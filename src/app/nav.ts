@@ -20,6 +20,7 @@ export type NavArgs = {
   back: [];
   search: [];
   login: [];
+  logout: [];
   notifications: [];
   save: [cid: string];
   apply: [target: { team: string; role: string }];

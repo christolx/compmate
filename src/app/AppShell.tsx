@@ -119,6 +119,11 @@ export function AppShell() {
           return setOverlay({ kind: 'search' });
         case 'login':
           return setOverlay({ kind: 'login' });
+        case 'logout':
+          setOverlay(null);
+          store.set({ authed: false });
+          navigate(paths.home(), { replace: true, state: null });
+          return flash('Logged out');
         case 'notifications':
           return gate('see notifications', () => setOverlay({ kind: 'notif', ...notifPosition() }));
         case 'save': {

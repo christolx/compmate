@@ -1,3 +1,4 @@
+import { useEffect, useId, useRef, useState } from 'react';
 import { NOTIFICATIONS } from '../data/seed';
 import { AppLink } from '../app/AppLink';
 import { useNav } from '../app/nav';
@@ -43,10 +44,13 @@ export function TopNav({ authed, active, backTitle }: TopNavProps) {
           <SearchIcon size={21} />
         </button>
         {authed ? (
+          <>
           <button type="button" onClick={() => nav('notifications')} aria-label="Notifications" className="relative grid h-11 w-11 cursor-pointer place-items-center border-0 bg-transparent text-ink">
             <BellIcon size={21} />
             {hasUnread && <span className="absolute top-[11px] right-3 h-2 w-2 rounded-full bg-brand shadow-[0_0_0_2px_#FFFFFF]" />}
           </button>
+          <AccountMenu />
+          </>
         ) : (
           <button type="button" onClick={() => nav('login')} className="h-9 cursor-pointer rounded-[9px] border-0 bg-ink px-3.5 text-[13px] font-semibold text-white">
             Log in
@@ -112,9 +116,7 @@ export function TopNav({ authed, active, backTitle }: TopNavProps) {
               <BellIcon size={19} />
               {hasUnread && <span className="absolute top-[9px] right-2.5 h-2 w-2 rounded-full bg-brand shadow-[0_0_0_2px_#FFFFFF]" />}
             </button>
-            <AppLink to="profile" args={['me']} aria-label="Your profile" className="ml-1.5 grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-full bg-brand text-[12px] font-bold text-white hover:text-white">
-              MP
-            </AppLink>
+            <AccountMenu />
           </div>
         ) : (
           <div className="flex items-center gap-2">
@@ -128,5 +130,66 @@ export function TopNav({ authed, active, backTitle }: TopNavProps) {
         )}
       </div>
     </header>
+  );
+}
+
+function AccountMenu() {
+  const nav = useNav();
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const id = useId();
+
+  useEffect(() => {
+    if (!open) return;
+    const outside = (event: PointerEvent) => {
+      if (!root.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setOpen(false);
+      trigger.current?.focus();
+    };
+    document.addEventListener('pointerdown', outside);
+    document.addEventListener('keydown', escape);
+    return () => {
+      document.removeEventListener('pointerdown', outside);
+      document.removeEventListener('keydown', escape);
+    };
+  }, [open]);
+
+  return (
+    <div ref={root} className="relative ml-1.5" onBlur={(event) => {
+      if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+    }}>
+      <button
+        ref={trigger}
+        type="button"
+        aria-label="Account options"
+        aria-expanded={open}
+        aria-controls={id}
+        onClick={() => setOpen((value) => !value)}
+        className="grid h-10 w-10 cursor-pointer place-items-center rounded-full border-0 bg-brand text-[12px] font-bold text-white hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      >
+        MP
+      </button>
+      {open && (
+        <div id={id} className="absolute top-full right-0 z-30 mt-2 w-[200px] rounded-[14px] border border-card bg-white p-1.5 shadow-[0_12px_32px_rgba(24,32,56,.14)]">
+          <div className="border-b border-line px-3 py-2.5">
+            <div className="text-[14px] font-bold text-ink">Maya</div>
+            <div className="mt-1 text-[12px] text-slate-500">Sample account</div>
+          </div>
+          <AppLink to="profile" args={['me']} onClick={() => setOpen(false)} className="mt-1 block rounded-[8px] px-3 py-3 text-[14px] font-semibold text-ink hover:bg-canvas hover:text-ink">
+            Profile
+          </AppLink>
+          <button type="button" onClick={() => {
+            setOpen(false);
+            nav('logout');
+          }} className="box-border w-full cursor-pointer rounded-[8px] border-0 bg-transparent px-3 py-3 text-left text-[14px] font-semibold text-danger hover:bg-canvas">
+            Log out
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
