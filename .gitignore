@@ -1,0 +1,17 @@
+# Dependencies and build output
+node_modules
+dist
+dist-ssr
+.vite
+coverage
+*.tsbuildinfo
+
+# Local environment and deployment settings
+.env
+.env.*
+.vercel
+*.local
+
+# Logs and OS files
+*.log
+.DS_Store
