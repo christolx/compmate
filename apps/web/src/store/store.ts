@@ -1,5 +1,6 @@
 import { createContext, useContext, useSyncExternalStore } from 'react';
 import { defaultState, type AppState } from '../data/state';
+import { loadPersistedState, serializeState } from './persisted';
 
 export interface Store {
   /** False for the read-only sample state the design board renders. */
@@ -12,14 +13,36 @@ export interface Store {
 
 const STORAGE_KEY = 'compmate-v2';
 
-/** The prototype's state, persisted in localStorage like the design's demo. */
-export function createPersistentStore(storage: Storage | undefined = globalThis.localStorage): Store {
-  let state: AppState;
+/** localStorage, or undefined when the browser blocks access to it. */
+function browserStorage(): Storage | undefined {
   try {
-    state = { ...defaultState(), ...JSON.parse(storage?.getItem(STORAGE_KEY) || '{}') };
+    return globalThis.localStorage;
   } catch {
-    state = defaultState();
+    return undefined;
   }
+}
+
+/**
+ * The prototype's state, persisted in localStorage like the design's demo.
+ * Saved data is validated on load, and a repaired copy is written back once.
+ */
+export function createPersistentStore(storage: Storage | undefined = browserStorage()): Store {
+  let saved: string | null = null;
+  try {
+    saved = storage?.getItem(STORAGE_KEY) ?? null;
+  } catch {
+    // Unreadable storage behaves like empty storage.
+  }
+  const loaded = loadPersistedState(saved);
+  let state = loaded.state;
+  const save = () => {
+    try {
+      storage?.setItem(STORAGE_KEY, serializeState(state));
+    } catch {
+      // Storage can be full or blocked (private mode); the session still works.
+    }
+  };
+  if (loaded.repaired) save();
   const listeners = new Set<() => void>();
   const emit = () => listeners.forEach((l) => l());
   return {
@@ -27,11 +50,7 @@ export function createPersistentStore(storage: Storage | undefined = globalThis.
     get: () => state,
     set(patch) {
       state = { ...state, ...(typeof patch === 'function' ? patch(state) : patch) };
-      try {
-        storage?.setItem(STORAGE_KEY, JSON.stringify(state));
-      } catch {
-        // Storage can be full or blocked (private mode); the session still works.
-      }
+      save();
       emit();
     },
     reset() {
