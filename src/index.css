@@ -1,0 +1,157 @@
+/* Tailwind without its preflight reset: the design was built on browser
+   defaults (content-box sizing, native buttons and selects), so keeping them
+   is what makes the screens match it pixel for pixel. */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-mono: ui-monospace, Menlo, monospace;
+
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-ink: #0f172a;
+  --color-ink-2: #1e293b;
+  --color-slate-700: #334155;
+  --color-slate-600: #475569;
+  --color-slate-500: #64748b;
+  --color-slate-400: #94a3b8;
+  --color-slate-300: #cbd5e1;
+  --color-slate-200: #e2e8f0;
+  --color-slate-100: #f1f5f9;
+  --color-slate-50: #f8fafc;
+  /* Hairlines and surfaces */
+  --color-line: #edf0f4;
+  --color-divider: #eef1f5;
+  --color-hairline: #f1f4f8;
+  --color-card: #e5e9f0;
+  --color-field: #dce2ea;
+  --color-canvas: #f6f8fb;
+  --color-seat: #a3aec2;
+  /* Cobalt */
+  --color-brand: #2563eb;
+  --color-brand-hover: #1d4ed8;
+  --color-brand-deep: #1e3a8a;
+  --color-brand-tint: #eff4ff;
+  /* Indigo: match labels and reasons */
+  --color-indigo: #4338ca;
+  --color-indigo-500: #4f46e5;
+  --color-indigo-tint: #eef0ff;
+  --color-match: #f7f6ff;
+  --color-match-line: #e8e5ff;
+  /* Status */
+  --color-success: #15803d;
+  --color-success-dot: #22c55e;
+  --color-success-tint: #ecfdf3;
+  --color-warning: #b45309;
+  --color-warning-dot: #f59e0b;
+  --color-warning-tint: #fff7e6;
+  --color-danger: #b91c1c;
+  --color-danger-strong: #dc2626;
+}
+
+@layer base {
+  body {
+    margin: 0;
+    background: #ffffff;
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Zero specificity so any utility (like an inline style in the design) wins. */
+  :where(a) {
+    color: var(--color-brand);
+    text-decoration: none;
+  }
+  :where(a):hover {
+    color: var(--color-brand-hover);
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font-family: inherit;
+  }
+}
+
+@keyframes cm-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+/* Success check in the apply sheet */
+@keyframes cm-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  70% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); }
+}
+/* Confirmation dialogs */
+@keyframes cm-dialog {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes cm-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes cm-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+/* Bottom sheets */
+@keyframes cm-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: none; }
+}
+/* Page enter. Lifts with `top` on a relative wrapper, not `transform`: a
+   transform would make the page the containing block of the fixed mobile bars
+   and push them off screen while it runs. */
+@keyframes cm-route {
+  from { opacity: 0; top: 6px; }
+  to { opacity: 1; top: 0; }
+}
+/* Horizontal centering stays on the `translate` property, so only lift here. */
+@keyframes cm-toast {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes cm-sheet {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes cm-drop {
+  from { transform: translateY(-8px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Diagonal hatching behind competitions that have no poster. */
+@utility poster-stripes {
+  background-image: repeating-linear-gradient(135deg, transparent 0 16px, rgba(255, 255, 255, 0.4) 16px 17px);
+}
+
+/* A link whose hit area covers its whole card (the card must be relative). */
+@utility stretched-link {
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  &:focus-visible {
+    outline: none;
+  }
+  &:focus-visible::after {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 3px;
+    border-radius: 14px;
+  }
+}
