@@ -145,7 +145,7 @@ export function CompTile({ cid, variant = 'a', wide, reason, authed }: CompTileP
             saved ? 'text-brand' : 'text-ink',
           )}
         >
-          <BookmarkIcon size={17} fill={saved ? '#2563EB' : 'none'} className="transition-[fill] duration-200" />
+          <BookmarkIcon size={17} fill={saved ? 'var(--color-brand)' : 'none'} className="transition-[fill] duration-200" />
         </button>
       </div>
       <div className="flex flex-col gap-[3px] px-0.5">

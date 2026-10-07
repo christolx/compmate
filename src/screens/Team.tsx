@@ -62,7 +62,7 @@ export function Team({ tid, authed: authedProp }: TeamProps) {
   const primaryClass = cx('cursor-pointer border-0 font-bold', primary[1] ? 'bg-brand text-white' : 'bg-slate-100 text-slate-500');
 
   return (
-    <div data-screen-label="Team" className="relative min-h-full bg-white font-sans text-ink">
+    <div data-screen-label="Team" className="relative min-h-full bg-canvas font-sans text-ink">
       <TopNav authed={authed} active="explore" backTitle={m ? 'Team' : ''} />
       {!m && (
         <nav aria-label="Breadcrumb" className="mx-auto flex max-w-[1120px] gap-2 px-8 pt-5 text-[13px] text-slate-500">

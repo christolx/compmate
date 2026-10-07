@@ -56,7 +56,7 @@ export function Profile({ pid }: { pid: string }) {
   );
 
   return (
-    <div data-screen-label="Profile" className="relative min-h-full bg-white font-sans text-ink">
+    <div data-screen-label="Profile" className="relative min-h-full bg-canvas font-sans text-ink">
       <TopNav authed active={me ? '' : 'people'} backTitle={m && !me ? 'Profile' : ''} />
       <div className={cx('mx-auto box-border max-w-[1120px]', m ? 'px-5 pt-6 pb-10' : 'px-8 pt-12 pb-[88px]')}>
         <header className={cx('grid items-start gap-6', m ? 'grid-cols-[minmax(0,1fr)]' : 'grid-cols-[auto_minmax(0,1fr)_auto]')}>
@@ -72,7 +72,7 @@ export function Profile({ pid }: { pid: string }) {
               {p.program} · {p.facName}
             </div>
             <div className="mt-0.5 flex items-center gap-1.5 text-[14px] text-slate-600">
-              <VerifiedIcon size={14} stroke="#2563EB" />
+              <VerifiedIcon size={14} stroke="var(--color-brand)" />
               BINUS University · verified student
             </div>
             <div className="mt-3.5 flex flex-wrap gap-4 text-[13px]">

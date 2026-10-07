@@ -139,7 +139,7 @@ export function Explore({ mode = 'all', q: initialQ = '', cat: initialCat = 'All
   const pick = (k: FilterKey, value: string) => update({ filters: { ...query.filters, [k]: query.filters[k] === value ? undefined : value } });
 
   return (
-    <div data-screen-label={saved ? 'Saved' : 'Explore'} className="relative min-h-full bg-white font-sans text-ink">
+    <div data-screen-label={saved ? 'Saved' : 'Explore'} className="relative min-h-full bg-canvas font-sans text-ink">
       <TopNav authed={authed} active={saved ? '' : 'explore'} />
       <div className={cx('mx-auto box-border max-w-[1280px]', m ? 'px-5 pt-5' : 'px-8 pt-10')}>
         <h1 className={cx('m-0 font-extrabold tracking-[-0.03em]', m ? 'text-[26px]' : 'text-[34px]')}>{saved ? 'Saved' : 'Explore competitions'}</h1>
@@ -229,7 +229,7 @@ export function Explore({ mode = 'all', q: initialQ = '', cat: initialCat = 'All
                             )}
                           >
                             {o.label}
-                            {sel && <CheckIcon size={14} stroke="#2563EB" />}
+                            {sel && <CheckIcon size={14} stroke="var(--color-brand)" />}
                           </button>
                         );
                       })}

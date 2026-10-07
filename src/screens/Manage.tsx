@@ -52,7 +52,7 @@ export function Manage({ tab: initialTab = 'apps' }: { tab?: Tab }) {
     if (!confirm) return null;
     if (confirm.kind === 'close') {
       return t.closed
-        ? { title: 'Reopen recruitment?', body: 'Vertex will show as recruiting again on the competition page.', btn: 'Reopen', btnBg: '#2563EB' }
+        ? { title: 'Reopen recruitment?', body: 'Vertex will show as recruiting again on the competition page.', btn: 'Reopen', btnBg: 'var(--color-brand)' }
         : { title: 'Close recruitment?', body: "Vertex will stop appearing as recruiting and won't receive new applications. Pending applications stay reviewable.", btn: 'Close recruitment', btnBg: '#DC2626' };
     }
     const a = vx.apps.find((x) => x.id === confirm.id)!;
@@ -63,10 +63,10 @@ export function Manage({ tab: initialTab = 'apps' }: { tab?: Tab }) {
       ? {
           title: `Accept ${p.first} as ${role.name}?`,
           body: `${p.first} joins Vertex and gets the Discord invite. The ${role.name} role closes, and ${p.first}'s other applications for this competition are withdrawn.`,
-          segs: Array.from({ length: t.target }, (_, i) => (i < n ? '#2563EB' : '#E2E8F0')),
+          segs: Array.from({ length: t.target }, (_, i) => (i < n ? 'var(--color-brand)' : '#E2E8F0')),
           after: `After accepting: ${n} of ${t.target} members`,
           btn: 'Accept ' + p.first,
-          btnBg: '#2563EB',
+          btnBg: 'var(--color-brand)',
         }
       : { title: `Decline ${p.first}?`, body: `${p.first} gets a short, neutral notification. You can still invite them later.`, btn: 'Decline', btnBg: '#DC2626' };
   })();
@@ -108,7 +108,7 @@ export function Manage({ tab: initialTab = 'apps' }: { tab?: Tab }) {
   const railH2 = 'mt-0 mb-1 text-[16px] font-extrabold';
 
   return (
-    <div data-screen-label="Manage team" className="relative min-h-full bg-white font-sans text-ink">
+    <div data-screen-label="Manage team" className="relative min-h-full bg-canvas font-sans text-ink">
       <TopNav authed active="teams" backTitle={m ? 'Manage team' : ''} />
       <div className={cx('mx-auto box-border max-w-[1240px]', m ? 'px-5 pt-5 pb-8' : 'px-8 pt-10 pb-[88px]')}>
         <header className={cx('grid items-end gap-6', m ? 'grid-cols-[minmax(0,1fr)]' : 'grid-cols-[minmax(0,1fr)_auto]')}>
@@ -160,7 +160,7 @@ export function Manage({ tab: initialTab = 'apps' }: { tab?: Tab }) {
                 role="tab"
                 aria-selected={tab === k}
                 onClick={() => setTab(k)}
-                className={cx('h-[46px] cursor-pointer border-0 bg-transparent p-0 text-[14px] font-bold', tab === k ? 'text-ink shadow-[inset_0_-2px_0_#2563EB]' : 'text-slate-500')}
+                className={cx('h-[46px] cursor-pointer border-0 bg-transparent p-0 text-[14px] font-bold', tab === k ? 'text-ink shadow-[inset_0_-2px_0_var(--color-brand)]' : 'text-slate-500')}
               >
                 {label}
               </button>

@@ -62,14 +62,14 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
   const facLine = c.facList.map((f) => f.name).join(', ');
   const timeline = c.timelineList.map((x) => ({
     ...x,
-    dot: x.next ? '#2563EB' : x.past ? '#94A3B8' : null,
+    dot: x.next ? 'var(--color-brand)' : x.past ? '#94A3B8' : null,
   }));
 
   const scrollTo = (ref: RefObject<HTMLElement | null>) => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   const toTeams = () => (m ? setTab('teams') : scrollTo(teamsRef));
   const openPoster = () => c.hasPoster && setPosterOpen(true);
   const save = { onClick: () => nav('save', c.id), 'aria-label': saved ? 'Remove from saved' : 'Save competition' };
-  const saveStyle = { borderColor: saved ? '#BFD3FE' : '#E2E8F0', background: saved ? '#EFF4FF' : '#FFFFFF', color: saved ? '#2563EB' : '#0F172A' };
+  const saveStyle = { borderColor: saved ? '#BFD3FE' : '#E2E8F0', background: saved ? '#EFF4FF' : '#FFFFFF', color: saved ? 'var(--color-brand)' : '#0F172A' };
 
   const statusPill = (small: boolean) => (
     <span
@@ -110,7 +110,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
   );
 
   return (
-    <div data-screen-label="Competition" className="relative min-h-full bg-white font-sans text-ink">
+    <div data-screen-label="Competition" className="relative min-h-full bg-canvas font-sans text-ink">
       <TopNav authed={authed} active="explore" backTitle={m ? 'Competition' : ''} />
 
       {!m && hero === 'a' && (
@@ -263,7 +263,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
                     className="grid h-[46px] w-[46px] flex-none cursor-pointer place-items-center rounded-[12px] border border-solid transition-all duration-200 active:scale-90"
                     style={saveStyle}
                   >
-                    <BookmarkIcon size={18} fill={saved ? '#2563EB' : 'none'} />
+                    <BookmarkIcon size={18} fill={saved ? 'var(--color-brand)' : 'none'} />
                   </button>
                 </div>
                 <p className="mt-3.5 mb-0 text-[12px] leading-[1.5] text-slate-500">Registration and payment happen on the organizer's site. CompMate helps you form the team first.</p>
@@ -375,7 +375,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
                 onClick={() => setTab(k)}
                 className={cx(
                   'h-[46px] cursor-pointer border-0 bg-transparent p-0 text-[14px] font-bold',
-                  tab === k ? 'text-ink shadow-[inset_0_-2px_0_#2563EB]' : 'text-slate-500',
+                  tab === k ? 'text-ink shadow-[inset_0_-2px_0_var(--color-brand)]' : 'text-slate-500',
                 )}
               >
                 {label}
@@ -522,7 +522,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
       {m && (
         <div className="fixed inset-x-0 bottom-0 z-[15] flex gap-2 border-t border-line bg-white/97 px-4 pt-2.5 pb-4 backdrop-blur-[10px]">
           <button type="button" {...save} className="grid h-[50px] w-[50px] flex-none cursor-pointer place-items-center rounded-[12px] border border-solid" style={saveStyle}>
-            <BookmarkIcon size={19} fill={saved ? '#2563EB' : 'none'} />
+            <BookmarkIcon size={19} fill={saved ? 'var(--color-brand)' : 'none'} />
           </button>
           <button
             type="button"

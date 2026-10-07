@@ -91,7 +91,7 @@ export const VerifiedIcon = (p: Sized) => (
 export function Logo({ size }: { size: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" aria-hidden="true">
-      <rect width="40" height="40" rx="10" fill="#2563EB" />
+      <rect width="40" height="40" rx="10" fill="var(--color-brand)" />
       <path d="M18 13.1 A8 8 0 1 0 14 28 H23 V12 L29 19.5 L35 12 V28" fill="none" stroke="#FFFFFF" strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );

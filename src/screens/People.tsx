@@ -85,7 +85,7 @@ export function People({ rank: initialRank = 'you' }: { rank?: PeopleRank }) {
   };
 
   return (
-    <div data-screen-label="People" className="relative min-h-full bg-white font-sans text-ink">
+    <div data-screen-label="People" className="relative min-h-full bg-canvas font-sans text-ink">
       <TopNav authed active="people" />
       <div className={cx('mx-auto box-border max-w-[1280px]', m ? 'px-5 pt-5 pb-8' : 'px-8 pt-10 pb-20')}>
         <h1 className={cx('m-0 font-extrabold tracking-[-0.035em]', m ? 'text-[28px]' : 'text-[36px]')}>Discover people</h1>

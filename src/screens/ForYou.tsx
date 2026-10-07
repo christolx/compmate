@@ -109,7 +109,7 @@ export function ForYou({ dir = 'a', demo }: ForYouProps) {
   const row = cx('overflow-x-auto', m ? '-mx-5 flex px-5 pb-1' : 'grid');
 
   return (
-    <div data-screen-label="For You" className="relative min-h-full bg-white font-sans text-ink">
+    <div data-screen-label="For You" className="relative min-h-full bg-canvas font-sans text-ink">
       <TopNav authed active="" />
       <div className={cx('mx-auto box-border max-w-[1280px]', m ? 'px-5 pt-5 pb-8' : 'px-8 pt-9 pb-20')}>
         <div className="text-[13px] font-semibold text-slate-500">{todayLabel}</div>

@@ -11,29 +11,31 @@
 
   --color-*: initial;
   --color-white: #ffffff;
-  --color-ink: #0f172a;
+  --color-ink: #182038;
   --color-ink-2: #1e293b;
   --color-slate-700: #334155;
   --color-slate-600: #475569;
-  --color-slate-500: #64748b;
+  --color-slate-500: #667085;
   --color-slate-400: #94a3b8;
   --color-slate-300: #cbd5e1;
-  --color-slate-200: #e2e8f0;
+  --color-slate-200: #e3e2ed;
   --color-slate-100: #f1f5f9;
   --color-slate-50: #f8fafc;
   /* Hairlines and surfaces */
-  --color-line: #edf0f4;
-  --color-divider: #eef1f5;
-  --color-hairline: #f1f4f8;
-  --color-card: #e5e9f0;
-  --color-field: #dce2ea;
-  --color-canvas: #f6f8fb;
+  --color-line: #e3e2ed;
+  --color-divider: #e9e8f1;
+  --color-hairline: #eeedf5;
+  --color-card: #e3e2ed;
+  --color-field: #e3e2ed;
+  --color-canvas: #f5f4fa;
+  --color-hero: #eeedfc;
+  --color-teams: #eceefa;
   --color-seat: #a3aec2;
   /* Cobalt */
-  --color-brand: #2563eb;
-  --color-brand-hover: #1d4ed8;
+  --color-brand: #285cf4;
+  --color-brand-hover: #204bd0;
   --color-brand-deep: #1e3a8a;
-  --color-brand-tint: #eff4ff;
+  --color-brand-tint: #eef0ff;
   /* Indigo: match labels and reasons */
   --color-indigo: #4338ca;
   --color-indigo-500: #4f46e5;
@@ -54,7 +56,7 @@
 @layer base {
   body {
     margin: 0;
-    background: #ffffff;
+    background: var(--color-canvas);
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;

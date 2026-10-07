@@ -28,7 +28,7 @@ export function BottomNav({ active }: { active: BottomNavActive }) {
             ),
             children: (
               <>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill={on && i.key === 'saved' ? '#2563EB' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill={on && i.key === 'saved' ? 'var(--color-brand)' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d={i.icon} />
                 </svg>
                 {i.label}

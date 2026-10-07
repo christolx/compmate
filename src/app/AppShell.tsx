@@ -312,7 +312,7 @@ export function AppShell() {
             <div className="flex min-h-0 flex-1 items-center justify-center p-5">
               <div
                 ref={stageRef}
-                className="relative h-[844px] max-h-full w-[390px] overflow-hidden rounded-[30px] bg-white shadow-[0_0_0_10px_#0F172A,0_30px_60px_rgba(15,23,42,.3)] [transform:translateZ(0)]"
+                className="relative h-[844px] max-h-full w-[390px] overflow-hidden rounded-[30px] bg-canvas shadow-[0_0_0_10px_#0F172A,0_30px_60px_rgba(15,23,42,.3)] [transform:translateZ(0)]"
               >
                 <div ref={scrollerRef} className="absolute inset-0 overflow-x-hidden overflow-y-auto">
                   {routes}
