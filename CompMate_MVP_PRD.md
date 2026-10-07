@@ -86,16 +86,15 @@ Login and registration use dedicated auth pages or dialogs.
 
 | Layer | Technology |
 |---|---|
-| Frontend | Next.js (App Router), TypeScript |
-| Backend | Go (net/http + Chi) — REST API |
-| Database | PostgreSQL (Supabase) |
-| Authentication | Supabase Auth |
-| Styling | Tailwind CSS |
-| UI Components | shadcn/ui |
-| Deployment | Vercel |
-| Version Control / CI | GitHub + GitHub Actions |
+| Repository | Polyglot monorepo: npm workspace + separate Go module |
+| Frontend | React, Vite, TypeScript (`apps/web`) |
+| Backend | Go `net/http`, pgx (`apps/api`) |
+| Database | PostgreSQL; Docker Compose for local development |
+| Authentication | Not implemented; provider/session design pending |
+| Styling | Tailwind CSS + existing components |
+| Deployment | Web on Vercel; API container + production DB hosting pending |
 
-**Architecture:** Full-stack monolith. One Next.js application, one PostgreSQL database, and managed authentication. A separate Go backend can be added later if needed.
+**Architecture:** One web app, one Go API, one PostgreSQL DB. Go owns domain mutations and authorization. Frontend currently uses fictional fixtures/localStorage; API currently exposes health/readiness only. Auth, schema migrations, domain endpoints, production routing, and CI remain next slices.
 
 ## 7. Core Data Models
 

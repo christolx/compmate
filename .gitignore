@@ -9,9 +9,13 @@ coverage
 # Local environment and deployment settings
 .env
 .env.*
+!.env.example
 .vercel
 *.local
 
 # Logs and OS files
 *.log
 .DS_Store
+
+# Go binaries
+/apps/api/bin/

@@ -1,0 +1,34 @@
+name: compmate
+
+services:
+  db:
+    image: postgres:18-bookworm
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-compmate}
+      POSTGRES_USER: ${POSTGRES_USER:-compmate}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-compmate_dev}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-55432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  api:
+    build:
+      context: ./apps/api
+    environment:
+      HTTP_ADDR: "0.0.0.0:8080"
+      DATABASE_URL: ${API_DATABASE_URL:-postgres://compmate:compmate_dev@db:5432/compmate?sslmode=disable}
+    ports:
+      - "127.0.0.1:${API_PORT:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
