@@ -24,7 +24,7 @@ export function TopNav({ authed, active, backTitle }: TopNavProps) {
 
   if (mobile) {
     return (
-      <header data-topnav className="sticky top-0 z-20 flex h-14 items-center gap-1 border-b border-line bg-white/96 pr-2 pl-4 font-sans backdrop-blur-[12px]">
+      <header data-topnav className="sticky top-0 z-20 flex h-14 items-center gap-1 border-b border-line bg-header/96 pr-2 pl-4 font-sans backdrop-blur-[12px]">
         {backTitle ? (
           <>
             <button type="button" onClick={() => nav('back')} aria-label="Back" className="-ml-2.5 grid h-11 w-11 cursor-pointer place-items-center border-0 bg-transparent text-ink">
@@ -72,7 +72,7 @@ export function TopNav({ authed, active, backTitle }: TopNavProps) {
       ];
 
   return (
-    <header data-topnav className="sticky top-0 z-20 border-b border-line bg-white/94 font-sans backdrop-blur-[12px]">
+    <header data-topnav className="sticky top-0 z-20 border-b border-line bg-header/94 font-sans backdrop-blur-[12px]">
       <div className="mx-auto flex h-[68px] max-w-[1280px] items-center gap-6 px-8">
         <AppLink to="home" className="flex cursor-pointer items-center gap-2.5">
           <Logo size={30} />
@@ -90,7 +90,7 @@ export function TopNav({ authed, active, backTitle }: TopNavProps) {
                 aria-current={on ? 'page' : undefined}
                 className={cx(
                   'flex h-[68px] cursor-pointer items-center px-3 text-[14px] font-semibold whitespace-nowrap transition-colors duration-150 hover:text-ink',
-                  on ? 'text-ink shadow-[inset_0_-2px_0_#0F172A]' : 'text-slate-500',
+                  on ? 'text-ink shadow-[inset_0_-2px_0_var(--color-brand)]' : 'text-slate-500',
                 )}
               >
                 {l.label}
@@ -101,7 +101,7 @@ export function TopNav({ authed, active, backTitle }: TopNavProps) {
         <button
           type="button"
           onClick={() => nav('search')}
-          className="ml-auto flex h-10 min-w-0 flex-[0_1_360px] cursor-pointer items-center gap-2.5 rounded-[10px] border border-card bg-[#F7F9FC] px-3 text-left text-[14px] font-medium text-slate-500 transition-[border-color,background-color] duration-150 hover:border-slate-300 hover:bg-white"
+          className="ml-auto flex h-10 min-w-0 flex-[0_1_360px] cursor-pointer items-center gap-2.5 rounded-[10px] border border-card bg-header-field px-3 text-left text-[14px] font-medium text-slate-500 transition-[border-color,background-color] duration-150 hover:border-slate-300 hover:bg-white"
         >
           <SearchIcon size={16} />
           <span className="flex-1 truncate">Search competitions, skills, people</span>
