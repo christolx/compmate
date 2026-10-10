@@ -29,6 +29,9 @@ out, reset demo state, or preview a 390px phone frame on wider screens.
   fixed at **6 October 2026** to keep deadlines and countdowns stable.
 - Sign-in is simulated. Saved competitions, applications, connections, and the
   Vertex roster persist in browser `localStorage` under `compmate-v2`.
+- Saved state is versioned and checked on load; entries that no longer match
+  the sample data are dropped. If a page still fails to render, a recovery
+  screen offers **Reset demo data**.
 - Screens use the mobile layout below 1024px.
 - Vertex is the team led by the sample user. Team management and role-based
   people rankings use this team.
