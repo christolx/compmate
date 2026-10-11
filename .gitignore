@@ -19,3 +19,7 @@ coverage
 
 # Go binaries
 /apps/api/bin/
+backups/
+e2e-results/
+__pycache__/
+.local/

@@ -23,6 +23,8 @@ services:
       context: ./apps/api
     environment:
       HTTP_ADDR: "0.0.0.0:8080"
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://127.0.0.1:5173}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
       DATABASE_URL: ${API_DATABASE_URL:-postgres://compmate:compmate_dev@db:5432/compmate?sslmode=disable}
     ports:
       - "127.0.0.1:${API_PORT:-8080}:8080"
