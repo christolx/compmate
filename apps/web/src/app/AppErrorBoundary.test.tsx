@@ -10,6 +10,6 @@ describe('AppErrorBoundary', () => {
   it('renders the recovery screen without the router, store or app shell', () => {
     const html = renderToStaticMarkup(<RecoveryScreen onRetry={() => {}} onReset={() => {}} />);
     expect(html).toContain('Try again');
-    expect(html).toContain('Reset demo data');
+    expect(html).toContain('Reload app');
   });
 });

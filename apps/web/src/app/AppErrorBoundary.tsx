@@ -3,7 +3,7 @@ import { Logo } from '../components/icons';
 
 interface Props {
   children: ReactNode;
-  /** Clears the saved demo state and restarts the app. */
+  /** Reloads the app after a rendering error. */
   onReset: () => void;
 }
 
@@ -24,6 +24,7 @@ export class AppErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('CompMate hit an unexpected error while rendering.', error, info.componentStack);
+    void fetch('/api/v1/client-errors', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: 'render_failure' }) }).catch(() => {});
   }
 
   render() {
@@ -42,15 +43,14 @@ export function RecoveryScreen({ onRetry, onReset }: { onRetry: () => void; onRe
         <div className="mt-6 font-mono text-[12px] font-semibold tracking-[.08em] text-slate-500 uppercase">Something went wrong</div>
         <h1 className="mt-3 mb-0 text-[30px] font-extrabold tracking-[-0.03em]">This page couldn't load.</h1>
         <p className="mt-2 mb-0 text-[15px] leading-[1.55] text-slate-500">
-          Try again. If it keeps happening, reset the demo data saved in this browser. Saved competitions, applications and other demo changes
-          go back to the start.
+          Try again or reload the app. Your account and team data are stored on the server.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2.5">
           <button type="button" onClick={onRetry} className="h-[46px] cursor-pointer rounded-[12px] border-0 bg-brand px-5 text-[14px] font-bold text-white hover:bg-brand-hover">
             Try again
           </button>
           <button type="button" onClick={onReset} className="h-[46px] cursor-pointer rounded-[12px] border border-slate-200 bg-white px-5 text-[14px] font-bold text-ink hover:bg-slate-50">
-            Reset demo data
+            Reload app
           </button>
         </div>
       </div>

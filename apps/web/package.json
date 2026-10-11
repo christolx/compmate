@@ -2,7 +2,7 @@
   "name": "@compmate/web",
   "private": true,
   "version": "0.3.0",
-  "description": "CompMate \u2014 find competitions, build your team. Round 3 core experience.",
+  "description": "CompMate \u2014 persistent team formation MVP",
   "type": "module",
   "scripts": {
     "dev": "vite",
