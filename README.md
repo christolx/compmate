@@ -158,13 +158,69 @@ Compose project/volume for fresh disposable data.
 
 ## Deployment
 
-The web app uses a static Vite build on Vercel. Root `vercel.json` runs
-`npm run build`, serves `apps/web/dist`, and rewrites all paths to `index.html`
-so nested routes support direct links and refreshes.
+### Frontend on Vercel
 
-The Go API requires separate container hosting and a same-origin `/api` gateway
-before production integration. The current Vercel configuration serves the web
-SPA only; it does not route requests to Go.
+Import the repository with these settings:
+
+| Setting | Value |
+| --- | --- |
+| Framework Preset | Vite |
+| Root Directory | `apps/web` |
+| Build Command | `npm run build` |
+| Output Directory | `dist` |
+| Install Command | `cd ../.. && npm ci` |
+| Include source files outside the Root Directory | Enabled |
+
+`apps/web/vercel.json` configures the build and SPA fallback so nested routes
+support direct links and refreshes. No frontend environment variables are
+required for the current prototype. The root `vercel.json` remains available
+for deployments using the repository root instead.
+
+### Backend and PostgreSQL on omen
+
+The server needs Docker Engine with Compose, permission to use Docker, rsync,
+OpenSSL, and curl. See [Docker's Debian installation guide](https://docs.docker.com/engine/install/debian/).
+The local machine needs SSH and rsync. From the repository root:
+
+```sh
+bash scripts/deploy-backend.sh       # defaults to SSH alias omen
+# bash scripts/deploy-backend.sh another-ssh-alias
+```
+
+The script checks prerequisites, copies backend sources and Compose files into
+`~/compmate`, creates a random DB password in a private server-side `.env` on
+first deploy, starts containers, and checks `/api/ready`. Later runs preserve
+credentials and the PostgreSQL volume. It refuses the development password.
+If deploying over an existing database, configure `.env` to match its actual
+credentials first; editing `.env` does not change an initialized DB password.
+
+`compose.production.yaml` adds automatic container restarts and requires explicit
+DB credentials. API and DB ports remain bound to `127.0.0.1`. Inspect the stack:
+
+```sh
+ssh omen
+cd ~/compmate
+docker compose -f compose.yaml -f compose.production.yaml ps
+docker compose -f compose.yaml -f compose.production.yaml logs --tail=100 api
+curl -f http://127.0.0.1:8080/api/ready
+```
+
+Do not run `docker compose down -v` unless intentionally deleting the database.
+Back up PostgreSQL before storing real application data.
+
+### Future API integration
+
+The prototype currently uses sample data and browser storage; the API only
+exposes health and readiness endpoints. To integrate it later, point an API
+domain at the server and configure an HTTPS reverse proxy to `127.0.0.1:8080`.
+Add an API rewrite **before** the SPA fallback in the active `vercel.json`:
+
+```json
+{ "source": "/api/:path*", "destination": "https://YOUR_API_DOMAIN/api/:path*" }
+```
+
+Replace the placeholder with the actual HTTPS domain. The current configuration
+serves the SPA only. Vite's `API_PROXY_TARGET` applies only during development.
 
 ## Further reading
 

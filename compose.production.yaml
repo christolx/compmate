@@ -1,0 +1,11 @@
+# Use with: docker compose -f compose.yaml -f compose.production.yaml ...
+services:
+  db:
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a production DB password}
+
+  api:
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${API_DATABASE_URL:?Set the container DB connection URL}
