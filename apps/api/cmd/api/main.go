@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"log/slog"
 	"net/http"
 	"os"
@@ -11,11 +12,13 @@ import (
 	"time"
 
 	"compmate/api/internal/config"
+	"compmate/api/internal/formation"
 	"compmate/api/internal/httpapi"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func main() {
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, nil)))
 	if err := run(); err != nil {
 		slog.Error("API stopped", "error", err)
 		os.Exit(1)
@@ -23,6 +26,8 @@ func main() {
 }
 
 func run() error {
+	adminEmail := flag.String("promote-admin", "", "Promote an existing account by email, then exit")
+	flag.Parse()
 	cfg, err := config.Load()
 	if err != nil {
 		return err
@@ -41,9 +46,23 @@ func run() error {
 		return errors.New("database pool initialization failed")
 	}
 	defer db.Close()
+	if err := formation.Migrate(ctx, db); err != nil {
+		return errors.New("database migration failed; inspect database/schema configuration")
+	}
+	if *adminEmail != "" {
+		tag, err := db.Exec(ctx, `UPDATE users SET admin=true WHERE email=lower($1)`, *adminEmail)
+		if err != nil {
+			return errors.New("admin promotion failed")
+		}
+		if tag.RowsAffected() != 1 {
+			return errors.New("account not found")
+		}
+		slog.Info("admin promoted")
+		return nil
+	}
 
 	server := &http.Server{
-		Addr: cfg.HTTPAddr, Handler: httpapi.New(db),
+		Addr: cfg.HTTPAddr, Handler: formation.New(db, httpapi.New(db)),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second, WriteTimeout: 10 * time.Second,
 		IdleTimeout: 60 * time.Second,
