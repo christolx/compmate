@@ -74,7 +74,7 @@ export function match(pid: string, tid: string, rid: string, st: AppState): Matc
       matched.push(s);
     } else if (p.skills.some((x) => SKILL_CATEGORY[x] === SKILL_CATEGORY[s])) related++;
   }
-  parts.skills = Math.round((25 * (exact + related * 0.5)) / role.skills.length);
+  parts.skills = role.skills.length ? Math.round((25 * (exact + related * 0.5)) / role.skills.length) : 0;
   if (exact) reasons.push((you ? '' : 'Matches ') + exact + ' of ' + role.skills.length + ' skills' + (you ? ' match' : '') + (related ? ', ' + related + ' related' : ''));
 
   if (p.interests.includes(c.interest)) {
@@ -129,7 +129,7 @@ export function bestFor(pid: string, tid: string, st: AppState): Match | null {
 /** Teams the sample user could still join, best match first. */
 export function teamsForMe(st: AppState): { id: string; m: Match }[] {
   const busy = TEAMS.filter((t) => team(t.id, st).members.includes('me')).map((t) => t.comp);
-  return TEAMS.filter((t) => !busy.includes(t.comp) && !st.apps[t.id])
+  return TEAMS.filter((t) => !busy.includes(t.comp) && !st.apps[t.id] && t.canApply !== false && !team(t.id,st).closed && !team(t.id,st).complete && comp(t.comp).left>=0)
     .map((t) => ({ id: t.id, m: bestFor('me', t.id, st) }))
     .filter((x): x is { id: string; m: Match } => !!x.m?.kind)
     .sort((a, b) => b.m.score - a.m.score);
@@ -138,7 +138,7 @@ export function teamsForMe(st: AppState): { id: string; m: Match }[] {
 /** Open competitions for the sample user, with the reasons spelled out. */
 export function compsForMe(): { id: string; s: number; reason: string }[] {
   const me = PERSONS.me;
-  return COMPETITIONS.filter((c) => !comp(c.id).upcoming)
+  return COMPETITIONS.filter((c) => !comp(c.id).upcoming && comp(c.id).left>=0)
     .map((c) => {
       const exact = c.skills.filter((s) => me.skills.includes(s));
       let s = 0;

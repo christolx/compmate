@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { PERSONS, TEAM_BY_ID, comp, team, todayLabel } from '../data/model';
-import { compsForMe, teamsForMe } from '../data/matching';
+import { compsForMe, teamsForMe, relevance } from '../data/matching';
 import type { ApplicationStatus } from '../data/types';
 import { AppLink } from '../app/AppLink';
 import { useNav } from '../app/nav';
@@ -29,10 +29,6 @@ const STATUS: Record<ApplicationStatus, { label: string; fg: string; bg: string 
   withdrawn: { label: 'Withdrawn', fg: '#475569', bg: '#F1F5F9' },
 };
 
-const RECOMMENDED_COMPS = compsForMe()
-  .filter((x) => x.id !== 'techno')
-  .slice(0, 3)
-  .map((x) => x.id);
 
 interface Action {
   icon: string;
@@ -55,54 +51,28 @@ interface ForYouProps {
 }
 
 /** Logged-in home: what needs doing first, then recommendations. */
-export function ForYou({ dir = 'a', demo }: ForYouProps) {
+export function ForYou({ dir = 'a' }: ForYouProps) {
   const st = useAppState();
   const m = useIsMobile();
   const nav = useNav();
-  const vx = team('vertex', st);
-  const apexApp = st.apps.apex;
-  const accepted = apexApp?.status === 'accepted';
-  const pending = st.vx.apps.filter((a) => a.status === 'pending');
-  const tc = comp('techno');
-
-  const actions: Action[] = [
-    {
-      icon: ICONS.clock, ibg: '#FFF7E6', ifg: '#B45309',
-      title: tc.title + ' closes in ' + tc.left + ' days',
-      sub: vx.eligible ? 'Vertex is eligible. Register the team on the official site.' : 'Vertex still needs members before registering.',
-      cta: 'Register ↗', go: () => nav('official', 'techno'), chip: 'Hackathon closes in ' + tc.left + ' days',
-    },
-  ];
-  if (pending.length) {
-    actions.push({
-      icon: ICONS.user, ibg: '#EFF4FF', ifg: '#1D4ED8',
-      title: 'Vertex has ' + pending.length + ' new applicant' + (pending.length > 1 ? 's' : ''),
-      sub: pending.map((a) => PERSONS[a.pid].first + ' · ' + TEAM_BY_ID.vertex.roles.find((r) => r.id === a.role)!.name).join('   '),
-      cta: 'Review', go: () => nav('manage'), primary: true, chip: pending.length + ' applicants for Vertex',
-    });
+  const RECOMMENDED_COMPS = compsForMe().slice(0,3).map(x=>x.id);
+  const myTeams=Object.values(TEAM_BY_ID).filter(t=>t.members.includes('me')).map(seed=>{const t=team(seed.id,st);return {t,myRole:t.mine?'Leader':t.memberList.find(m=>m.isMe)?.roles[0]||'Member',cta:t.mine?'Manage':'View',eligShort:t.eligible?'Eligible':'Needs members',leads:t.mine}});
+  const actions:Action[]=[];
+  for(const {t} of myTeams.filter(x=>x.leads)) {
+    const pending=(st.managed?.[t.id]||st.vx).apps.filter(a=>a.status==='pending');
+    if(pending.length)actions.push({icon:ICONS.user,ibg:'#EFF4FF',ifg:'#1D4ED8',title:t.name+' has '+pending.length+' new applicant'+(pending.length>1?'s':''),sub:pending.map(a=>PERSONS[a.pid].first+' · '+TEAM_BY_ID[t.id].roles.find(r=>r.id===a.role)?.name).join('   '),cta:'Review',go:()=>nav('manage',t.id),primary:true,chip:pending.length+' applicants for '+t.name});
+    if(t.c.left>=0)actions.push({icon:ICONS.clock,ibg:'#FFF7E6',ifg:'#B45309',title:t.c.title+' closes in '+t.c.left+' days',sub:t.eligible?t.name+' is eligible. Register on the official site.':t.name+' still needs members before registering.',cta:'Register ↗',go:()=>nav('official',t.comp),chip:'Registration deadline'});
   }
-  if (accepted) {
-    actions.push({ icon: ICONS.check, ibg: '#ECFDF3', ifg: '#15803D', title: "You're now on Apex", sub: 'Dimas shared the WhatsApp group. Apex is competition eligible.', cta: 'View team', go: () => nav('team', 'apex'), chip: 'You joined Apex' });
-  } else if (apexApp) {
-    actions.push({ icon: ICONS.send, ibg: '#F1F5F9', ifg: '#334155', title: 'Your application to Apex is pending', sub: 'Presenter · sent ' + apexApp.when.toLowerCase(), cta: 'View', go: () => nav('team', 'apex'), chip: 'Apex application pending' });
-  } else {
-    actions.push({ icon: ICONS.spark, ibg: '#EEF0FF', ifg: '#4338CA', title: 'Apex needs a Presenter', sub: 'Strong match for you · ' + comp('nbcc').title, cta: 'View team', go: () => nav('team', 'apex'), chip: 'Apex needs a Presenter' });
-  }
-  if (st.apps.orion?.status === 'pending') {
-    actions.push({ icon: ICONS.send, ibg: '#F1F5F9', ifg: '#334155', title: 'Your application to Orion is pending', sub: 'Researcher · sent ' + st.apps.orion.when, cta: 'View', go: () => nav('team', 'orion'), chip: 'Orion application pending' });
-  }
-  if (st.conns.nadia === 'incoming') {
-    actions.push({ icon: ICONS.user, ibg: '#F1F5F9', ifg: '#334155', title: 'Nadia Chen wants to connect', sub: "UI/UX Designer · strong fit for Vertex's design role", cta: 'View', go: () => nav('profile', 'nadia'), chip: 'Nadia wants to connect' });
-  }
-  const upNext = actions.slice(0, 4);
-
-  const myTeams = [{ t: vx, myRole: 'Leader', cta: 'Manage', eligShort: vx.eligible ? 'Eligible' : 'Needs members', leads: true }];
-  if (accepted) myTeams.push({ t: team('apex', st), myRole: 'Presenter', cta: 'View', eligShort: 'Eligible', leads: false });
+  for(const [tid,a] of Object.entries(st.apps)){const t=team(tid,st);actions.push({icon:a.status==='accepted'?ICONS.check:ICONS.send,ibg:'#F1F5F9',ifg:'#334155',title:a.status==='accepted'?"You're now on "+t.name:'Your application to '+t.name+' is '+a.status,sub:a.status==='accepted'?'Open your team to access consented member contacts.':(t.roles.find(r=>r.id===a.role)?.name||'Role')+' · sent '+a.when,cta:'View',go:()=>nav('team',tid),chip:'Application '+a.status});}
+  for(const [pid,status] of Object.entries(st.conns)){if(status==='incoming')actions.push({icon:ICONS.user,ibg:'#F1F5F9',ifg:'#334155',title:PERSONS[pid].name+' wants to connect',sub:PERSONS[pid].rolesLine,cta:'View',go:()=>nav('profile',pid),chip:'Connection request'});}
+  for(const invitation of st.incomingInvites||[]){const t=TEAM_BY_ID[invitation.team_id];if(t)actions.unshift({icon:ICONS.user,ibg:'#EFF4FF',ifg:'#1D4ED8',title:t.name+' invited you to join',sub:t.roles.find(r=>r.id===invitation.role_id)?.name||'Team invitation',cta:'View invitation',go:()=>nav('team',t.id),chip:'Team invitation'});}
+  const upNext=actions.slice(0,4);
   const deadlines = st.saved
     .map((id) => comp(id))
     .filter((c) => c.left >= 0)
     .sort((a, b) => a.left - b.left)
     .slice(0, 3);
+  const recPeople=Object.keys(PERSONS).filter(id=>id!=='me').sort((a,b)=>relevance(b).score-relevance(a).score).slice(0,2);
   const recTeams = teamsForMe(st).map((x) => x.id);
 
   const h2 = cx('m-0 font-extrabold tracking-[-0.025em]', m ? 'text-[20px]' : 'text-[24px]');
@@ -114,15 +84,7 @@ export function ForYou({ dir = 'a', demo }: ForYouProps) {
       <div className={cx('mx-auto box-border max-w-[1280px]', m ? 'px-5 pt-5 pb-8' : 'px-8 pt-9 pb-20')}>
         <div className="text-[13px] font-semibold text-slate-500">{todayLabel}</div>
         <h1 className={cx('mt-1 mb-0 font-extrabold tracking-[-0.035em]', m ? 'text-[30px]' : 'text-[40px]')}>For you</h1>
-        {demo && apexApp?.status === 'pending' && (
-          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-[12px] border border-dashed border-slate-300 px-3.5 py-2.5 text-[13px] text-slate-600">
-            <span className="font-mono text-[10px] font-bold tracking-[.06em] text-slate-500">PROTOTYPE</span>
-            <span className="flex-1">Simulate Dimas accepting your Apex application.</span>
-            <button type="button" onClick={() => nav('acceptApex')} className="h-8 cursor-pointer rounded-[8px] border-0 bg-ink px-3 text-[12px] font-bold text-white">
-              Accept application
-            </button>
-          </div>
-        )}
+
 
         {dir === 'a' || m ? (
           <div className={cx('mt-7 grid items-start', m ? 'grid-cols-[minmax(0,1fr)] gap-11' : 'grid-cols-[minmax(0,1fr)_340px] gap-[clamp(32px,4vw,64px)]')}>
@@ -205,7 +167,7 @@ export function ForYou({ dir = 'a', demo }: ForYouProps) {
                     </>
                   );
                   return leads ? (
-                    <AppLink key={t.id} to="manage" className={rowClass}>
+                    <AppLink key={t.id} to="manage" args={[t.id]} className={rowClass}>
                       {content}
                     </AppLink>
                   ) : (
@@ -222,7 +184,7 @@ export function ForYou({ dir = 'a', demo }: ForYouProps) {
                     <AppLink key={id} to="team" args={[id]} className="flex w-full cursor-pointer items-center gap-3 border-b border-divider py-3 text-left">
                       <span className="min-w-0 flex-1">
                         <span className="block text-[14px] font-bold text-ink">
-                          {TEAM_BY_ID[id].name} · {TEAM_BY_ID[id].roles.find((r) => r.id === a.role)!.name}
+                          {TEAM_BY_ID[id].name} · {TEAM_BY_ID[id].roles.find((r) => r.id === a.role)?.name||'Role'}
                         </span>
                         <span className="block truncate text-[12px] text-slate-500">{comp(TEAM_BY_ID[id].comp).title}</span>
                       </span>
@@ -255,8 +217,7 @@ export function ForYou({ dir = 'a', demo }: ForYouProps) {
               <section>
                 <h2 className="m-0 text-[16px] font-extrabold">People you may want to know</h2>
                 <p className="mt-1 mb-1 text-[12px] text-slate-500">Based on shared interests and skills your teams need.</p>
-                <PersonTile pid="raka" variant="mini" />
-                <PersonTile pid="nadia" variant="mini" />
+                {recPeople.map(pid=><PersonTile key={pid} pid={pid} variant="mini"/>)}
               </section>
             </aside>
           </div>

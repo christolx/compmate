@@ -4,7 +4,7 @@ export interface ExploreQuery {
   q?: string;
   cat?: string;
 }
-export type PeopleRank = 'you' | 'vertex';
+export type PeopleRank = string;
 
 /** Every navigation or action a screen can ask the app shell for. */
 export type NavArgs = {
@@ -14,12 +14,12 @@ export type NavArgs = {
   team: [id: string];
   people: [opts?: { rank?: PeopleRank }];
   profile: [id: string];
-  manage: [];
+  manage: [tid?: string];
   saved: [];
   how: [];
   back: [];
   search: [];
-  login: [];
+  login: [signup?: boolean];
   logout: [];
   notifications: [];
   save: [cid: string];
@@ -64,9 +64,9 @@ export const paths = {
   },
   comp: (id: string) => '/competitions/' + id,
   team: (id: string) => '/teams/' + id,
-  people: (opts?: { rank?: PeopleRank }) => '/people' + (opts?.rank === 'vertex' ? '?rank=vertex' : ''),
+  people: (opts?: { rank?: PeopleRank }) => '/people' + (opts?.rank && opts.rank !== 'you' ? '?rank='+encodeURIComponent(opts.rank) : ''),
   profile: (id: string) => '/u/' + id,
-  manage: () => '/teams/vertex/manage',
+  manage: (tid?: string) => '/teams/'+(tid||'vertex')+'/manage',
   saved: () => '/saved',
   how: () => '/#how',
   board: () => '/board',

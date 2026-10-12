@@ -36,8 +36,9 @@ export function People({ rank: initialRank = 'you' }: { rank?: PeopleRank }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [openFilter, sheetOpen]);
 
-  const vx = team('vertex', st);
-  const ids = Object.keys(PERSONS).filter((id) => id !== 'me' && !vx.members.includes(id));
+  const ownedId=(st.managed?.[rank]?rank:Object.keys(st.managed||{})[0])||(st.loaded===undefined?'vertex':undefined);
+  const vx=ownedId?team(ownedId,st):null;
+  const ids = Object.keys(PERSONS).filter((id) => id !== 'me' && !vx?.members.includes(id));
   const uniq = (a: string[]) => [...new Set(a)].sort();
   const options: Record<FilterKey, { title: string; values: string[] }> = {
     role: { title: 'Preferred role', values: uniq(ids.flatMap((i) => PERSONS[i].roles)) },
@@ -60,13 +61,13 @@ export function People({ rank: initialRank = 'you' }: { rank?: PeopleRank }) {
     (!filters.fac || p.fac === filters.fac) &&
     (!filters.level || p.level === filters.level) &&
     (!filters.avail || p.avail === filters.avail);
-  const teamMode = rank === 'vertex' && vx.roleList.length > 0;
+  const teamMode = rank !== 'you' && !!vx && vx!.roleList.length > 0;
   const results = ids
     .map((id) => PERSONS[id])
     .filter(ok)
     .map((p) => {
       if (teamMode) {
-        const best = vx.roleList.map((r) => match(p.id, 'vertex', r.id, st)).sort((a, b) => b.score - a.score)[0];
+        const best = vx!.roleList.map((r) => match(p.id, ownedId!, r.id, st)).sort((a, b) => b.score - a.score)[0];
         return { id: p.id, rid: best.role.id, score: best.score };
       }
       return { id: p.id, rid: undefined, score: relevance(p.id).score };
@@ -107,7 +108,7 @@ export function People({ rank: initialRank = 'you' }: { rank?: PeopleRank }) {
             {(
               [
                 ['you', 'For you'],
-                ['vertex', "For Vertex's open roles"],
+                [ownedId||'you', 'For '+(vx?.name||'your team')+"'s open roles"],
               ] as const
             ).map(([k, l]) => {
               const on = rank === k;
@@ -194,8 +195,8 @@ export function People({ rank: initialRank = 'you' }: { rank?: PeopleRank }) {
         )}
         {teamMode && (
           <div className="mt-7 flex flex-wrap items-center gap-3 rounded-[14px] border border-match-line bg-match px-4 py-3.5 text-[14px] text-ink-2">
-            <strong>Ranking for Vertex.</strong>
-            <span>Open roles: {vx.roleList.map((r) => r.name).join(', ')}. People who add skills the team is missing rank higher.</span>
+            <strong>Ranking for {vx?.name}.</strong>
+            <span>Open roles: {vx!.roleList.map((r) => r.name).join(', ')}. People who add skills the team is missing rank higher.</span>
           </div>
         )}
         <div className="mt-6 flex items-baseline justify-between">
@@ -206,7 +207,7 @@ export function People({ rank: initialRank = 'you' }: { rank?: PeopleRank }) {
         </div>
         <div className="mt-3.5 grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-5">
           {results.map((r) => (
-            <PersonTile key={r.id} pid={r.id} tid={teamMode ? 'vertex' : undefined} rid={r.rid} canInvite={teamMode} />
+            <PersonTile key={r.id} pid={r.id} tid={teamMode ? ownedId : undefined} rid={r.rid} canInvite={teamMode} />
           ))}
         </div>
         {results.length === 0 && (

@@ -4,6 +4,7 @@ import { AppLink } from '../app/AppLink';
 import { useNav } from '../app/nav';
 import { useIsMobile } from '../app/viewport';
 import { cx } from '../lib/cx';
+import { PERSONS } from '../data/model';
 import { useAppState } from '../store/store';
 import { BackIcon, BellIcon, BookmarkIcon, Logo, SearchIcon } from './icons';
 
@@ -123,7 +124,7 @@ export function TopNav({ authed, active, backTitle }: TopNavProps) {
             <button type="button" onClick={() => nav('login')} className="h-10 cursor-pointer rounded-[10px] border-0 bg-transparent px-3.5 text-[14px] font-semibold whitespace-nowrap text-ink hover:bg-slate-100">
               Log in
             </button>
-            <button type="button" onClick={() => nav('login')} className="h-10 cursor-pointer rounded-[10px] border-0 bg-ink px-4 text-[14px] font-semibold whitespace-nowrap text-white hover:bg-ink-2">
+            <button type="button" onClick={() => nav('login', true)} className="h-10 cursor-pointer rounded-[10px] border-0 bg-ink px-4 text-[14px] font-semibold whitespace-nowrap text-white hover:bg-ink-2">
               Sign up
             </button>
           </div>
@@ -134,6 +135,8 @@ export function TopNav({ authed, active, backTitle }: TopNavProps) {
 }
 
 function AccountMenu() {
+  const st=useAppState();
+  const current=PERSONS.me;
   const nav = useNav();
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -171,17 +174,19 @@ function AccountMenu() {
         onClick={() => setOpen((value) => !value)}
         className="grid h-10 w-10 cursor-pointer place-items-center rounded-full border-0 bg-brand text-[12px] font-bold text-white hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       >
-        MP
+        {current.initials}
       </button>
       {open && (
         <div id={id} className="absolute top-full right-0 z-30 mt-2 w-[200px] rounded-[14px] border border-card bg-white p-1.5 shadow-[0_12px_32px_rgba(24,32,56,.14)]">
           <div className="border-b border-line px-3 py-2.5">
-            <div className="text-[14px] font-bold text-ink">Maya</div>
-            <div className="mt-1 text-[12px] text-slate-500">Sample account</div>
+            <div className="text-[14px] font-bold text-ink">{current.first}</div>
+            <div className="mt-1 text-[12px] text-slate-500">{st.account?.email||'Your account'}</div>
           </div>
           <AppLink to="profile" args={['me']} onClick={() => setOpen(false)} className="mt-1 block rounded-[8px] px-3 py-3 text-[14px] font-semibold text-ink hover:bg-canvas hover:text-ink">
             Profile
           </AppLink>
+          <a href="/privacy" className="block rounded-[8px] px-3 py-3 text-[14px] font-semibold text-ink hover:bg-canvas">Privacy</a>
+          {st.account?.admin && <a href="/admin" className="block rounded-[8px] px-3 py-3 text-[14px] font-semibold text-ink hover:bg-canvas">Admin</a>}
           <button type="button" onClick={() => {
             setOpen(false);
             nav('logout');

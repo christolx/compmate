@@ -7,6 +7,7 @@ import { Competition } from '../screens/Competition';
 import { Discover } from '../screens/Discover';
 import { Explore } from '../screens/Explore';
 import { ForYou } from '../screens/ForYou';
+import { ProfileEditor, TeamEditor, AdminCuration, Privacy } from '../screens/DataForms';
 import { Manage } from '../screens/Manage';
 import { People } from '../screens/People';
 import { Profile } from '../screens/Profile';
@@ -42,7 +43,7 @@ function Home() {
 
 function ForYouRoute() {
   useTitle('For you');
-  return <ForYou demo />;
+  return <ForYou />;
 }
 
 function ExploreRoute() {
@@ -72,13 +73,13 @@ function TeamRoute() {
 }
 
 function ManageRoute() {
-  useTitle('Manage Vertex');
-  return <Manage />;
+ const {id='vertex'}=useParams();const t=TEAM_BY_ID[id];useTitle(t?'Manage '+t.name:'Manage team');
+ return t&&t.leader==='me'?<Manage key={id} tid={id}/>:<Navigate to="/for-you" replace/>;
 }
 
 function PeopleRoute() {
   const [params] = useSearchParams();
-  const rank: PeopleRank = params.get('rank') === 'vertex' ? 'vertex' : 'you';
+  const rank:PeopleRank=params.get('rank')||'you';
   useTitle('Discover people');
   return <People key={rank} rank={rank} />;
 }
@@ -114,7 +115,12 @@ export function AppRoutes() {
       <Route path="/for-you" element={<RequireAuth reason="see what's next for you"><ForYouRoute /></RequireAuth>} />
       <Route path="/competitions" element={<ExploreRoute />} />
       <Route path="/competitions/:id" element={<CompetitionRoute />} />
-      <Route path="/teams/vertex/manage" element={<RequireAuth reason="manage your team"><ManageRoute /></RequireAuth>} />
+      <Route path="/teams/:id/manage" element={<RequireAuth reason="manage your team"><ManageRoute /></RequireAuth>} />
+      <Route path="/teams/new" element={<RequireAuth reason="create a team"><TeamEditor/></RequireAuth>} />
+      <Route path="/teams/:id/edit" element={<RequireAuth reason="edit your team"><TeamEditor/></RequireAuth>} />
+      <Route path="/u/me/edit" element={<RequireAuth reason="edit your profile"><ProfileEditor/></RequireAuth>} />
+      <Route path="/privacy" element={<Privacy/>} />
+      <Route path="/admin" element={<RequireAuth reason="curate competitions"><AdminCuration/></RequireAuth>} />
       <Route path="/teams/:id" element={<TeamRoute />} />
       <Route path="/people" element={<RequireAuth reason="see student profiles"><PeopleRoute /></RequireAuth>} />
       <Route path="/u/:id" element={<RequireAuth reason="see student profiles"><ProfileRoute /></RequireAuth>} />

@@ -1,11 +1,11 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useId, useState } from 'react';
 import { PERSONS, SKILL_CATEGORY, TEAM_BY_ID, team } from '../data/model';
 import { bestFor, match } from '../data/matching';
 import { AppLink } from '../app/AppLink';
 import { useNav } from '../app/nav';
 import { useIsMobile } from '../app/viewport';
 import { cx } from '../lib/cx';
-import { useAppState } from '../store/store';
+import { useAppState, useStore } from '../store/store';
 import { CheckIcon, CloseIcon } from './icons';
 
 /** Why an application cannot be sent (validation states from the brief). */
@@ -25,15 +25,15 @@ const QUICK_ADDS = ['Available on weekends', "I've pitched before", 'Happy to re
 export function ApplySheet({ tid, role: initialRole, block, sent: initialSent = false }: ApplySheetProps) {
   const mobile = useIsMobile();
   const st = useAppState();
+  const store=useStore();
+  const [error,setError]=useState('');
   const nav = useNav();
   const msgId = useId();
   const [roleId, setRoleId] = useState(initialRole ?? null);
   const [msg, setMsg] = useState('');
-  const [shareLinkedIn, setShareLinkedIn] = useState(true);
+  const [shareLinkedIn, setShareLinkedIn] = useState(false);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(initialSent);
-  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  useEffect(() => () => clearTimeout(timer.current), []);
 
   const t = team(tid, st);
   const rid = roleId ?? bestFor('me', t.id, st)?.role.id ?? t.roleList[0]?.id;
@@ -47,13 +47,8 @@ export function ApplySheet({ tid, role: initialRole, block, sent: initialSent = 
   const blocked = block && BLOCKS[block](t.name, t.leaderFirst);
   const title = 'Join ' + t.name;
 
-  const send = () => {
-    setSending(true);
-    timer.current = setTimeout(() => {
-      setSending(false);
-      setSent(true);
-      nav('applied', { team: t.id, role: role.id });
-    }, 650);
+  const send = async () => {
+    setSending(true);setError('');try{await store.request?.(`/teams/${t.id}/applications`,'POST',{role_id:role.id,message:msg,share_contact:shareLinkedIn});setSent(true)}catch(e){setError((e as Error).message)}finally{setSending(false)}
   };
 
   const pad = {
@@ -63,7 +58,7 @@ export function ApplySheet({ tid, role: initialRole, block, sent: initialSent = 
   };
 
   return (
-    <div role="dialog" aria-label={title} className={cx('box-border flex h-full flex-col overflow-hidden bg-white font-sans text-ink', mobile ? 'rounded-t-[20px]' : 'rounded-[20px]')}>
+    <div role="dialog" aria-modal="true" aria-label={title} className={cx('box-border flex h-full flex-col overflow-hidden bg-white font-sans text-ink', mobile ? 'rounded-t-[20px]' : 'rounded-[20px]')}>
       {mobile && <div className="mx-auto mt-2.5 h-1 w-9 flex-none rounded-[2px] bg-slate-300" />}
       {!sent ? (
         <>
@@ -84,6 +79,7 @@ export function ApplySheet({ tid, role: initialRole, block, sent: initialSent = 
             </button>
           </div>
           <div className={cx('flex-1 overflow-y-auto', pad.body)}>
+            {error && <p role="alert" className="text-[14px] text-danger">{error}</p>}
             {blocked ? (
               <div role="alert" className="rounded-[12px] px-4 py-3.5 text-[14px] leading-[1.5]" style={{ background: blocked.bg, color: blocked.fg }}>
                 <strong>{blocked.title}</strong> {blocked.body}
@@ -138,7 +134,7 @@ export function ApplySheet({ tid, role: initialRole, block, sent: initialSent = 
                   })}
                 </div>
                 <label htmlFor={msgId} className="mt-[22px] block text-[14px] font-bold">
-                  Message to the team <span className="font-medium text-slate-500">(optional)</span>
+                  Message to the team <span className="font-medium text-slate-500">(10–300 characters)</span>
                 </label>
                 <textarea
                   id={msgId}
@@ -169,8 +165,8 @@ export function ApplySheet({ tid, role: initialRole, block, sent: initialSent = 
                   className="mt-5 flex w-full cursor-pointer items-center gap-3 border-0 border-t border-solid border-hairline bg-transparent px-0 py-3 text-left"
                 >
                   <span className="flex-1">
-                    <span className="block text-[14px] font-semibold text-ink">Share my LinkedIn</span>
-                    <span className="block text-[12px] text-slate-500">Your email, phone number and student ID stay private.</span>
+                    <span className="block text-[14px] font-semibold text-ink">Share my contact after acceptance</span>
+                    <span className="block text-[12px] text-slate-500">Only accepted team members can see your shared contact. Profile sharing must also be enabled.</span>
                   </span>
                   <span className={cx('relative h-6 w-10 flex-none rounded-[12px] transition-[background-color] duration-200', shareLinkedIn ? 'bg-brand' : 'bg-slate-300')}>
                     <span className={cx('absolute top-[3px] h-[18px] w-[18px] rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,.2)] transition-[left] duration-200', shareLinkedIn ? 'left-[19px]' : 'left-[3px]')} />
@@ -188,7 +184,7 @@ export function ApplySheet({ tid, role: initialRole, block, sent: initialSent = 
               {blocked ? 'Close' : 'Cancel'}
             </button>
             {!blocked && (
-              <button type="button" onClick={send} disabled={sending} className="flex h-[50px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-[12px] border-0 bg-brand text-[15px] font-bold text-white hover:bg-brand-hover">
+              <button type="button" onClick={send} disabled={sending || msg.trim().length<10} className="flex h-[50px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-[12px] border-0 bg-brand text-[15px] font-bold text-white hover:bg-brand-hover">
                 {sending && <span className="box-border h-4 w-4 animate-[cm-spin_.7s_linear_infinite] rounded-full border-2 border-white/40 border-t-white" />}
                 {sending ? 'Sending…' : 'Send application'}
               </button>
@@ -203,7 +199,7 @@ export function ApplySheet({ tid, role: initialRole, block, sent: initialSent = 
             </div>
             <h2 className="mt-[18px] mb-0 text-[26px] font-extrabold tracking-[-0.025em]">Application sent</h2>
             <p className="mx-auto mt-2 mb-0 max-w-[360px] text-[15px] leading-[1.55] text-slate-600">
-              Your application is now waiting for the team leader. {t.leaderFirst} usually replies within a few days.
+              Your application is now waiting for {t.leaderFirst} to review it.
             </p>
             <div className="mx-auto mt-[26px] grid max-w-[380px] grid-cols-3 gap-2 text-center">
               {[
@@ -220,7 +216,7 @@ export function ApplySheet({ tid, role: initialRole, block, sent: initialSent = 
               ))}
             </div>
             <p className="mx-auto mt-[26px] mb-0 max-w-[380px] text-[13px] leading-[1.55] text-slate-500">
-              You can still apply to other teams for this competition. If you join one, your other applications for it are withdrawn automatically.
+              You can still apply to other teams for this competition. Only pending applications can be withdrawn; withdrawal is final.
             </p>
           </div>
           <div className={cx('flex flex-none gap-2 border-t border-hairline', pad.foot)}>

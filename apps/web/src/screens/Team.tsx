@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { PERSONS, TEAMS_BY_COMP, team } from '../data/model';
 import { bestFor, match } from '../data/matching';
 import { AppLink } from '../app/AppLink';
@@ -6,7 +7,7 @@ import { useIsMobile } from '../app/viewport';
 import { CheckIcon, Icon, ShareIcon } from '../components/icons';
 import { TopNav } from '../components/TopNav';
 import { cx } from '../lib/cx';
-import { useAppState } from '../store/store';
+import { useAppState, useStore } from '../store/store';
 
 interface TeamProps {
   tid: string;
@@ -16,13 +17,16 @@ interface TeamProps {
 /** Team detail: people first, with a match strip explaining why it fits. */
 export function Team({ tid, authed: authedProp }: TeamProps) {
   const st = useAppState();
+  const store=useStore();
+  const invitation=st.incomingInvites?.find(i=>i.team_id===tid);
+  const [shareInvite,setShareInvite]=useState(false);
   const authed = authedProp ?? st.authed;
   const m = useIsMobile();
   const nav = useNav();
   const t = team(tid, st);
   const app = st.apps[t.id];
   const busy = TEAMS_BY_COMP[t.comp].some((id) => id !== t.id && team(id, st).isMember);
-  const canApply = !t.mine && !t.isMember && !app && !busy && !t.complete && !t.closed;
+  const canApply = !t.mine && !t.isMember && !app && !busy && !t.complete && !t.closed && t.c.left >= 0 && t.canApply !== false;
   const best = authed && canApply ? bestFor('me', t.id, st) : null;
   const mySkills = new Set(PERSONS.me.skills);
 
@@ -52,11 +56,13 @@ export function Team({ tid, authed: authedProp }: TeamProps) {
         ? ['Application ' + app.status, false]
         : busy
           ? ['Already in a team for this competition', false]
+          : !canApply && authed
+            ? ['Not recruiting', false]
           : roles.length
             ? ['Apply as ' + (best ? best.role.name : roles[0].name), true]
             : ['Not recruiting', false];
   const onPrimary = () => {
-    if (t.mine) nav('manage');
+    if (t.mine) nav('manage',t.id);
     else if (primary[1]) nav('apply', { team: t.id, role: best ? best.role.id : t.roleList[0].id });
   };
   const primaryClass = cx('cursor-pointer border-0 font-bold', primary[1] ? 'bg-brand text-white' : 'bg-slate-100 text-slate-500');
@@ -127,7 +133,7 @@ export function Team({ tid, authed: authedProp }: TeamProps) {
         </div>
         {!m && (
           <div className="flex gap-2">
-            <button type="button" onClick={() => nav('toast', 'Team link copied')} aria-label="Share team" className="grid h-12 w-12 cursor-pointer place-items-center rounded-[12px] border border-slate-200 bg-white text-slate-700">
+            <button type="button" onClick={() => void navigator.clipboard.writeText(window.location.href).then(()=>nav('toast','Team link copied')).catch(()=>nav('toast','Unable to copy link'))} aria-label="Share team" className="grid h-12 w-12 cursor-pointer place-items-center rounded-[12px] border border-slate-200 bg-white text-slate-700">
               <ShareIcon size={18} />
             </button>
             <button type="button" onClick={onPrimary} disabled={!primary[1]} className={cx('h-12 rounded-[12px] px-[22px] text-[15px]', primaryClass)}>
@@ -207,6 +213,7 @@ export function Team({ tid, authed: authedProp }: TeamProps) {
               )),
             )}
           </section>
+          {authed && store.request && <TeamReport tid={tid}/>}
         </main>
         <aside className={cx('top-[92px]', m ? 'static' : 'sticky')}>
           <h2 className="mt-0 mb-3.5 text-[20px] font-bold tracking-[-0.015em]">Open roles</h2>
@@ -263,6 +270,11 @@ export function Team({ tid, authed: authedProp }: TeamProps) {
         </aside>
       </div>
       {m && <div aria-hidden="true" className="h-[79px]" />}
+      {invitation && <section className="mx-auto box-border max-w-[1140px] px-5 pb-6"><div className="rounded-[14px] border border-card bg-white p-5"><h2 className="mt-0 text-[18px] font-extrabold">You're invited to join {t.name}</h2><label className="flex gap-3 text-[13px]"><input type="checkbox" checked={shareInvite} onChange={e=>setShareInvite(e.target.checked)}/>Share my contact after joining (profile sharing must also be enabled).</label><div className="mt-4 flex gap-3">{(['accept','decline'] as const).map(action=><button key={action} className="h-10 cursor-pointer rounded-[10px] border-0 bg-brand px-4 text-[14px] font-bold text-white" onClick={()=>{void store.request?.('/invitations/'+invitation.id+'/'+action,'POST',{share_contact:shareInvite}).then(()=>nav('toast','Invitation '+(action==='accept'?'accepted':'declined'))).catch(e=>nav('toast',e.message))}}>{action==='accept'?'Accept invitation':'Decline invitation'}</button>)}</div></div></section>}
+      {(t.isMember || app?.status==='pending') && <div className={cx("mx-auto box-border max-w-[1140px] px-5",m?"pb-28":"pb-8")}>
+        {app?.status==='pending' && <button className="h-10 cursor-pointer rounded-[10px] border border-slate-200 bg-white px-4 text-[14px] font-semibold text-danger" onClick={()=>{void store.request?.('/applications/'+app.id+'/withdraw','POST',{}).then(()=>nav('toast','Application withdrawn')).catch(e=>nav('toast',e.message))}}>Withdraw application</button>}
+        {t.isMember && <MemberContacts tid={tid}/>}
+      </div>}
       {m && (
         <div className="fixed inset-x-0 bottom-0 z-[15] border-t border-line bg-white/97 px-4 pt-2.5 pb-4 backdrop-blur-[10px]">
           <button type="button" onClick={onPrimary} disabled={!primary[1]} className={cx('h-[52px] w-full rounded-[12px] text-[15px]', primaryClass)}>
@@ -272,4 +284,17 @@ export function Team({ tid, authed: authedProp }: TeamProps) {
       )}
     </div>
   );
+}
+
+function TeamReport({tid}:{tid:string}) {
+ const store=useStore();const [notice,setNotice]=useState('');const [error,setError]=useState('');const [busy,setBusy]=useState(false);
+ return <details className="mt-6 rounded-[14px] border border-card bg-white p-5"><summary className="cursor-pointer text-[13px] font-bold text-slate-600">Report this team</summary><form className="mt-4 grid gap-3" onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);setBusy(true);setError('');setNotice('');void store.request!('/reports','POST',{team_id:tid,reason:String(f.get('reason'))}).then(()=>setNotice('Report submitted for moderation')).catch(e=>setError(e.message)).finally(()=>setBusy(false))}}><label className="text-[13px] font-bold">Report reason<textarea name="reason" required minLength={10} maxLength={2000} className="mt-2 box-border block h-24 w-full rounded-[10px] border border-field p-3 text-[14px]"/></label><button disabled={busy} className="h-10 cursor-pointer rounded-[10px] border-0 bg-brand px-4 text-[14px] font-bold text-white">Submit report</button>{notice&&<p role="status" className="m-0 text-[13px] text-success">{notice}</p>}{error&&<p role="alert" className="m-0 text-[13px] text-danger">{error}</p>}</form></details>;
+}
+
+function MemberContacts({tid}:{tid:string}) {
+ const store=useStore();const nav=useNav();const [contacts,setContacts]=useState<{id:string;name:string;contact:string|null}[]>([]);
+ return <section className="mt-6 rounded-[14px] border border-card bg-white p-5"><h2 className="mt-0 text-[18px] font-extrabold">Member contacts</h2><p className="text-[13px] text-slate-500">Only shared contacts are visible. Refresh for current consent.</p>
+ <button className="h-10 cursor-pointer rounded-[10px] border-0 bg-brand px-4 text-[14px] font-bold text-white" onClick={()=>{void store.request?.<{id:string;name:string;contact:string|null}[]>('/teams/'+tid+'/contacts').then(setContacts).catch(e=>nav('toast',e.message))}}>Show / refresh contacts</button>
+ {contacts.map(c=><p key={c.id} className="text-[14px]">{c.name}: {c.contact||'Contact not shared'}</p>)}
+ <button className="ml-3 h-10 cursor-pointer rounded-[10px] border border-slate-200 bg-white px-4 text-[14px] font-semibold" onClick={()=>{void store.request?.('/teams/'+tid+'/connected','POST',{}).then(()=>nav('toast','Connection confirmed')).catch(e=>nav('toast',e.message))}}>We connected</button></section>
 }

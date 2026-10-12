@@ -1,6 +1,6 @@
 // View models: everything the screens render is derived here from the seed
 // data plus the current app state, so components stay presentational.
-import { COMPETITIONS, FACULTIES, GROUPS, HUES, PEOPLE, TAXONOMY, TEAMS, TODAY } from './seed';
+import { COMPETITIONS, FACULTIES, GROUPS, HUES, PEOPLE, TAXONOMY, TEAMS, TODAY, NOTIFICATIONS } from './seed';
 import type { AppState } from './state';
 import type { Avatar, Competition, FacultyCode, Person, Prize, Role, Slot, Team } from './types';
 
@@ -26,7 +26,7 @@ export function daysUntil(iso: string) {
   return Math.round((parseDate(iso).getTime() - TODAY.getTime()) / 864e5);
 }
 /** "Tuesday, 6 October" */
-export const todayLabel = `${WEEKDAYS[TODAY.getDay()]}, ${TODAY.getDate()} ${LONG_MONTHS[TODAY.getMonth()]}`;
+export let todayLabel = `${WEEKDAYS[TODAY.getDay()]}, ${TODAY.getDate()} ${LONG_MONTHS[TODAY.getMonth()]}`;
 
 /** Skill → category, e.g. Pitching → Communication. */
 export const SKILL_CATEGORY: Record<string, string> = {};
@@ -111,7 +111,7 @@ export function comp(id: string): CompetitionView {
   const closing = !upcoming && left >= 0 && left <= 7;
   const hue = HUES[(GROUPS.indexOf(c.group) + 6) % HUES.length];
   const faceIds = [...new Set(TEAMS.filter((t) => t.comp === id).flatMap((t) => t.members).filter((x) => x !== 'me'))]
-    .concat(['raka', 'nadia', 'rizky', 'sarah'])
+    .concat(['raka','nadia','rizky','sarah'].filter(id=>!!PERSONS[id])).concat(Object.keys(PERSONS).filter(id=>id!=='me'))
     .slice(0, 3);
   const milestones = c.timeline || [{ label: 'Registration closes', date: c.deadline }, { label: 'Event', date: c.event }];
   const vm: CompetitionView = {
@@ -121,10 +121,10 @@ export function comp(id: string): CompetitionView {
     closing,
     hasPoster: !!c.poster,
     status: upcoming ? 'upcoming' : closing ? 'closing' : 'open',
-    statusLabel: upcoming ? 'Opens ' + formatShortDate(c.open) : closing ? 'Closing soon' : 'Registration open',
-    leftLabel: upcoming ? 'Opens ' + formatShortDate(c.open) : left === 0 ? 'Closes today' : left === 1 ? '1 day left' : left + ' days left',
-    leftNum: upcoming ? formatShortDate(c.open) : String(left),
-    leftUnit: upcoming ? 'opens' : left === 1 ? 'day left' : 'days left',
+    statusLabel: left<0 ? 'Registration closed' : upcoming ? 'Opens ' + formatShortDate(c.open) : closing ? 'Closing soon' : 'Registration open',
+    leftLabel: left<0 ? 'Deadline passed' : upcoming ? 'Opens ' + formatShortDate(c.open) : left === 0 ? 'Closes today' : left === 1 ? '1 day left' : left + ' days left',
+    leftNum: upcoming ? formatShortDate(c.open) : String(Math.max(0,left)),
+    leftUnit: left<0 ? 'closed' : upcoming ? 'opens' : left === 1 ? 'day left' : 'days left',
     dlFg: closing ? '#B45309' : '#0F172A',
     deadlineShort: formatShortDate(c.deadline),
     deadlineFull: formatDate(c.deadline),
@@ -200,18 +200,18 @@ export function team(id: string, st: AppState): TeamView {
   let members = t.members.slice();
   let filledRoles: string[] = [];
   let target = t.target;
-  let closed = false;
-  if (id === 'apex' && st.apps.apex?.status === 'accepted') {
+  let closed = t.recruiting === false;
+  if (st.loaded === undefined && id === 'apex' && st.apps.apex?.status === 'accepted') {
     members.push('me');
     filledRoles.push('presenter');
   }
-  if (id === 'vertex') {
+  if (st.loaded === undefined && id === 'vertex') {
     members = members.concat(st.vx.added);
     filledRoles = st.vx.filled;
     target = st.vx.target;
     closed = st.vx.closed;
   }
-  const roles = t.roles.filter((r) => !filledRoles.includes(r.id));
+  const roles = t.roles.filter((r) => !filledRoles.includes(r.id) && (r.filled ?? 0) < r.qty).map(r => ({...r,qty:r.qty-(r.filled ?? 0)}));
   const filled = members.length;
   const open = Math.max(0, target - filled);
   const eligible = filled >= c.min;
@@ -236,11 +236,11 @@ export function team(id: string, st: AppState): TeamView {
     eligible,
     complete,
     closed,
-    kind: closed ? 'closed' : complete ? 'complete' : 'recruiting',
+    kind: c.left<0 || closed ? 'closed' : complete ? 'complete' : 'recruiting',
     slots,
     initial: t.name[0],
     sizeLabel: filled + ' of ' + target + ' members',
-    statusLabel: closed ? 'Closed' : complete ? 'Team complete' : 'Recruiting',
+    statusLabel: c.left<0 ? 'Deadline passed' : closed ? 'Closed' : complete ? 'Team complete' : 'Recruiting',
     statusFg: closed ? '#475569' : complete ? '#15803D' : '#1D4ED8',
     statusBg: closed ? '#F1F5F9' : complete ? '#ECFDF3' : '#EFF4FF',
     eligText: complete
@@ -264,4 +264,17 @@ export function team(id: string, st: AppState): TeamView {
 /** Teams recruiting for a competition, in seed order. */
 export function teamsFor(compId: string, st: AppState): TeamView[] {
   return TEAMS.filter((t) => t.comp === compId).map((t) => team(t.id, st));
+}
+
+/** Replace records in place so existing screens keep their original imports/layout. */
+export function hydrateCatalog(comps: Competition[], teams: Team[], people: Record<string, import('./types').PersonSeed>, notifications: import('./types').Notification[]) {
+ COMPETITIONS.splice(0,COMPETITIONS.length,...comps);TEAMS.splice(0,TEAMS.length,...teams);
+ for(const k of Object.keys(PEOPLE))delete PEOPLE[k];Object.assign(PEOPLE,people);
+ for(const k of Object.keys(PERSONS))delete PERSONS[k];
+ Object.entries(people).forEach(([id,p],i)=>{const hue=HUES[(p.color_index??i)%HUES.length];PERSONS[id]={...p,id,name:p.name,bg:id==='me'?'#2563EB':hue[0],fg:id==='me'?'#FFFFFF':hue[1],initials:p.name.split(' ').map(w=>w[0]).slice(0,2).join(''),first:p.name.split(' ')[0],facName:FACULTIES[p.fac],cats:[...new Set(p.skills.map(s=>SKILL_CATEGORY[s]).filter(Boolean))],rolesLine:p.roles.join(' · '),mutual:p.mutual??0,connections:p.connections??0,about:p.about||'',exp:p.exp||[],links:p.links||[]};});
+ for(const k of Object.keys(COMPETITION_BY_ID))delete COMPETITION_BY_ID[k];Object.assign(COMPETITION_BY_ID,Object.fromEntries(comps.map(c=>[c.id,c])));
+ for(const k of Object.keys(TEAM_BY_ID))delete TEAM_BY_ID[k];Object.assign(TEAM_BY_ID,Object.fromEntries(teams.map(t=>[t.id,t])));
+ for(const k of Object.keys(TEAMS_BY_COMP))delete TEAMS_BY_COMP[k];for(const c of comps)TEAMS_BY_COMP[c.id]=teams.filter(t=>t.comp===c.id).map(t=>t.id);
+ const now=new Date();TODAY.setTime(new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime());todayLabel=`${WEEKDAYS[TODAY.getDay()]}, ${TODAY.getDate()} ${LONG_MONTHS[TODAY.getMonth()]}`;compCache.clear();ALL_COMPETITIONS.splice(0,ALL_COMPETITIONS.length,...comps.map(c=>comp(c.id)));
+ NOTIFICATIONS.splice(0,NOTIFICATIONS.length,...notifications);
 }

@@ -6,7 +6,7 @@ import { cx } from '../lib/cx';
 import { useAppState } from '../store/store';
 import { BookmarkIcon, CheckIcon } from './icons';
 
-const REASONS = new Map(compsForMe().map((x) => [x.id, x.reason]));
+
 
 interface CompTileProps {
   cid: string;
@@ -24,7 +24,7 @@ export function CompTile({ cid, variant = 'a', wide, reason, authed }: CompTileP
   const nav = useNav();
   const c = comp(cid);
   const saved = !!(authed || st.authed) && st.saved.includes(c.id);
-  const reasonText = reason ? REASONS.get(c.id) || '' : '';
+  const reasonText = reason ? compsForMe().find(x=>x.id===c.id)?.reason||'' : '';
   const title = (
     <AppLink to="comp" args={[c.id]} className="stretched-link text-inherit hover:text-inherit">
       {c.title}
@@ -129,8 +129,8 @@ export function CompTile({ cid, variant = 'a', wide, reason, authed }: CompTileP
             Closing soon · <span>{c.leftLabel}</span>
           </span>
         )}
-        {c.featuredOnly && (
-          <span className="absolute top-3 left-3 inline-flex h-[26px] items-center rounded-[7px] bg-[rgba(15,23,42,.72)] px-[9px] text-[11px] font-bold tracking-[.02em] text-white">Featured</span>
+        {(c.featuredOnly || c.left<0) && (
+          <span className="absolute top-3 left-3 inline-flex h-[26px] items-center rounded-[7px] bg-[rgba(15,23,42,.72)] px-[9px] text-[11px] font-bold tracking-[.02em] text-white">{c.left<0?'Deadline passed':'Featured'}</span>
         )}
         <button
           type="button"

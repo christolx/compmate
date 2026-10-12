@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
+import { useEffect, useState, useRef } from 'react';
 import { PERSONS, TEAM_BY_ID, team } from '../data/model';
 import { MATCH_WEIGHTS, coverage, match, recsForTeam } from '../data/matching';
-import type { VertexState } from '../data/state';
-import type { ApplicationStatus } from '../data/types';
+
+
 import { AppLink } from '../app/AppLink';
 import { useNav } from '../app/nav';
 import { useIsMobile } from '../app/viewport';
@@ -15,9 +16,10 @@ import { useAppState, useStore } from '../store/store';
 type Tab = 'apps' | 'recs' | 'team';
 type Confirm = { kind: 'close' } | { kind: 'accept' | 'decline'; id: string };
 
-/** Team management for Vertex, the team the sample user leads. */
-export function Manage({ tab: initialTab = 'apps' }: { tab?: Tab }) {
+/** Original management UI, backed by actual leader permissions and inbox. */
+export function Manage({ tid='vertex', tab: initialTab = 'apps' }: {tid?:string; tab?: Tab }) {
   const store = useStore();
+  const navigate=useNavigate();
   const st = useAppState();
   const m = useIsMobile();
   const nav = useNav();
@@ -26,23 +28,25 @@ export function Manage({ tab: initialTab = 'apps' }: { tab?: Tab }) {
   const [howOpen, setHowOpen] = useState(false);
   const [confirm, setConfirm] = useState<Confirm | null>(null);
   const [err, setErr] = useState('');
+  const focusReturn=useRef<HTMLElement|null>(null);
+  const openConfirm=(value:Confirm)=>{focusReturn.current=document.activeElement as HTMLElement;setConfirm(value)};
 
   useEffect(() => {
     if (!confirm) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setConfirm(null);
+    const onKey=(e:KeyboardEvent)=>{if(e.key==='Escape'){setConfirm(null);return}if(e.key!=='Tab')return;const controls=document.querySelectorAll<HTMLElement>('[role="alertdialog"] button:not(:disabled)');if(!controls.length)return;const first=controls[0],last=controls[controls.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}};
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {window.removeEventListener('keydown', onKey);if(focusReturn.current?.isConnected)focusReturn.current.focus();else document.querySelector<HTMLElement>('[aria-label="Account options"]')?.focus()};
   }, [confirm]);
 
-  const t = team('vertex', st);
-  const vx = st.vx;
-  const write = (patch: Partial<VertexState>) => store.set((s) => ({ vx: { ...s.vx, ...patch } }));
+  const t = team(tid, st);
+  const vx = st.managed?.[tid]||st.vx;
+  const [saving,setSaving]=useState(false);
   const pending = vx.apps.filter((a) => a.status === 'pending');
   const curRole = (t.roleList.find((r) => r.id === roleId) || t.roleList[0])?.id;
-  const cov = coverage('vertex', st);
+  const cov = coverage(tid, st);
   const missing = cov.filter((c) => c.missing).map((c) => c.name);
   const recs = curRole
-    ? recsForTeam('vertex', curRole, st)
+    ? recsForTeam(tid, curRole, st)
         .filter((x) => !vx.apps.some((a) => a.pid === x.id && a.status === 'pending'))
         .slice(0, 3)
         .map((x) => x.id)
@@ -52,55 +56,33 @@ export function Manage({ tab: initialTab = 'apps' }: { tab?: Tab }) {
     if (!confirm) return null;
     if (confirm.kind === 'close') {
       return t.closed
-        ? { title: 'Reopen recruitment?', body: 'Vertex will show as recruiting again on the competition page.', btn: 'Reopen', btnBg: 'var(--color-brand)' }
-        : { title: 'Close recruitment?', body: "Vertex will stop appearing as recruiting and won't receive new applications. Pending applications stay reviewable.", btn: 'Close recruitment', btnBg: '#DC2626' };
+        ? { title: 'Reopen recruitment?', body: t.name+' will show as recruiting again on the competition page.', btn: 'Reopen', btnBg: 'var(--color-brand)' }
+        : { title: 'Close recruitment?', body: t.name+' will stop receiving applications. Existing pending applications remain visible; reopen before accepting.', btn: 'Close recruitment', btnBg: '#DC2626' };
     }
     const a = vx.apps.find((x) => x.id === confirm.id)!;
     const p = PERSONS[a.pid];
-    const role = TEAM_BY_ID.vertex.roles.find((x) => x.id === a.role)!;
+    const role = TEAM_BY_ID[tid].roles.find((x) => x.id === a.role)!;
     const n = t.filled + 1;
     return confirm.kind === 'accept'
       ? {
           title: `Accept ${p.first} as ${role.name}?`,
-          body: `${p.first} joins Vertex and gets the Discord invite. The ${role.name} role closes, and ${p.first}'s other applications for this competition are withdrawn.`,
+          body: `${p.first} joins ${t.name}. Consented contacts become visible to team members. Capacity and role availability are checked again before acceptance.`,
           segs: Array.from({ length: t.target }, (_, i) => (i < n ? 'var(--color-brand)' : '#E2E8F0')),
           after: `After accepting: ${n} of ${t.target} members`,
           btn: 'Accept ' + p.first,
           btnBg: 'var(--color-brand)',
         }
-      : { title: `Decline ${p.first}?`, body: `${p.first} gets a short, neutral notification. You can still invite them later.`, btn: 'Decline', btnBg: '#DC2626' };
+      : { title: `Decline ${p.first}?`, body: `${p.first} gets a short, neutral notification. Their application becomes final.`, btn: 'Decline', btnBg: '#DC2626' };
   })();
 
-  const onConfirm = () => {
-    if (!confirm) return;
+  const update=async(body:unknown)=>{setSaving(true);setErr('');try{await store.request?.('/teams/'+tid,'PATCH',body)}catch(e){setErr((e as Error).message)}finally{setSaving(false)}};
+  const onConfirm=async()=>{if(!confirm||saving)return;setSaving(true);setErr('');try{
+    if(confirm.kind==='close'){await store.request?.('/teams/'+tid,'PATCH',{recruiting:t.closed});nav('toast',t.closed?'Recruitment reopened':'Recruitment closed')}
+    else{await store.request?.('/applications/'+confirm.id+'/'+confirm.kind,'POST',{});nav('toast',confirm.kind==='accept'?'Applicant joined '+t.name:'Application declined')}
     setConfirm(null);
-    if (confirm.kind === 'close') {
-      write({ closed: !t.closed });
-      nav('toast', t.closed ? 'Recruitment reopened' : 'Recruitment closed');
-      return;
-    }
-    const a = vx.apps.find((x) => x.id === confirm.id)!;
-    const status: ApplicationStatus = confirm.kind === 'accept' ? 'accepted' : 'declined';
-    const apps = vx.apps.map((x) => (x.id === a.id ? { ...x, status } : x));
-    if (confirm.kind === 'accept') {
-      write({ added: vx.added.concat(a.pid), filled: vx.filled.concat(a.role), apps });
-      nav('toast', PERSONS[a.pid].first + ' joined Vertex');
-    } else {
-      write({ apps });
-      nav('toast', 'Application declined');
-    }
-  };
-
-  const increase = () => {
-    if (t.target >= t.c.max) return setErr(`Team size cannot exceed the competition maximum (${t.c.max}).`);
-    setErr('');
-    write({ target: t.target + 1 });
-  };
-  const decrease = () => {
-    if (t.target - 1 < Math.max(t.filled, t.c.min)) return setErr(`Target can't go below your current ${t.filled} members.`);
-    setErr('');
-    write({ target: t.target - 1 });
-  };
+  }catch(e){setErr((e as Error).message)}finally{setSaving(false)}};
+  const increase=()=>{void update({capacity:t.target+1})};
+  const decrease=()=>{void update({capacity:t.target-1})};
 
   const showApps = !m || tab === 'apps';
   const showRecs = !m || tab === 'recs';
@@ -140,7 +122,7 @@ export function Manage({ tab: initialTab = 'apps' }: { tab?: Tab }) {
             </div>
           </div>
           <div className="flex gap-2">
-            <button type="button" onClick={() => nav('team', 'vertex')} className="h-11 cursor-pointer rounded-[12px] border border-slate-200 bg-white px-4 text-[14px] font-bold text-ink">
+            <button type="button" onClick={() => nav('team', tid)} className="h-11 cursor-pointer rounded-[12px] border border-slate-200 bg-white px-4 text-[14px] font-bold text-ink">
               View public page
             </button>
           </div>
@@ -178,7 +160,7 @@ export function Manage({ tab: initialTab = 'apps' }: { tab?: Tab }) {
                 <div className="mt-3 flex flex-col gap-3">
                   {pending.map((a) => {
                     const p = PERSONS[a.pid];
-                    const mm = match(a.pid, 'vertex', a.role, st);
+                    const mm = match(a.pid, tid, a.role, st);
                     return (
                       <article key={a.id} className="animate-[cm-fade_.25s] rounded-[16px] border border-card p-5">
                         <div className="flex items-start gap-3.5">
@@ -203,10 +185,10 @@ export function Manage({ tab: initialTab = 'apps' }: { tab?: Tab }) {
                                 View profile
                               </button>
                               <div className="flex-1" />
-                              <button type="button" onClick={() => setConfirm({ kind: 'decline', id: a.id })} className="h-[38px] cursor-pointer rounded-[10px] border border-slate-200 bg-white px-3.5 text-[13px] font-bold text-danger">
+                              <button type="button" onClick={() => openConfirm({ kind: 'decline', id: a.id })} className="h-[38px] cursor-pointer rounded-[10px] border border-slate-200 bg-white px-3.5 text-[13px] font-bold text-danger">
                                 Decline
                               </button>
-                              <button type="button" onClick={() => setConfirm({ kind: 'accept', id: a.id })} className="h-[38px] cursor-pointer rounded-[10px] border-0 bg-brand px-4 text-[13px] font-bold text-white">
+                              <button type="button" onClick={() => openConfirm({ kind: 'accept', id: a.id })} className="h-[38px] cursor-pointer rounded-[10px] border-0 bg-brand px-4 text-[13px] font-bold text-white">
                                 Accept
                               </button>
                             </div>
@@ -274,7 +256,7 @@ export function Manage({ tab: initialTab = 'apps' }: { tab?: Tab }) {
                       <button type="button" onClick={() => setHowOpen((v) => !v)} aria-expanded={howOpen} className="cursor-pointer border-0 bg-transparent p-0 text-[13px] font-semibold text-slate-600">
                         {howOpen ? 'Hide how matches are ranked' : 'How are matches ranked?'}
                       </button>
-                      <AppLink to="people" args={[{ rank: 'vertex' }]} className="cursor-pointer text-[13px] font-bold">
+                      <AppLink to="people" args={[{ rank: tid }]} className="cursor-pointer text-[13px] font-bold">
                         Browse everyone in Discover people →
                       </AppLink>
                     </div>
@@ -358,12 +340,12 @@ export function Manage({ tab: initialTab = 'apps' }: { tab?: Tab }) {
                   </div>
                 )}
                 <div className="mt-3.5 flex flex-col gap-2">
-                  <button type="button" onClick={() => nav('toast', 'Edit team uses the same guided flow as Create team')} className="h-10 cursor-pointer rounded-[10px] border border-slate-200 bg-white text-[14px] font-semibold text-ink">
+                  <button type="button" onClick={() => navigate('/teams/'+tid+'/edit')} className="h-10 cursor-pointer rounded-[10px] border border-slate-200 bg-white text-[14px] font-semibold text-ink">
                     Edit team info
                   </button>
                   <button
                     type="button"
-                    onClick={() => setConfirm({ kind: 'close' })}
+                    onClick={() => openConfirm({ kind: 'close' })}
                     className={cx('h-10 cursor-pointer rounded-[10px] border border-slate-200 bg-white text-[14px] font-semibold', t.closed ? 'text-brand-hover' : 'text-danger')}
                   >
                     {t.closed ? 'Reopen recruitment' : 'Close recruitment'}
@@ -387,6 +369,7 @@ export function Manage({ tab: initialTab = 'apps' }: { tab?: Tab }) {
               {dialog.title}
             </h2>
             <p className="mt-2 mb-0 text-[14px] leading-[1.55] text-slate-600">{dialog.body}</p>
+            {err&&<p role="alert" className="text-[13px] text-danger">{err}</p>}
             {'segs' in dialog && dialog.segs && (
               <div className="mt-3.5 flex items-center gap-3 rounded-[12px] bg-canvas px-3.5 py-3 text-[13px] text-slate-700">
                 <span className="flex gap-1">
@@ -401,7 +384,7 @@ export function Manage({ tab: initialTab = 'apps' }: { tab?: Tab }) {
               <button type="button" onClick={() => setConfirm(null)} className="h-[42px] cursor-pointer rounded-[10px] border-0 bg-slate-100 px-4 text-[14px] font-bold text-ink">
                 Cancel
               </button>
-              <button type="button" onClick={onConfirm} autoFocus className="h-[42px] cursor-pointer rounded-[10px] border-0 px-[18px] text-[14px] font-bold text-white" style={{ background: dialog.btnBg }}>
+              <button type="button" onClick={onConfirm} disabled={saving} autoFocus className="h-[42px] cursor-pointer rounded-[10px] border-0 px-[18px] text-[14px] font-bold text-white" style={{ background: dialog.btnBg }}>
                 {dialog.btn}
               </button>
             </div>

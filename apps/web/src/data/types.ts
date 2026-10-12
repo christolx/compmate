@@ -12,6 +12,7 @@ export interface ProfileLink { label: string; value: string }
 export interface PastTeam { name: string; comp: string; role: string; result: string }
 
 export interface PersonSeed {
+  color_index?: number;
   name: string;
   program: string;
   fac: FacultyCode;
@@ -85,6 +86,7 @@ export interface Competition {
 }
 
 export interface Role {
+  filled?: number;
   id: string;
   name: string;
   qty: number;
@@ -93,6 +95,8 @@ export interface Role {
 }
 
 export interface Team {
+  recruiting?: boolean;
+  canApply?: boolean;
   id: string;
   name: string;
   comp: string;
@@ -111,7 +115,7 @@ export interface Notification {
   id: string;
   text: string;
   time: string;
-  go: { to: 'manage' | 'profile' | 'comp'; id: string };
+  go: { to: 'manage' | 'profile' | 'comp' | 'team'; id: string };
 }
 
 export interface Avatar { id: string; name: string; initials: string; bg: string; fg: string }

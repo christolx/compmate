@@ -22,10 +22,6 @@ const CATEGORY_HUES = [
   ['#EDF1FC', '#1D4ED8'],
   ['#F0EDFA', '#5B45C9'],
 ];
-const TEAMS_RECRUITING = ALL_COMPETITIONS.reduce((n, c) => n + c.teamsCount, 0);
-const CLOSING_SOON = ALL_COMPETITIONS.filter((c) => !c.upcoming && c.left >= 0 && c.left <= 14)
-  .sort((a, b) => a.left - b.left)
-  .slice(0, 4);
 const STEPS = [
   { n: '1', t: 'Discover', d: 'Every open competition in one place, with deadlines and team rules up front.' },
   { n: '2', t: 'Find a team', d: 'See who is already in each team and apply for the role that fits you.' },
@@ -35,6 +31,11 @@ const STEPS = [
 /** Logged-out landing: real competitions and recruiting teams in the first viewport. */
 export function Discover({ authed: authedProp }: { authed?: boolean }) {
   const st = useAppState();
+  const TEAMS_RECRUITING = ALL_COMPETITIONS.filter(c=>c.left>=0).reduce((n, c) => n + c.teamsCount, 0);
+  const CLOSING_SOON = ALL_COMPETITIONS.filter((c) => !c.upcoming && c.left >= 0 && c.left <= 14)
+    .sort((a, b) => a.left - b.left)
+    .slice(0, 4);
+
   const authed = authedProp ?? st.authed;
   const m = useIsMobile();
   const nav = useNav();
@@ -165,7 +166,7 @@ export function Discover({ authed: authedProp }: { authed?: boolean }) {
           <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2">
             {GROUPS.map((g, i) => {
               const [bg, fg] = CATEGORY_HUES[i];
-              const n = ALL_COMPETITIONS.filter((c) => c.group === g).length;
+              const n = ALL_COMPETITIONS.filter((c) => c.group === g && c.left>=0).length;
               return (
                 <button
                   key={g}

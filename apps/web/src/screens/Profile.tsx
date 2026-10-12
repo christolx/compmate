@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router';
 import { PERSONS, SKILL_CATEGORY, avatar, team } from '../data/model';
 import { match } from '../data/matching';
 import { TEAMS } from '../data/seed';
@@ -19,14 +20,17 @@ const CONNECT_BUTTON = {
 /** A student profile: trust signals, experience, teams, and fit for Vertex. */
 export function Profile({ pid }: { pid: string }) {
   const st = useAppState();
+  const navigate=useNavigate();
   const m = useIsMobile();
   const nav = useNav();
   const p = PERSONS[pid];
   const me = pid === 'me';
+  const invited=!!st.invites[pid];
   const conn = me ? null : st.conns[pid] || 'none';
-  const vx = team('vertex', st);
-  const fit = !me && !vx.members.includes(pid) && vx.roleList.length ? vx.roleList.map((r) => match(pid, 'vertex', r.id, st)).sort((a, b) => b.score - a.score)[0] : null;
-  const invited = !!st.invites[pid];
+  const ownedId=Object.keys(st.managed||{})[0]||(st.loaded===undefined?'vertex':undefined);
+  const vx = ownedId?team(ownedId,st):null;
+  const fit = !me && vx && !vx.members.includes(pid) && vx.roleList.length ? vx.roleList.map((r) => match(pid, ownedId!, r.id, st)).sort((a, b) => b.score - a.score)[0] : null;
+
 
   const groups: Record<string, string[]> = {};
   p.skills.forEach((s) => (groups[SKILL_CATEGORY[s] || 'Other'] ??= []).push(s));
@@ -98,7 +102,7 @@ export function Profile({ pid }: { pid: string }) {
           </div>
           <div className={cx('flex flex-wrap gap-2', m ? 'justify-start' : 'justify-end')}>
             {me ? (
-              <button type="button" onClick={() => nav('toast', 'Profile editing comes in the next round')} className="h-11 cursor-pointer rounded-[12px] border border-slate-200 bg-white px-[18px] text-[14px] font-bold text-ink">
+              <button type="button" onClick={() => navigate('/u/me/edit')} className="h-11 cursor-pointer rounded-[12px] border border-slate-200 bg-white px-[18px] text-[14px] font-bold text-ink">
                 Edit profile
               </button>
             ) : (
@@ -124,16 +128,8 @@ export function Profile({ pid }: { pid: string }) {
                     </button>
                   )
                 )}
-                {fit?.kind && (
-                  <button
-                    type="button"
-                    onClick={() => !invited && nav('invite', { pid, tid: 'vertex', rid: fit.role.id })}
-                    disabled={invited}
-                    className={cx('h-11 cursor-pointer rounded-[12px] border-0 px-[18px] text-[14px] font-bold', invited ? 'bg-success-tint text-success' : 'bg-brand text-white')}
-                  >
-                    {invited ? 'Invited to Vertex ✓' : 'Invite to Vertex'}
-                  </button>
-                )}
+
+                {fit?.kind && <button type="button" onClick={()=>nav('invite',{pid,tid:ownedId!,rid:fit.role.id})} disabled={invited} className={cx('h-11 cursor-pointer rounded-[12px] border-0 px-[18px] text-[14px] font-bold',invited?'bg-success-tint text-success':'bg-brand text-white')}>{invited?'Invited to '+vx?.name+' ✓':'Invite to '+vx?.name}</button>}
               </>
             )}
           </div>
@@ -156,7 +152,7 @@ export function Profile({ pid }: { pid: string }) {
               <span className="inline-flex h-[26px] items-center rounded-full px-2.5 text-[12px] font-extrabold" style={{ background: fit.bg, color: fit.fg }}>
                 {fit.label}
               </span>
-              <div className="mt-2 text-[15px] font-bold">for Vertex · {fit.role.name}</div>
+              <div className="mt-2 text-[15px] font-bold">for {vx?.name} · {fit.role.name}</div>
             </div>
             <div className={cx('grid gap-x-6 gap-y-2', m ? 'grid-cols-[minmax(0,1fr)]' : 'grid-cols-2')}>
               {fit.reasons.map((w) => (

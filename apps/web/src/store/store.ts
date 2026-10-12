@@ -5,6 +5,8 @@ import { loadPersistedState, serializeState } from './persisted';
 export interface Store {
   /** False for the read-only sample state the design board renders. */
   readonly live: boolean;
+  refresh?(): Promise<void>;
+  request?<T>(path:string, method?:string, body?:unknown): Promise<T>;
   get(): AppState;
   set(patch: Partial<AppState> | ((s: AppState) => Partial<AppState>)): void;
   reset(): void;

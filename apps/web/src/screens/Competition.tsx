@@ -484,7 +484,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
                 </div>
                 {shown.length === 0 && <div className="mt-4 p-7 text-center text-[14px] text-slate-500">No teams are looking for this role right now.</div>}
                 <div className="mt-5 text-center text-[13px] text-slate-500">
-                  Showing {shown.length} of {teamsTotal} teams in this prototype
+                  Showing {shown.length} of {teamsTotal} teams
                 </div>
                 <div className="mt-9 flex flex-wrap items-center justify-between gap-5 border-t border-slate-200 pt-7">
                   <div>

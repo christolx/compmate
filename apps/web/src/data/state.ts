@@ -1,6 +1,7 @@
 import type { ApplicationStatus, ConnState } from './types';
 
 export interface Application {
+  id?: string;
   role: string;
   status: ApplicationStatus;
   when: string;
@@ -22,6 +23,12 @@ export interface VertexState {
 }
 
 export interface AppState {
+  loaded?: boolean;
+  error?: string;
+  account?: import("../store/apiStore").Account | null;
+  actorId?: string;
+  incomingInvites?: {id:string;team_id:string;role_id:string}[];
+  managed?: Record<string, VertexState>;
   authed: boolean;
   saved: string[];
   /** The sample user's applications, keyed by team id. */

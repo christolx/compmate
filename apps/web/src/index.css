@@ -1,3 +1,10 @@
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('/fonts/plus-jakarta-sans-latin.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+}
 /* Tailwind without its preflight reset: the design was built on browser
    defaults (content-box sizing, native buttons and selects), so keeping them
    is what makes the screens match it pixel for pixel. */

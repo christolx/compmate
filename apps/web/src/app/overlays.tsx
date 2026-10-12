@@ -4,7 +4,7 @@ import { NOTIFICATIONS, POPULAR_SEARCHES, TEAMS } from '../data/seed';
 import { ApplySheet } from '../components/ApplySheet';
 import { CheckIcon, Logo, SearchIcon } from '../components/icons';
 import { cx } from '../lib/cx';
-import { useAppState } from '../store/store';
+import { useAppState, useStore } from '../store/store';
 import { useNav } from './nav';
 import { useIsMobile } from './viewport';
 
@@ -15,7 +15,7 @@ interface OverlayProps {
 /** Moves keyboard focus into a dialog when it opens. */
 function useFocusOnOpen<T extends HTMLElement>() {
   const ref = useRef<T>(null);
-  useEffect(() => ref.current?.focus({ preventScroll: true }), []);
+  useEffect(() => {const root=ref.current;if(root&&!root.contains(document.activeElement))(root.querySelector<HTMLElement>('input,button,textarea,a[href]')||root).focus({preventScroll:true})}, []);
   return ref;
 }
 
@@ -154,12 +154,9 @@ export function SearchOverlay({ onClose }: OverlayProps) {
 }
 
 /** Demo sign-in: the sample account is prefilled, any action signs you in. */
-export function LoginOverlay({ reason, onClose, onLogin }: OverlayProps & { reason?: string; onLogin: () => void }) {
-  const m = useIsMobile();
-  const submit = (e?: FormEvent) => {
-    e?.preventDefault();
-    onLogin();
-  };
+export function LoginOverlay({ reason, signup=false, onClose, onLogin }: OverlayProps & { reason?: string; signup?: boolean; onLogin: () => void }) {
+  const m=useIsMobile();const store=useStore();const [isSignup,setSignup]=useState(signup);const [email,setEmail]=useState('');const [password,setPassword]=useState('');const [name,setName]=useState('');const [busy,setBusy]=useState(false);const [error,setError]=useState('');
+  const submit=async(e?:FormEvent)=>{e?.preventDefault();if(busy)return;setBusy(true);setError('');try{await store.request?.(isSignup?'/signup':'/login','POST',{email,password,...(isSignup?{name}:{})});onLogin()}catch(e){setError((e as Error).message)}finally{setBusy(false)}};
   const field = 'mt-1.5 box-border h-[46px] w-full rounded-[12px] border border-field px-3.5 text-[15px] font-medium text-ink';
   return (
     <div onClick={onClose} className={cx('fixed inset-0 z-40 flex animate-[cm-fade_.15s] justify-center bg-[rgba(15,23,42,.45)]', m ? 'items-end p-0' : 'items-center p-6')}>
@@ -173,28 +170,23 @@ export function LoginOverlay({ reason, onClose, onLogin }: OverlayProps & { reas
       >
         <Logo size={36} />
         <h2 id="login-title" className="mt-4 mb-0 text-[22px] font-extrabold tracking-[-0.02em] text-ink">
-          {reason ? 'Log in to ' + reason : 'Log in to CompMate'}
+          {isSignup?'Create your account':reason ? 'Log in to ' + reason : 'Log in to CompMate'}
         </h2>
         <p className="mt-1.5 mb-0 text-[14px] leading-[1.5] text-slate-500">Browse competitions without an account. Log in when you're ready to build a team.</p>
+        {isSignup && <><label htmlFor="lg-name" className="mt-5 block text-[13px] font-bold text-ink">Name</label><input id="lg-name" autoFocus value={name} onChange={e=>setName(e.target.value)} required minLength={2} maxLength={80} className={field}/></>}
+        {error && <p role="alert" className="text-[13px] text-danger">{error}</p>}
         <label htmlFor="lg-email" className="mt-5 block text-[13px] font-bold text-ink">
           Email
         </label>
-        <input id="lg-email" value="maya.putri@binus.ac.id" readOnly className={field} />
+        <input id="lg-email" autoFocus={!isSignup} type="email" value={email} onChange={e=>setEmail(e.target.value)} required maxLength={254} autoComplete="email" className={field} />
         <label htmlFor="lg-pw" className="mt-3.5 block text-[13px] font-bold text-ink">
           Password
         </label>
-        <input id="lg-pw" type="password" value="password123" readOnly className={field} />
-        <button type="submit" autoFocus className="mt-5 h-[50px] w-full cursor-pointer rounded-[12px] border-0 bg-brand text-[15px] font-bold text-white">
-          Continue
+        <input id="lg-pw" type="password" value={password} onChange={e=>setPassword(e.target.value)} required minLength={10} maxLength={72} autoComplete={isSignup?"new-password":"current-password"} className={field} />
+        <button type="submit" disabled={busy} className="mt-5 h-[50px] w-full cursor-pointer rounded-[12px] border-0 bg-brand text-[15px] font-bold text-white">
+          {busy?'Saving…':isSignup?'Create account':'Continue'}
         </button>
-        <div className="mt-3.5 flex justify-between text-[13px]">
-          <button type="button" onClick={() => submit()} className="cursor-pointer border-0 bg-transparent p-0 font-semibold text-brand hover:text-brand-hover">
-            Email me a code instead
-          </button>
-          <button type="button" onClick={() => submit()} className="cursor-pointer border-0 bg-transparent p-0 font-bold text-brand hover:text-brand-hover">
-            Create account
-          </button>
-        </div>
+        <div className="mt-3.5 flex justify-between text-[13px]"><button type="button" onClick={()=>setSignup(!isSignup)} className="cursor-pointer border-0 bg-transparent p-0 font-bold text-brand hover:text-brand-hover">{isSignup?'Already registered? Log in':'Create account'}</button><button type="button" onClick={onClose} className="cursor-pointer border-0 bg-transparent text-slate-500">Cancel</button></div>
       </form>
     </div>
   );
@@ -261,7 +253,6 @@ export function ApplyOverlay({ team, role, onClose }: OverlayProps & { team: str
       <div
         ref={ref}
         tabIndex={-1}
-        aria-modal="true"
         onClick={(e) => e.stopPropagation()}
         className={cx(
           'max-h-full animate-[cm-sheet_.24s_ease-out] shadow-[0_30px_80px_rgba(15,23,42,.3)] outline-none',

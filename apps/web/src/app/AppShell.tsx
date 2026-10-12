@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { PERSONS, TEAM_BY_ID, team } from '../data/model';
-import type { AppState } from '../data/state';
-import type { ConnState } from '../data/types';
+import { COMPETITION_BY_ID, TEAM_BY_ID, team } from '../data/model';
+
+
 import { useMediaQuery } from '../lib/useMediaQuery';
 import { useAppState, useStore } from '../store/store';
 import type { LoginRequest } from './AppRoutes';
@@ -14,20 +14,13 @@ import { ViewportContext } from './viewport';
 
 type Overlay =
   | { kind: 'search' }
-  | { kind: 'login'; reason?: string; then?: () => void }
+  | { kind: 'login'; reason?: string; then?: () => void; signup?: boolean }
   | { kind: 'notif'; top: number; right: number }
   | { kind: 'apply'; team: string; role: string };
 
 const PHONE_PREVIEW_KEY = 'compmate-v2-phone-preview';
 const GATED = ['/for-you', '/people', '/u/', '/teams/vertex/manage', '/saved'];
 
-function readFlag(key: string) {
-  try {
-    return localStorage.getItem(key) === '1';
-  } catch {
-    return false;
-  }
-}
 
 /**
  * The prototype shell: routes, sign-in gates, overlays (search, sign in,
@@ -40,7 +33,7 @@ export function AppShell() {
   const location = useLocation();
   // The design defines desktop (1440) and mobile (390); tablets in portrait get mobile.
   const narrow = useMediaQuery('(max-width: 1023px)');
-  const [phonePreview, setPhonePreview] = useState(() => readFlag(PHONE_PREVIEW_KEY));
+  const [phonePreview, setPhonePreview] = useState(false);
   const framed = phonePreview && !narrow;
   const mobile = narrow || framed;
   const [overlay, setOverlay] = useState<Overlay | null>(null);
@@ -76,8 +69,10 @@ export function AppShell() {
         if (store.get().authed) then();
         else setOverlay({ kind: 'login', reason, then });
       };
-      const setConn = (pid: string, value: ConnState) => store.set((s) => ({ conns: { ...s.conns, [pid]: value } }));
-      const first = (pid: string) => PERSONS[pid].first;
+      const command = (path: string, method: string, body: unknown, success: string) => {
+        void store.request?.(path,method,body).then(()=>flash(success)).catch(e=>flash(e.message));
+      };
+
       const notifPosition = () => {
         const root = framed ? stageRef.current : document.body;
         const header = root?.querySelector('[data-topnav]');
@@ -112,27 +107,22 @@ export function AppShell() {
         case 'profile':
           return gate('see student profiles', () => go(paths.profile(a[0] as string)));
         case 'manage':
-          return gate('manage your team', () => go(paths.manage()));
+          return gate('manage your team', () => {const tid=(a[0] as string)||Object.keys(store.get().managed||{})[0];go(tid?paths.manage(tid):paths.forYou())});
         case 'saved':
           return gate('see saved competitions', () => go(paths.saved()));
         case 'search':
           return setOverlay({ kind: 'search' });
         case 'login':
-          return setOverlay({ kind: 'login' });
+          return setOverlay({ kind: 'login', signup: !!a[0] });
         case 'logout':
-          setOverlay(null);
-          store.set({ authed: false });
-          navigate(paths.home(), { replace: true, state: null });
-          return flash('Logged out');
+          void store.request?.('/logout','POST',{}).then(()=>{setOverlay(null);navigate(paths.home(),{replace:true,state:null});flash('Logged out')}).catch(e=>flash(e.message));return;
         case 'notifications':
           return gate('see notifications', () => setOverlay({ kind: 'notif', ...notifPosition() }));
         case 'save': {
           const cid = a[0] as string;
           return gate('save competitions', () => {
-            const cur = store.get().saved;
-            const has = cur.includes(cid);
-            store.set({ saved: has ? cur.filter((x) => x !== cid) : cur.concat(cid) });
-            flash(has ? 'Removed from Saved' : "Saved. We'll remind you before registration closes.", () => store.set({ saved: cur }));
+            const has=store.get().saved.includes(cid);
+            command('/saved/'+cid,has?'DELETE':'PUT',{},has?'Removed from Saved':'Saved competition');
           });
         }
         case 'apply': {
@@ -144,54 +134,16 @@ export function AppShell() {
             setOverlay({ kind: 'apply', ...target });
           });
         }
-        case 'applied': {
-          const target = a[0] as { team: string; role: string };
-          return store.set((s) => ({ apps: { ...s.apps, [target.team]: { role: target.role, status: 'pending', when: 'Just now' } } }));
-        }
-        case 'closeApply':
-          return setOverlay(null);
-        case 'acceptApex':
-          store.set((s) => {
-            const apps: AppState['apps'] = { ...s.apps, apex: { ...s.apps.apex, status: 'accepted' } };
-            for (const k of Object.keys(apps)) {
-              if (k !== 'apex' && TEAM_BY_ID[k].comp === 'nbcc' && apps[k].status === 'pending') apps[k] = { ...apps[k], status: 'withdrawn' };
-            }
-            return { apps };
-          });
-          return flash('Dimas accepted you. Apex is now 3 of 3 and your Orion application was withdrawn.');
-        case 'connect': {
-          const pid = a[0] as string;
-          setConn(pid, 'sent');
-          return flash('Connection request sent to ' + first(pid), () => setConn(pid, 'none'));
-        }
-        case 'withdraw':
-          setConn(a[0] as string, 'none');
-          return flash('Request withdrawn');
-        case 'acceptConn':
-          setConn(a[0] as string, 'connected');
-          return flash('You and ' + first(a[0] as string) + ' are now connected');
-        case 'ignoreConn':
-          setConn(a[0] as string, 'none');
-          return flash('Request ignored. ' + first(a[0] as string) + " won't be notified.");
-        case 'removeConn':
-          setConn(a[0] as string, 'none');
-          return flash('Connection removed');
-        case 'invite': {
-          const { pid, tid, rid } = a[0] as { pid: string; tid: string; rid: string };
-          const roleName = TEAM_BY_ID[tid].roles.find((r) => r.id === rid)!.name;
-          store.set((s) => ({ invites: { ...s.invites, [pid]: { tid, rid } } }));
-          return flash(`Invited ${first(pid)} to join Vertex as ${roleName}`, () =>
-            store.set((s) => {
-              const invites = { ...s.invites };
-              delete invites[pid];
-              return { invites };
-            }),
-          );
-        }
-        case 'create':
-          return gate('create a team', () => flash('The guided Create team flow is part of the next round.'));
+        case 'applied': return;
+        case 'closeApply': return setOverlay(null);
+        case 'acceptApex': return;
+        case 'connect': command('/connections/'+a[0],'POST',{},'Connection request sent');return;
+        case 'withdraw': case 'ignoreConn': case 'removeConn': command('/connections/'+a[0],'DELETE',{},'Connection updated');return;
+        case 'acceptConn': command('/connections/'+a[0]+'/accept','POST',{},'Connection accepted');return;
+        case 'invite': {const v=a[0] as {pid:string;tid:string;rid:string};command('/teams/'+v.tid+'/invitations','POST',{user_id:v.pid,role_id:v.rid},'Team invitation sent');return;}
+        case 'create': return gate('create a team',()=>go('/teams/new?competition='+a[0]));
         case 'official':
-          return flash("Opens the organizer's registration page in a new tab");
+          { const url=COMPETITION_BY_ID[a[0] as string]?.url;if(url)window.open(url.startsWith('https://')?url:'https://'+url,'_blank','noopener,noreferrer');else flash('No official registration link provided for this sample competition.');return; }
         case 'toast':
           return flash(a[0] as string);
       }
@@ -201,7 +153,7 @@ export function AppShell() {
 
   const login = () => {
     const then = overlay?.kind === 'login' ? overlay.then : undefined;
-    store.set({ authed: true });
+
     setOverlay(null);
     if (loginRequest) navigate(loginRequest.next, { replace: true });
     else if (then) setTimeout(then, 60);
@@ -228,6 +180,17 @@ export function AppShell() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [overlayOpen, close]);
+
+  useEffect(() => {
+    if (!overlayOpen) return;
+    const previous=document.activeElement as HTMLElement|null;
+    const root=document.querySelector('[data-page-content]') as HTMLElement|null;
+    if(root)root.inert=true;
+    const trap=(e:KeyboardEvent)=>{if(e.key!=='Tab')return;const dialog=document.querySelector('[role="dialog"]')||document.querySelector('[aria-modal="true"]');
+      const controls=dialog?.querySelectorAll<HTMLElement>('button:not(:disabled),input,textarea,select,a[href],[tabindex="0"]');if(!controls?.length)return;
+      const first=controls[0],last=controls[controls.length-1];if(e.shiftKey&&(document.activeElement===first||!dialog?.contains(document.activeElement))){e.preventDefault();last.focus()}else if(!e.shiftKey&&(document.activeElement===last||!dialog?.contains(document.activeElement))){e.preventDefault();first.focus()}};
+    document.addEventListener('keydown',trap);return()=>{if(root)root.inert=false;document.removeEventListener('keydown',trap);previous?.focus()};
+  },[overlayOpen]);
 
   // The page behind an open overlay should not scroll.
   useEffect(() => {
@@ -273,20 +236,20 @@ export function AppShell() {
   };
 
   const routes = (
-    <div key={location.pathname} className="relative min-h-full animate-[cm-route_.25s_ease-out]">
+    <div data-page-content key={location.pathname} className="relative min-h-full animate-[cm-route_.25s_ease-out]">
       <AppRoutes />
     </div>
   );
   const overlays = (
     <>
       {active?.kind === 'search' && <SearchOverlay onClose={close} />}
-      {active?.kind === 'login' && <LoginOverlay reason={active.reason} onClose={close} onLogin={login} />}
+      {active?.kind === 'login' && <LoginOverlay reason={active.reason} signup={active.signup} onClose={close} onLogin={login} />}
       {active?.kind === 'notif' && (
         <NotificationsPanel
           onClose={close}
           position={active}
-          onRead={(id) => store.set((s) => ({ read: s.read.includes(id) ? s.read : s.read.concat(id) }))}
-          onReadAll={() => store.set({ read: ['n1', 'n2', 'n3', 'n4', 'n5'] })}
+          onRead={(id) => {void store.request?.('/notifications/'+id+'/read','POST',{}).catch(e=>flash(e.message))}}
+          onReadAll={() => {void store.request?.('/notifications/read','POST',{}).catch(e=>flash(e.message))}}
         />
       )}
       {active?.kind === 'apply' && <ApplyOverlay team={active.team} role={active.role} onClose={close} />}
@@ -312,6 +275,7 @@ export function AppShell() {
   return (
     <ViewportContext.Provider value={mobile}>
       <NavContext.Provider value={navValue}>
+        {st.error && <div role="alert" className="sticky top-0 z-[70] bg-danger p-3 text-center text-[14px] text-white">{st.error} <button onClick={()=>{void store.refresh?.()}} className="cursor-pointer rounded border border-white bg-transparent px-3 py-1 text-white">Retry</button></div>}
         {framed ? (
           <div className="flex h-dvh flex-col bg-[#E5E9F0]">
             <div className="flex min-h-0 flex-1 items-center justify-center p-5">
@@ -333,7 +297,7 @@ export function AppShell() {
           </>
         )}
         {/* Hidden while a dialog or sheet is open so it never covers one. */}
-        {!overlayOpen && (
+        {!store.request && !overlayOpen && (
           <DemoDock
             path={location.pathname + location.search}
             authed={st.authed}
