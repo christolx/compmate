@@ -11,6 +11,7 @@
     "preview": "npm run preview --workspace @compmate/web",
     "typecheck": "npm run typecheck --workspace @compmate/web",
     "lint": "npm run lint --workspace @compmate/web",
-    "test": "npm run test --workspace @compmate/web"
+    "test": "npm run test --workspace @compmate/web",
+    "test:e2e": "node scripts/e2e.mjs"
   }
 }
