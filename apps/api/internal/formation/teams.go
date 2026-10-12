@@ -2,6 +2,7 @@ package formation
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/jackc/pgx/v5"
 	"net/http"
 	"net/url"
@@ -77,7 +78,7 @@ const teamProjection = `SELECT to_jsonb(t)||jsonb_build_object(
  'member_count',(SELECT count(*) FROM memberships WHERE team_id=t.id),
  'eligible',recruitment_eligible(t.id,$1) AND NOT EXISTS(SELECT 1 FROM applications WHERE team_id=t.id AND user_id=$1),
  'roles',(SELECT coalesce(jsonb_agg(to_jsonb(x)||jsonb_build_object('filled',(SELECT count(*) FROM memberships WHERE role_id=x.id)) ORDER BY x.name),'[]') FROM roles x WHERE team_id=t.id),
- 'members',(SELECT coalesce(jsonb_agg(jsonb_build_object('id',m.user_id,'name',p.name,'role',coalesce(x.name,'Leader')) ORDER BY m.joined_at),'[]') FROM memberships m JOIN profiles p ON p.user_id=m.user_id LEFT JOIN roles x ON x.id=m.role_id WHERE m.team_id=t.id)
+ 'members',(SELECT coalesce(jsonb_agg(jsonb_build_object('id',m.user_id,'name',p.name,'role',coalesce(x.name,'Leader')) ORDER BY (m.user_id=t.leader_id) DESC, coalesce(array_position(ARRAY(SELECT jsonb_array_elements_text(coalesce(t.presentation->'members','[]'))),m.user_id),9999),m.joined_at),'[]') FROM memberships m JOIN profiles p ON p.user_id=m.user_id LEFT JOIN roles x ON x.id=m.role_id WHERE m.team_id=t.id)
  ) AS item FROM teams t JOIN competitions c ON c.id=t.competition_id `
 
 func (s *Server) teams(w http.ResponseWriter, r *http.Request, a actor) (any, error) {
@@ -93,12 +94,13 @@ type roleInput struct {
 	Capacity int    `json:"capacity"`
 }
 type teamInput struct {
-	Competition string      `json:"competition_id"`
-	Name        string      `json:"name"`
-	About       string      `json:"about"`
-	Capacity    int         `json:"capacity"`
-	Share       bool        `json:"share_contact"`
-	Roles       []roleInput `json:"roles"`
+	Presentation json.RawMessage `json:"presentation,omitempty"`
+	Competition  string          `json:"competition_id"`
+	Name         string          `json:"name"`
+	About        string          `json:"about"`
+	Capacity     int             `json:"capacity"`
+	Share        bool            `json:"share_contact"`
+	Roles        []roleInput     `json:"roles"`
 }
 
 func (s *Server) createTeam(w http.ResponseWriter, r *http.Request, a actor) (any, error) {
@@ -145,12 +147,18 @@ func (s *Server) createTeam(w http.ResponseWriter, r *http.Request, a actor) (an
 	if v.Capacity < min || v.Capacity > max {
 		return nil, bad("Capacity outside competition limits")
 	}
+	if v.Presentation != nil {
+		var obj map[string]any
+		if json.Unmarshal(v.Presentation, &obj) != nil || obj == nil {
+			return nil, bad("Invalid team presentation")
+		}
+	}
 	tid := id()
-	if _, err = tx.Exec(ctx, `INSERT INTO teams(id,competition_id,leader_id,name,about,capacity) VALUES($1,$2,$3,$4,$5,$6)`, tid, v.Competition, a.ID, v.Name, v.About, v.Capacity); err != nil {
+	if _, err = tx.Exec(ctx, `INSERT INTO teams(id,competition_id,leader_id,name,about,capacity,presentation) VALUES($1,$2,$3,$4,$5,$6,coalesce($7::jsonb,'{}'))`, tid, v.Competition, a.ID, v.Name, v.About, v.Capacity, v.Presentation); err != nil {
 		return nil, err
 	}
-	for _, x := range v.Roles {
-		if _, err = tx.Exec(ctx, `INSERT INTO roles(id,team_id,name,skills,capacity) VALUES($1,$2,$3,$4,$5)`, id(), tid, x.Name, x.Skills, x.Capacity); err != nil {
+	for order, x := range v.Roles {
+		if _, err = tx.Exec(ctx, `INSERT INTO roles(id,team_id,name,skills,capacity,presentation) VALUES($1,$2,$3,$4,$5,jsonb_build_object('order',$6::int))`, id(), tid, x.Name, x.Skills, x.Capacity, order); err != nil {
 			return nil, err
 		}
 	}

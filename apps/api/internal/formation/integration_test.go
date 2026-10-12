@@ -244,8 +244,10 @@ func TestConcurrentLastSeatAndRoleLimits(t *testing.T) {
 	h.req(h.admin, "POST", "/teams/"+tid+"/applications", map[string]any{"role_id": role, "message": "Full team must reject me"}, 409)
 	tid2 := h.team(leader, "Role limit", 3, []roleInput{{Name: "Designer", Capacity: 1}, {Name: "Developer", Capacity: 1}})
 	role2 := h.role(leader, tid2, 0)
-	c := h.apply(one, tid2, role2, false)
-	d := h.apply(two, tid2, role2, true)
+	roleOne, _ := h.signup("roleone")
+	roleTwo, _ := h.signup("roletwo")
+	c := h.apply(roleOne, tid2, role2, false)
+	d := h.apply(roleTwo, tid2, role2, true)
 	h.decide(leader, c, "accept", 200)
 	h.decide(leader, d, "accept", 409)
 	if h.count(`SELECT count(*) FROM memberships WHERE team_id=$1`, tid2) != 2 {
@@ -444,4 +446,58 @@ func TestSecureCookieOnHTTPS(t *testing.T) {
 	if me.StatusCode != 200 {
 		t.Fatal("HTTPS session did not persist")
 	}
+}
+
+func TestDefaultUISeedAndPreferences(t *testing.T) {
+	h := setup(t)
+	ctx := context.Background()
+	if err := Seed(ctx, h.db); err != nil {
+		t.Fatal(err)
+	}
+	if h.count(`SELECT count(*) FROM users WHERE seeded`) != 19 || h.count(`SELECT count(*) FROM teams WHERE id='vertex'`) != 1 {
+		t.Fatal("old default data not seeded")
+	}
+	seededClient, _ := cookiejar.New(nil)
+	maya := &http.Client{Jar: seededClient}
+	h.req(maya, "POST", "/login", map[string]string{"email": "maya@compmate.local", "password": "compmate-demo-password"}, 200)
+	dashboard := h.req(maya, "GET", "/dashboard", nil, 200)
+	if len(dashboard["inbox"].([]any)) != 2 || len(dashboard["applications"].([]any)) != 1 {
+		t.Fatal("seeded applications not shared")
+	}
+	h.profile(maya, "Maya Edited", "BINUS", "PRIVATE-SEED-CONTACT", false)
+	if err := Seed(ctx, h.db); err != nil {
+		t.Fatal(err)
+	}
+	me := h.req(maya, "GET", "/me", nil, 200)
+	if me["name"] != "Maya Edited" || me["share_contact"] != false {
+		t.Fatal("seed overwrote account edits")
+	}
+	_, _, catalog := h.request(http.DefaultClient, "GET", "/catalog", nil)
+	if strings.Contains(catalog, "PRIVATE-SEED-CONTACT") || strings.Contains(catalog, "password_hash") {
+		t.Fatal("catalog leaked private data")
+	}
+	h.req(maya, "PUT", "/saved/ived", map[string]any{}, 200)
+	h.req(maya, "POST", "/connections/nadia/accept", map[string]any{}, 200)
+	prefs := h.req(maya, "GET", "/preferences", nil, 200)
+	if prefs["connections"].(map[string]any)["nadia"] != "connected" {
+		t.Fatal("connection not committed")
+	}
+	h.req(h.admin, "POST", "/connections/nadia/accept", map[string]any{}, 403)
+}
+func TestInvitationsAndSameCompetitionAcceptance(t *testing.T) {
+	h := setup(t)
+	leader, _ := h.signup("leader")
+	applicant, uid := h.signup("applicant")
+	other, _ := h.signup("other")
+	tid := h.team(leader, "Inviting team", 3, []roleInput{{Name: "Developer", Capacity: 2}})
+	rid := h.role(leader, tid, 0)
+	invite := h.req(leader, "POST", "/teams/"+tid+"/invitations", map[string]string{"user_id": uid, "role_id": rid}, 200)["id"].(string)
+	h.req(other, "POST", "/invitations/"+invite+"/accept", map[string]any{}, 403)
+	h.req(applicant, "POST", "/invitations/"+invite+"/accept", map[string]bool{"share_contact": false}, 200)
+	h.req(applicant, "POST", "/invitations/"+invite+"/accept", map[string]bool{"share_contact": false}, 200)
+	if h.count(`SELECT count(*) FROM memberships WHERE team_id=$1`, tid) != 2 || h.count(`SELECT count(*) FROM applications WHERE team_id=$1 AND user_id=$2 AND status='accepted'`, tid, uid) != 1 {
+		t.Fatal("invitation not atomic/shared")
+	}
+	second := h.team(leader, "Another team", 2, []roleInput{{Name: "Designer", Capacity: 1}})
+	h.req(applicant, "POST", "/teams/"+second+"/applications", map[string]any{"role_id": h.role(leader, second, 0), "message": "Already in another team here"}, 409)
 }

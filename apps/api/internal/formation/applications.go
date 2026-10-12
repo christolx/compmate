@@ -65,6 +65,15 @@ func (s *Server) decision(w http.ResponseWriter, r *http.Request, a actor) (any,
 	if err = tx.QueryRow(ctx, `SELECT team_id FROM applications WHERE id=$1`, aid).Scan(&tid); err != nil {
 		return nil, err
 	}
+	if action == "accept" {
+		var user string
+		if err = tx.QueryRow(ctx, `SELECT user_id FROM applications WHERE id=$1`, aid).Scan(&user); err != nil {
+			return nil, err
+		}
+		if err = tx.QueryRow(ctx, `SELECT id FROM users WHERE id=$1 FOR UPDATE`, user).Scan(&user); err != nil {
+			return nil, err
+		}
+	}
 	leader, _, err := lockTeam(ctx, tx, tid)
 	if err != nil {
 		return nil, err
@@ -102,6 +111,11 @@ func (s *Server) decision(w http.ResponseWriter, r *http.Request, a actor) (any,
 	recipient := user
 	if action == "withdraw" {
 		recipient = leader
+	}
+	if action == "accept" {
+		if _, err = tx.Exec(ctx, `UPDATE applications SET status='withdrawn',decided_at=now() WHERE user_id=$1 AND team_id<>$2 AND status='pending' AND team_id IN (SELECT other.id FROM teams other JOIN teams accepted ON accepted.competition_id=other.competition_id WHERE accepted.id=$2)`, user, tid); err != nil {
+			return nil, err
+		}
 	}
 	if err = notify(ctx, tx, recipient, tid, "Application "+target); err != nil {
 		return nil, err

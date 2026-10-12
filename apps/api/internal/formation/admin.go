@@ -87,6 +87,9 @@ func (s *Server) export(w http.ResponseWriter, r *http.Request, a actor) (any, e
  'memberships',(SELECT coalesce(jsonb_agg(to_jsonb(m)),'[]') FROM memberships m WHERE user_id=$1),
  'teams',(SELECT coalesce(jsonb_agg(to_jsonb(t)),'[]') FROM teams t WHERE leader_id=$1),
  'reports',(SELECT coalesce(jsonb_agg(to_jsonb(x)),'[]') FROM reports x WHERE reporter_id=$1),
+ 'saved',(SELECT coalesce(jsonb_agg(competition_id),'[]') FROM saved_competitions WHERE user_id=$1),
+ 'connections',(SELECT coalesce(jsonb_agg(to_jsonb(x)),'[]') FROM connections x WHERE sender_id=$1 OR recipient_id=$1),
+ 'invitations',(SELECT coalesce(jsonb_agg(to_jsonb(x)),'[]') FROM team_invitations x WHERE user_id=$1 OR team_id IN(SELECT id FROM teams WHERE leader_id=$1)),
  'notifications',(SELECT coalesce(jsonb_agg(to_jsonb(x)),'[]') FROM notifications x WHERE user_id=$1))`, a.ID)
 }
 func (s *Server) deleteAccount(w http.ResponseWriter, r *http.Request, a actor) (any, error) {

@@ -9,6 +9,7 @@ services:
     restart: unless-stopped
     environment:
       COOKIE_SECURE: "true"
+      SEED_DATA: "false"
       PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?Set PUBLIC_ORIGIN to frontend Vercel origin}
   proxy:
     image: caddy:2-alpine

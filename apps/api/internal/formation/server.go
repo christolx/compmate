@@ -58,6 +58,17 @@ func New(db *pgxpool.Pool, health http.Handler) http.Handler {
 	register("POST", "/login", false, s.login)
 	register("POST", "/logout", false, s.logout)
 	register("GET", "/me", true, s.me)
+	register("GET", "/catalog", false, s.catalog)
+	register("GET", "/preferences", true, s.preferences)
+	register("GET", "/invitations", true, s.invites)
+	register("POST", "/teams/{id}/invitations", true, s.invite)
+	register("POST", "/invitations/{id}/{action}", true, s.answerInvite)
+	register("PUT", "/saved/{id}", true, s.saveCompetition)
+	register("DELETE", "/saved/{id}", true, s.saveCompetition)
+	register("POST", "/connections/{id}", true, s.connection)
+	register("DELETE", "/connections/{id}", true, s.connection)
+	register("POST", "/connections/{id}/{action}", true, s.connection)
+	register("POST", "/notifications/{id}/read", true, s.readNotification)
 	register("PUT", "/profile", true, s.profile)
 	register("GET", "/account/export", true, s.export)
 	register("DELETE", "/account", true, s.deleteAccount)
@@ -67,7 +78,7 @@ func New(db *pgxpool.Pool, health http.Handler) http.Handler {
 	register("GET", "/teams", false, s.teams)
 	register("POST", "/teams", true, s.createTeam)
 	register("GET", "/teams/{id}", false, s.team)
-	register("PATCH", "/teams/{id}", true, s.recruit)
+	register("PATCH", "/teams/{id}", true, s.editTeam)
 	register("DELETE", "/teams/{id}", true, s.deleteTeam)
 	register("POST", "/teams/{id}/applications", true, s.apply)
 	register("GET", "/dashboard", true, s.dashboard)
@@ -130,7 +141,15 @@ func (s *Server) wrap(auth bool, fn endpoint) http.HandlerFunc {
 			origin := r.Header.Get("Origin")
 			if origin != "" {
 				u, err := url.Parse(origin)
-				if err != nil || (origin != s.origin && u.Host != r.Host) {
+				localAlias := false
+				if err == nil && !s.secure {
+					configured, _ := url.Parse(s.origin)
+					if configured != nil {
+						isLocal := func(host string) bool { return host == "localhost" || host == "127.0.0.1" || host == "::1" }
+						localAlias = isLocal(configured.Hostname()) && isLocal(u.Hostname()) && configured.Port() == u.Port() && configured.Scheme == u.Scheme
+					}
+				}
+				if err != nil || (origin != s.origin && u.Host != r.Host && !localAlias) {
 					s.reply(w, nil, forbidden)
 					return
 				}
@@ -302,13 +321,14 @@ func (s *Server) me(w http.ResponseWriter, r *http.Request, a actor) (any, error
 }
 
 type profileInput struct {
-	Name         string `json:"name"`
-	Campus       string `json:"campus"`
-	Skills       string `json:"skills"`
-	Availability string `json:"availability"`
-	About        string `json:"about"`
-	Contact      string `json:"contact"`
-	Share        bool   `json:"share_contact"`
+	Name         string          `json:"name"`
+	Campus       string          `json:"campus"`
+	Skills       string          `json:"skills"`
+	Availability string          `json:"availability"`
+	About        string          `json:"about"`
+	Contact      string          `json:"contact"`
+	Share        bool            `json:"share_contact"`
+	Presentation json.RawMessage `json:"presentation,omitempty"`
 }
 
 func (s *Server) profile(w http.ResponseWriter, r *http.Request, a actor) (any, error) {
@@ -319,7 +339,17 @@ func (s *Server) profile(w http.ResponseWriter, r *http.Request, a actor) (any, 
 	if len(strings.TrimSpace(v.Name)) < 2 || len(v.Name) > 80 || len(v.Campus) > 120 || len(v.Skills) > 500 || len(v.About) > 2000 || len(v.Contact) > 300 || len(v.Availability) > 200 {
 		return nil, bad("Profile fields exceed limits or name missing")
 	}
-	_, err := s.db.Exec(r.Context(), `UPDATE profiles SET name=$2,campus=$3,skills=$4,availability=$5,about=$6,contact=$7,share_contact=$8 WHERE user_id=$1`, a.ID, v.Name, v.Campus, v.Skills, v.Availability, v.About, v.Contact, v.Share)
+	if v.Presentation != nil {
+		var obj map[string]any
+		if json.Unmarshal(v.Presentation, &obj) != nil || obj == nil {
+			return nil, bad("Invalid profile presentation")
+		}
+		delete(obj, "contact")
+		delete(obj, "email")
+		delete(obj, "share_contact")
+		v.Presentation, _ = json.Marshal(obj)
+	}
+	_, err := s.db.Exec(r.Context(), `UPDATE profiles SET name=$2,campus=$3,skills=$4,availability=$5,about=$6,contact=$7,share_contact=$8,presentation=presentation||coalesce($9::jsonb,'{}') WHERE user_id=$1`, a.ID, v.Name, v.Campus, v.Skills, v.Availability, v.About, v.Contact, v.Share, v.Presentation)
 	if err != nil {
 		return nil, err
 	}

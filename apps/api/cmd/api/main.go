@@ -49,6 +49,11 @@ func run() error {
 	if err := formation.Migrate(ctx, db); err != nil {
 		return errors.New("database migration failed; inspect database/schema configuration")
 	}
+	if os.Getenv("SEED_DATA") != "false" && os.Getenv("COOKIE_SECURE") != "true" {
+		if err := formation.Seed(ctx, db); err != nil {
+			return errors.New("default seed import failed")
+		}
+	}
 	if *adminEmail != "" {
 		tag, err := db.Exec(ctx, `UPDATE users SET admin=true WHERE email=lower($1)`, *adminEmail)
 		if err != nil {
