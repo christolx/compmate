@@ -1,0 +1,55 @@
+name: MVP checks
+on:
+  push:
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-bookworm
+        env:
+          POSTGRES_DB: compmate_test
+          POSTGRES_USER: compmate
+          POSTGRES_PASSWORD: ci_disposable
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U compmate -d compmate_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://compmate:ci_disposable@127.0.0.1:55432/compmate_test?sslmode=disable
+      TEST_DATABASE_URL: postgres://compmate:ci_disposable@127.0.0.1:55432/compmate_test?sslmode=disable
+      PUBLIC_ORIGIN: http://127.0.0.1:5173
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: apps/api/go.mod
+          cache-dependency-path: apps/api/go.sum
+      - run: npm ci
+      - run: make check
+      - run: npm install -g agent-browser@0.27.0 && agent-browser install --with-deps
+      - name: Two-user desktop and mobile E2E
+        run: |
+          setsid apps/api/bin/api > /tmp/compmate-api.log 2>&1 &
+          setsid npm run dev --workspace @compmate/web -- --host 127.0.0.1 --port 5173 > /tmp/compmate-web.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:5173/api/ready; then break; fi
+            sleep 1
+          done
+          npm run test:e2e
+      - name: Backup restore smoke test
+        run: |
+          docker run --rm --network host -v "$PWD:/work" -w /work -e DATABASE_URL -e BACKUP_DIR=/work/backups postgres:18-bookworm bash -c 'apt-get update -qq && apt-get install -y -qq python3 >/dev/null && bash scripts/backup-db.sh'
+          docker run --rm --network host -e PGHOST=127.0.0.1 -e PGPORT=55432 -e PGUSER=compmate -e PGPASSWORD=ci_disposable -e PGDATABASE=compmate_test postgres:18-bookworm psql -v ON_ERROR_STOP=1 -c 'CREATE DATABASE compmate_restore'
+          docker run --rm --network host -v "$PWD:/work" -w /work -e RESTORE_DATABASE_URL='postgres://compmate:ci_disposable@127.0.0.1:55432/compmate_restore?sslmode=disable' postgres:18-bookworm bash -c 'apt-get update -qq && apt-get install -y -qq python3 >/dev/null && bash scripts/restore-db.sh backups/*.dump'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-evidence
+          path: e2e-results/
