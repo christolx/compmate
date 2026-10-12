@@ -1,127 +1,16 @@
 # CompMate
 
-**Competition Teammate.** Find competitions, discover teammates, build your team.
-Each competition has its own team board. Teams list open roles; recommendations
-explain why competitions and people fit.
+Find competitions, form teams, connect. React/TypeScript + Go + PostgreSQL.
+Product routes use real accounts and server records. Historical sample design
+board remains available only in Vite development at `/board`.
 
-CompMate is a monorepo with a React/TypeScript web prototype, a Go API foundation,
-and a local PostgreSQL stack. Product flows use sample data and browser storage.
-The API currently exposes health and readiness endpoints only.
+## Run locally
 
-## Quick start
-
-Requires Node.js and npm. Run commands from the repository root.
+Requires Node.js 24+, Go 1.26+, PostgreSQL 18 (or Docker Compose).
 
 ```sh
 npm ci
-npm run dev
-```
-
-Open the local URL printed by Vite. The web prototype runs independently of the
-API and database.
-
-Use the **Prototype** control at the bottom left to sign the sample user in or
-out, reset demo state, or preview a 390px phone frame on wider screens.
-
-## Prototype behavior
-
-- Fictional sample data lives in `apps/web/src/data/seed.ts`. The demo date is
-  fixed at **6 October 2026** to keep deadlines and countdowns stable.
-- Sign-in is simulated. Saved competitions, applications, connections, and the
-  Vertex roster persist in browser `localStorage` under `compmate-v2`.
-- Saved state is versioned and checked on load; entries that no longer match
-  the sample data are dropped. If a page still fails to render, a recovery
-  screen offers **Reset demo data**.
-- Screens use the mobile layout below 1024px.
-- Vertex is the team led by the sample user. Team management and role-based
-  people rankings use this team.
-
-## Routes
-
-| Route | Screen |
-| --- | --- |
-| `/` | Discover; signed-in users redirect to For you |
-| `/for-you` | For you: actions, then recommendations |
-| `/competitions` | Explore; `?q=` searches, `?cat=` filters by category |
-| `/competitions/:id` | Competition detail and Find your team board |
-| `/teams/:id` | Team detail |
-| `/teams/vertex/manage` | Manage Vertex |
-| `/people` | Discover people; `?rank=vertex` ranks for Vertex's open roles |
-| `/u/:id` | Profile; `/u/me` shows the sample user |
-| `/saved` | Saved competitions |
-| `/board` | Presentation design board; unlinked from the app |
-
-For you, team management, people, profiles, and saved competitions require
-simulated sign-in.
-
-## Repository structure
-
-```text
-apps/web/       React, TypeScript, Vite; web package and configs
-apps/api/       Go module; cmd/api, internal/config, internal/httpapi
-compose.yaml    Local PostgreSQL and API containers
-Makefile        Web and Go development/check commands
-docs/           Architecture and high-impact audit
-```
-
-npm workspaces manage web dependencies. Go manages API dependencies separately.
-Root npm scripts target `apps/web`.
-
-## Development commands
-
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | Start the Vite dev server |
-| `npm test` | Run web data and matching tests |
-| `npm run lint` | Lint web code |
-| `npm run typecheck` | Check TypeScript |
-| `npm run build` | Type-check and build the web app into `apps/web/dist/` |
-| `npm run preview` | Preview the built web app locally |
-| `make check` | Run web lint/tests/build and Go vet/race tests/build |
-
-`make check` requires Go 1.26+ and Make in addition to Node.js and npm. The Go
-build outputs `apps/api/bin/api`.
-
-## Local API and database
-
-Requires Docker Engine with Compose. Keep Docker running. Make provides
-convenience commands; native API development also requires Go 1.26+.
-
-### Container stack
-
-```sh
 cp .env.example .env
-make stack
-```
-
-In a separate terminal, start the web app:
-
-```sh
-npm run dev
-```
-
-Vite proxies `/api` requests to the Go API during development. Check endpoints:
-
-```sh
-curl http://127.0.0.1:8080/api/health
-curl http://127.0.0.1:8080/api/ready
-```
-
-| Endpoint | Result |
-| --- | --- |
-| `GET /api/health` | `200` while the API process runs |
-| `GET /api/ready` | `200` after a successful DB ping; `503` when DB is unavailable |
-
-`make stack` waits for database health and API container startup. Use
-`/api/ready` to confirm the API can reach PostgreSQL. Responses omit DB
-connection details. No domain schema or migrations exist yet; readiness checks
-connectivity only.
-
-### Native Go development
-
-Start PostgreSQL, load the local environment, then run the API:
-
-```sh
 make db
 set -a
 . ./.env
@@ -129,101 +18,191 @@ set +a
 make api
 ```
 
-Stop with Ctrl+C; restart after Go edits. Run either the native API or the API
-container on port 8080. When switching from the container, stop it first:
+For existing native PostgreSQL, skip `make db` and set `DATABASE_URL` to that
+DB before `make api`. Keep `PUBLIC_ORIGIN=http://127.0.0.1:5173` for this frontend.
+
+Current local verification also supports a persistent native PostgreSQL cluster
+at `.local/postgres` (ignored by Git). If using that cluster after a restart:
 
 ```sh
-docker compose stop api
+pg_ctl -D .local/postgres -l .local/postgres.log -o "-h 127.0.0.1 -k $PWD/.local -p 55432" start
+set -a
+. ./.env
+set +a
+make api
 ```
 
-### Configuration and cleanup
+Stop native DB with `pg_ctl -D .local/postgres stop` before switching to Docker
+on the same DB port. Both options use PostgreSQL and the same Go API/migrations.
 
-- Compose reads the root `.env`. Defaults are for local development.
-- PostgreSQL binds to `127.0.0.1:55432`; its container port is `5432`. The API
-  binds to `127.0.0.1:8080` by default.
-- Keep DB credentials, `API_DATABASE_URL` (container), and `DATABASE_URL`
-  (native API) in sync. Percent-encode credentials in connection URLs.
-- If changing the API port, update `API_PROXY_TARGET` and the relevant setting:
-  `API_PORT` for Compose, `HTTP_ADDR` for the native API. Compose sets its
-  internal HTTP address independently.
-- Frontend code needs no DB credentials. The Vite proxy applies only in dev.
+In another terminal:
 
 ```sh
-make down   # Stop containers; preserve the database volume
+npm run dev --workspace @compmate/web -- --host 127.0.0.1
 ```
 
-Changing DB credentials in `.env` does not change credentials in an initialized
-PostgreSQL volume. Update existing DB credentials explicitly, or use a separate
-Compose project/volume for fresh disposable data.
+Open `http://127.0.0.1:5173`. Vite proxies `/api` to Go on port 8080.
+`PUBLIC_ORIGIN` must match browser origin; `.env.example` uses this address.
+Migrations run transactionally at API startup, protected by a DB advisory lock.
+DB credentials stay server-side. No competition fixtures ship as real events.
 
-## Deployment
+Sign up first, then promote a trusted curator with supported operator CLI:
 
-### Frontend on Vercel
+```sh
+cd apps/api
+# With DATABASE_URL loaded:
+go run ./cmd/api -promote-admin curator@your-campus.edu
+```
 
-Import the repository with these settings:
+Refresh browser. Admin can add competitions with verified official HTTPS links,
+real deadlines, campus restrictions and team-size limits. Nobody gets admin
+permissions from claiming an email address alone.
 
-| Setting | Value |
+## Complete journey
+
+1. Two students sign up separately, fill profiles and private contacts.
+2. Leader creates team under a competition, sets capacity and open roles.
+   Role seats must equal team capacity minus leader's seat.
+3. Applicant selects role, sends message, optionally consents to contact sharing.
+4. Leader accepts/declines through dashboard inbox. Applicant can withdraw while
+   pending. One application per team; withdrawal/decline are final.
+5. Accepted user joins roster. Both dashboards derive from same DB records.
+6. Contacts appear only to team members when **both** profile sharing and
+   team-specific consent are enabled. Revoking profile sharing blocks future reads.
+7. Both members confirm “We connected” to record actual formation outcome.
+
+Recruitment can be closed/reopened. Closed/full/expired/unpublished/hidden teams
+or filled roles reject application/acceptance. Campus eligibility uses exact
+profile campus. Accepted memberships cannot withdraw; account deletion or team
+deletion removes membership. Account deletion requires password, blocked while
+leading teams. Leader can explicitly delete team after typing its name.
+
+Applications are atomic: competition lock → team lock → application lock →
+latest eligibility → membership + decision + alert → commit. Unique application
+and membership constraints plus DB seat trigger protect duplicates/capacity.
+Repeated same decision is idempotent. Other transitions reject with `409`.
+
+## Routes and API
+
+| Route | Screen |
 | --- | --- |
-| Framework Preset | Vite |
-| Root Directory | `apps/web` |
-| Build Command | `npm run build` |
-| Output Directory | `dist` |
-| Install Command | `cd ../.. && npm ci` |
-| Include source files outside the Root Directory | Enabled |
+| `/`, `/competitions` | Curated competition discovery/search |
+| `/competitions/:id` | Details, eligibility-first skill recommendations, teams |
+| `/signup`, `/login` | Real signup/login |
+| `/for-you` | Teams, applications, leader inbox, in-app alerts |
+| `/teams/new` | Create team with role quantities |
+| `/teams/:id`, `/teams/:id/manage` | Roster, application, recruitment, contacts/report |
+| `/u/me` | Edit profile, revoke consent, export/delete account |
+| `/admin` | Competition curation, reporting/moderation, pilot metrics |
+| `/privacy` | Data visibility and deletion policy |
 
-`apps/web/vercel.json` configures the build and SPA fallback so nested routes
-support direct links and refreshes. No frontend environment variables are
-required for the current prototype. The root `vercel.json` remains available
-for deployments using the repository root instead.
+See [API contract](docs/api-contract.md). Sessions: random opaque cookie,
+server stores hash, seven-day expiry, HttpOnly, SameSite=Lax; Secure in production.
+Passwords use bcrypt. JSON-only mutations + Origin checks prevent browser CSRF.
+Login/signup are limited to 20 attempts per remote IP per minute in each process.
+Behind Caddy, limit applies to proxy IP; increase/replace with trusted edge rate
+limiting before expanding pilot. Forwarded headers are not trusted automatically.
 
-### Backend and PostgreSQL on omen
+Alerts refresh every 30s, or immediately after action/manual refresh. Application
+messages visible only to applicant and leader. Public teams expose no contacts
+or account emails. Contacts already viewed can be retained by recipients.
 
-The server needs Docker Engine with Compose, permission to use Docker, rsync,
-OpenSSL, and curl. See [Docker's Debian installation guide](https://docs.docker.com/engine/install/debian/).
-The local machine needs SSH and rsync. From the repository root:
-
-```sh
-bash scripts/deploy-backend.sh       # defaults to SSH alias omen
-# bash scripts/deploy-backend.sh another-ssh-alias
-```
-
-The script checks prerequisites, copies backend sources and Compose files into
-`~/compmate`, creates a random DB password in a private server-side `.env` on
-first deploy, starts containers, and checks `/api/ready`. Later runs preserve
-credentials and the PostgreSQL volume. It refuses the development password.
-If deploying over an existing database, configure `.env` to match its actual
-credentials first; editing `.env` does not change an initialized DB password.
-
-`compose.production.yaml` adds automatic container restarts and requires explicit
-DB credentials. API and DB ports remain bound to `127.0.0.1`. Inspect the stack:
+## Verify
 
 ```sh
-ssh omen
-cd ~/compmate
-docker compose -f compose.yaml -f compose.production.yaml ps
-docker compose -f compose.yaml -f compose.production.yaml logs --tail=100 api
-curl -f http://127.0.0.1:8080/api/ready
+make check                   # Web lint/tests/build; Go vet/race tests/build
+# Real PostgreSQL integration (isolated schemas, cleaned automatically):
+TEST_DATABASE_URL="$DATABASE_URL" make check
+agent-browser install        # Install browser after installing agent-browser 0.27.0
+# Keep API/web running; use disposable DB:
+npm run test:e2e
 ```
 
-Do not run `docker compose down -v` unless intentionally deleting the database.
-Back up PostgreSQL before storing real application data.
+E2E requires `agent-browser` on PATH (`npm install -g agent-browser@0.27.0`).
+It creates disposable curator/student accounts and competitions through UI,
+promotes curator through operator CLI using `DATABASE_URL`, exercises desktop
+and 390px mobile journeys, revocation, network failure, logout/login, keyboard
+focus and layout. Outputs screenshots/snapshots to `e2e-results/`.
+For staging, provide `E2E_BASE_URL`, `E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD` for a
+preconfigured test admin; no automatic remote privilege bootstrap. Tests create
+visible fixtures; run only on designated test deployments.
 
-### Future API integration
+CI runs `make check` with PostgreSQL, E2E, backup restoration; uploads browser
+artifacts. Go integration tests skip explicitly if `TEST_DATABASE_URL` absent.
 
-The prototype currently uses sample data and browser storage; the API only
-exposes health and readiness endpoints. To integrate it later, point an API
-domain at the server and configure an HTTPS reverse proxy to `127.0.0.1:8080`.
-Add an API rewrite **before** the SPA fallback in the active `vercel.json`:
+## Production
+
+Intended deployment: **backend only on the production server; frontend deployed
+separately via Vercel**. Production Compose runs PostgreSQL, Go API and an API-only
+Caddy HTTPS proxy. No frontend source, npm dependencies or static build is copied
+or built by the backend deploy script. Non-API paths on the backend return 404.
+
+Point backend DNS at the server; allow ports 80/443. API/DB direct ports remain
+loopback-only. Configure server `~/compmate/.env` with:
+
+```dotenv
+APP_HOST=api.your-campus.example
+PUBLIC_ORIGIN=https://compmate.vercel.app
+```
+
+`APP_HOST` is the backend hostname. `PUBLIC_ORIGIN` must exactly match the frontend
+browser origin (scheme + hostname, no path or trailing slash), including when
+using a custom Vercel domain. Production sets Secure cookies.
+
+```sh
+bash scripts/deploy-backend.sh omen
+```
+
+First run initializes private DB credentials, then stops until operator sets
+`APP_HOST` and `PUBLIC_ORIGIN`. Later runs preserve credentials and DB volume.
+Existing DB deployments must use credentials matching their initialized DB.
+The script removes obsolete Compose containers, including the former frontend
+`web` service, without deleting DB volumes. It verifies certificate, HTTPS/HTTP
+redirect, API JSON routing, readiness, security headers and frontend exclusion:
+
+```sh
+bash scripts/verify-deployment.sh your-backend-hostname
+```
+
+Deploy the frontend separately on Vercel. With repository root selected, root
+`vercel.json` builds via `npm run build` and outputs `apps/web/dist`. With
+`apps/web` selected, its config outputs `dist`. In whichever config Vercel uses,
+add this rewrite **before** the existing SPA fallback, replacing the hostname
+with the actual backend HTTPS domain:
 
 ```json
-{ "source": "/api/:path*", "destination": "https://YOUR_API_DOMAIN/api/:path*" }
+{ "source": "/api/:path*", "destination": "https://api.your-campus.example/api/:path*" }
 ```
 
-Replace the placeholder with the actual HTTPS domain. The current configuration
-serves the SPA only. Vite's `API_PROXY_TARGET` applies only during development.
+Frontend requests keep using `/api`; Vercel proxies them to the backend so auth
+cookies remain on the frontend origin. Vite's `API_PROXY_TARGET` only applies in
+development. Verify frontend deep links and login through the Vercel domain.
+Two-account desktop/mobile browser E2E on that frontend remains a separate release
+gate. Do not delete database volume. Back up before deployment/migrations.
+After curator signup through the frontend, promote on the backend server:
 
-## Further reading
+```sh
+docker compose -f compose.yaml -f compose.production.yaml exec api /api -promote-admin curator@your-campus.edu
+```
 
-- [Architecture](docs/architecture.md)
-- [High-impact audit](docs/high-impact-audit.md)
-- [MVP product requirements](CompMate_MVP_PRD.md)
+## Backups and monitoring
+
+```sh
+DATABASE_URL='…' BACKUP_DIR=/secure/backups bash scripts/backup-db.sh
+# New empty DB only; refuses any existing user tables:
+RESTORE_DATABASE_URL='…' bash scripts/restore-db.sh /secure/backups/compmate-….dump
+```
+
+Requires Python 3 and matching PostgreSQL client version. Backups use private files; restore
+runs transactionally. Store encrypted/off-host copies with defined retention,
+exclude backups from Git. [Pilot runbook](docs/pilot-runbook.md) covers restore drill.
+
+`/api/health` reports liveness; `/api/ready` pings DB. API emits structured JSON
+logs for server/client render failures with request IDs, route pattern and status.
+No request bodies, cookies, email or contacts are logged. Connect health probes
+and error logs to hosting alert system before live pilot; no external monitoring
+account is bundled.
+
+Live pilot, official competition validation, production DNS/HTTPS smoke test and
+real-student outcomes remain operator release gates. See runbook for proposed
+numeric targets, onboarding and outcome review.

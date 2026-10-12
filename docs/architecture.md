@@ -1,60 +1,34 @@
-# CompMate architecture
+# Architecture
 
-Short answer: polyglot monorepo, satu web app + satu Go API + PostgreSQL. Domain correctness jadi slice berikutnya.
+Product: React/TypeScript + Vite, Go HTTP API, PostgreSQL. Server owns identities,
+profiles, competitions, teams, roles, applications, memberships, notifications,
+reports and outcome events. Browser contains presentation state and an HttpOnly
+session cookie; browser localStorage is not authoritative product data.
 
-## Boundaries
+`apps/web/src/app/FormationApp.tsx` owns product routes/forms and data loading.
+`apps/api/internal/formation` owns versioned API, authorization, migrations and
+transactional commands. Existing prototype components/data remain historical
+reference and preserve old data/matching tests; `/board` is development-only.
 
-| Location | Owns |
-| --- | --- |
-| `apps/web` | React UI, routes, view models; prototype fixtures/localStorage sekarang |
-| `apps/api/cmd/api` | Process startup, HTTP timeouts, graceful shutdown, DB pool |
-| `apps/api/internal/config` | Env config validation |
-| `apps/api/internal/httpapi` | HTTP transport; health + DB readiness sekarang |
-| Root | npm workspace, Compose, shared dev commands, docs |
+Migrations embedded into API binary run under advisory transaction lock. Passwords
+bcrypt; session token random 192-bit, stored as SHA-256 hash with seven-day expiry.
+Admin promotion uses operator CLI against existing account; no public admin signup.
 
-Internal feature packages + SQL migrations ditambah saat domain feature masuk. Go module dependencies tetap terpisah dari npm; SQL dimiliki API. API contract versioning + generated web types ditambah bersama endpoint pertama.
+Application uniqueness `(team_id,user_id)`; membership uniqueness same keys.
+Composite role/team foreign keys prevent cross-team role selection. Team-row locks
+serialize acceptance, DB trigger prevents membership seat overflow. Competition
+locks order before team locks, coordinating eligibility edits. Shared SQL function
+supplies eligibility to display and apply/accept. Contacts have separate authorized
+projection; never included in public team/dashboard data.
 
-## Runtime
+Read/write errors surface without success notices. API structured ERROR logs and
+client render-failure reports contain request IDs and generic codes. Time-bounded
+DB requests and health/readiness endpoints support hosting probes.
 
-```text
-Current product data:
-web → fixtures/localStorage → selectors/matching → UI
-
-New infra path:
-browser /api/* → Vite dev proxy → Go API → pgx pool → PostgreSQL
-container API → db:5432
-native API → 127.0.0.1:55432
-
-Target domain path:
-web command → authenticated API → domain validation → DB transaction
-  → response → web state refresh → derived views
-```
-
-Go API tidak mengubah fixture state sekarang. `/api/health` cek process; `/api/ready` ping DB dengan timeout. Pool connection failure tidak membunuh HTTP process → readiness gagal sampai DB pulih.
-
-## Decisions
-
-- React/Vite tetap. npm workspace cukup untuk satu JS app; Go module berdiri sendiri.
-- Go standard library HTTP + pgx; satu deployable API, modular domain packages saat dibutuhkan.
-- PostgreSQL 18 local; named volume mount `/var/lib/postgresql` sesuai [official image docs](https://hub.docker.com/_/postgres).
-- Compose local infra; web/native API bisa run di host. Port DB/API bind localhost.
-- Root `.env` dibaca Compose. Native API baca process env; `.env.example` + shell export untuk dev. Jangan kirim DB URL ke browser.
-- Health endpoints belum menjamin schema/domain siap. Migration runner masuk bersama schema pertama.
-- Vercel root build tetap jalan; production `/api` gateway + API hosting belum dikonfigurasi.
-
-## Next slice
-
-1. Define generic profiles/teams/roles/memberships/applications records + API contract.
-2. SQL migrations + constraints + domain commands. Acceptance transaction enforce capacity, role seats, satu team/user/competition, competing pending requests withdrawal.
-3. Auth/session + authorization tests → register/profile/create/apply/accept end-to-end.
-4. Move fixture-backed screens bertahap ke API reads; preserve demo fixtures untuk board/test.
-
-Auth provider masih keputusan terbuka. Infra foundation tidak menetapkan password/session implementation.
-
-## Checks / limits
-
-`make check`: web ESLint/Vitest/TypeScript/Vite build + Go vet/race tests/build. Go tests cover config, DB-independent liveness, DB readiness success/failure.
-
-Verified: `make check` pass; 44 relocated web files byte-identical, web build hashes unchanged. HTTP smoke: deep links/assets 200; Vite → Go health 200, readiness 503 saat DB offline; SIGTERM exit 0. Compose config valid dengan defaults + `.env.example`.
-
-Docker daemon unavailable saat setup (`/var/run/docker.sock` absent). Container build, DB connectivity success, volume persistence, production routing belum diuji. API/domain data tetap belum terhubung.
+Development: Vite `/api` proxy. Production frontend deploys separately via Vercel,
+with SPA fallback and `/api/:path*` HTTPS rewrite to the backend. Backend-only
+Compose runs PostgreSQL, Go API and Caddy HTTPS → `/api/*` reverse proxy; all other
+paths return 404. PostgreSQL/API direct ports loopback. Backend `PUBLIC_ORIGIN`
+matches the Vercel frontend origin so proxied browser mutations pass origin checks.
+DB backup/restore scripts and PostgreSQL integration + two-user browser tests are
+release checks. See API contract and pilot runbook for operational limits.
