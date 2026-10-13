@@ -1,8 +1,9 @@
 # CompMate
 
 Find competitions, form teams, connect. React/TypeScript + Go + PostgreSQL.
-Product routes use real accounts and server records. Historical sample design
-board remains available only in Vite development at `/board`.
+Original frontend UI runs against real accounts and server records. Original
+sample content becomes default local DB seed; `/board` remains a development-only
+design reference.
 
 ## Run locally
 
@@ -44,7 +45,16 @@ npm run dev --workspace @compmate/web -- --host 127.0.0.1
 Open `http://127.0.0.1:5173`. Vite proxies `/api` to Go on port 8080.
 `PUBLIC_ORIGIN` must match browser origin; `.env.example` uses this address.
 Migrations run transactionally at API startup, protected by a DB advisory lock.
-DB credentials stay server-side. No competition fixtures ship as real events.
+DB credentials stay server-side. Default local seed imports original 19 profiles,
+10 competitions, 11 teams, applications, saved items and connections once.
+Seed dates remain original; expired events show deadline passed. These are sample
+records, not verified real events. Restart preserves edits/deletions.
+
+Seed login: `maya@compmate.local` / `compmate-demo-password`. Other seeded
+profiles use `<id>@compmate.local` with same password; see
+`apps/api/internal/formation/seed/catalog.json`. New signups get their own empty
+workspace. Set `SEED_DATA=false` before first startup for an empty DB; production
+Compose disables seeding. Maya has Vertex applicant inbox and Orion application.
 
 Sign up first, then promote a trusted curator with supported operator CLI:
 
@@ -75,12 +85,13 @@ Recruitment can be closed/reopened. Closed/full/expired/unpublished/hidden teams
 or filled roles reject application/acceptance. Campus eligibility uses exact
 profile campus. Accepted memberships cannot withdraw; account deletion or team
 deletion removes membership. Account deletion requires password, blocked while
-leading teams. Leader can explicitly delete team after typing its name.
+leading teams. Leader can explicitly delete team from Edit team after typing its name.
 
-Applications are atomic: competition lock → team lock → application lock →
+Applications are atomic: applicant lock → competition lock → team lock → application lock →
 latest eligibility → membership + decision + alert → commit. Unique application
 and membership constraints plus DB seat trigger protect duplicates/capacity.
-Repeated same decision is idempotent. Other transitions reject with `409`.
+One team membership per competition. Acceptance withdraws other pending applications
+for that competition. Repeated same decision is idempotent. Other transitions reject with `409`.
 
 ## Routes and API
 
@@ -88,11 +99,11 @@ Repeated same decision is idempotent. Other transitions reject with `409`.
 | --- | --- |
 | `/`, `/competitions` | Curated competition discovery/search |
 | `/competitions/:id` | Details, eligibility-first skill recommendations, teams |
-| `/signup`, `/login` | Real signup/login |
+| Login / Sign up dialogs | Real signup/login |
 | `/for-you` | Teams, applications, leader inbox, in-app alerts |
 | `/teams/new` | Create team with role quantities |
-| `/teams/:id`, `/teams/:id/manage` | Roster, application, recruitment, contacts/report |
-| `/u/me` | Edit profile, revoke consent, export/delete account |
+| `/teams/:id`, `/teams/:id/manage`, `/teams/:id/edit` | Roster, application, recruitment, contacts/report, edit/delete |
+| `/u/me`, `/u/me/edit` | Profile, edit, revoke consent, export/delete account |
 | `/admin` | Competition curation, reporting/moderation, pilot metrics |
 | `/privacy` | Data visibility and deletion policy |
 
@@ -119,7 +130,7 @@ npm run test:e2e
 ```
 
 E2E requires `agent-browser` on PATH (`npm install -g agent-browser@0.27.0`).
-It creates disposable curator/student accounts and competitions through UI,
+It verifies default seeded Maya profile/inbox, creates disposable curator/student accounts and competitions through UI,
 promotes curator through operator CLI using `DATABASE_URL`, exercises desktop
 and 390px mobile journeys, revocation, network failure, logout/login, keyboard
 focus and layout. Outputs screenshots/snapshots to `e2e-results/`.
