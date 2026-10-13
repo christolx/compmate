@@ -358,4 +358,120 @@ describe('P0-1 & P0-2 Domain Commands', () => {
       expect(res.nextState.managed!.vertex.added).toContain('livia');
     });
   });
+
+  describe('P1-3 Real identity, profile onboarding, and team creation', () => {
+    it('creates clean account on signup without inheriting demo state', () => {
+      const s = defaultState();
+      const res = handleStoreRequest(s, '/signup', 'POST', {
+        email: 'alice@example.com',
+        name: 'Alice Wonder',
+      });
+      expect(res.nextState.authed).toBe(true);
+      expect(res.nextState.account?.name).toBe('Alice Wonder');
+      expect(res.nextState.account?.email).toBe('alice@example.com');
+      expect(Object.keys(res.nextState.apps).length).toBe(0);
+      expect(Object.keys(res.nextState.conns).length).toBe(0);
+      expect(res.nextState.saved.length).toBe(0);
+      expect(res.nextState.vx.apps.length).toBe(0);
+    });
+
+    it('creates demo session on demo login', () => {
+      const s = defaultState();
+      const res = handleStoreRequest(s, '/login', 'POST', {
+        email: 'demo@compmate.id',
+      });
+      expect(res.nextState.authed).toBe(true);
+      expect(res.nextState.account?.name).toBe('Maya Chen');
+    });
+
+    it('clears session on logout', () => {
+      const s = { ...defaultState(), authed: true };
+      const res = handleStoreRequest(s, '/logout', 'POST', {});
+      expect(res.nextState.authed).toBe(false);
+      expect(res.nextState.account).toBeNull();
+    });
+
+    it('updates user profile via PUT /profile', () => {
+      const s = {
+        ...defaultState(),
+        authed: true,
+        actorId: 'me',
+        account: {
+          id: 'me',
+          name: 'Maya Chen',
+          email: 'maya@example.com',
+          campus: 'Anggrek',
+          skills: 'Design',
+          availability: 'Flexible',
+          about: '',
+          contact: '',
+          share_contact: false,
+          admin: false,
+        },
+      };
+      const res = handleStoreRequest(s, '/profile', 'PUT', {
+        name: 'Maya Updated',
+        skills: 'Figma, React, TypeScript',
+        contact: 'maya@chat.id',
+        share_contact: true,
+        presentation: {
+          roles: ['Product Designer'],
+          level: 'Experienced',
+        },
+      });
+      expect(res.nextState.account?.name).toBe('Maya Updated');
+      expect(res.nextState.account?.skills).toBe('Figma, React, TypeScript');
+      expect(res.nextState.account?.share_contact).toBe(true);
+    });
+
+    it('creates and deletes teams with boundary validation via POST /teams and DELETE /teams/:id', () => {
+      const s = {
+        ...defaultState(),
+        authed: true,
+        actorId: 'new_leader',
+        account: {
+          id: 'new_leader',
+          name: 'New Leader',
+          email: 'leader@example.com',
+          campus: 'Anggrek',
+          skills: 'Engineering',
+          availability: 'Weekends',
+          about: '',
+          contact: '',
+          share_contact: false,
+          admin: false,
+        },
+      };
+
+      // Successfully create a team
+      const createRes = handleStoreRequest(s, '/teams', 'POST', {
+        name: 'Quantum Pioneers',
+        competition_id: 'nbcc',
+        capacity: 3,
+        about: 'Pushing boundaries',
+        presentation: { avail: 'Weekends', level: 'Beginner friendly' },
+        roles: [{ name: 'Analyst', capacity: 2, skills: 'Excel, Python' }],
+      });
+
+      const newTid = (createRes.response as { id: string }).id;
+      expect(newTid).toBeDefined();
+      expect(createRes.nextState.managed?.[newTid]).toBeDefined();
+      expect(createRes.nextState.managed?.[newTid].target).toBe(3);
+
+      // Successfully delete the team
+      const delRes = handleStoreRequest(createRes.nextState, `/teams/${newTid}`, 'DELETE', {});
+      expect(delRes.nextState.managed?.[newTid]).toBeUndefined();
+    });
+
+    it('rejects team creation if capacity is outside competition bounds', () => {
+      const s = { ...defaultState(), authed: true, actorId: 'me' };
+      expect(() =>
+        handleStoreRequest(s, '/teams', 'POST', {
+          name: 'Too Big Team',
+          competition_id: 'nbcc', // nbcc min: 2, max: 3
+          capacity: 50,
+        }),
+      ).toThrow();
+    });
+  });
 });

@@ -1,6 +1,7 @@
 // View models: everything the screens render is derived here from the seed
 // data plus the current app state, so components stay presentational.
 import { COMPETITIONS, FACULTIES, GROUPS, HUES, PEOPLE, TAXONOMY, TEAMS, TODAY, NOTIFICATIONS } from './seed';
+export { TEAMS, COMPETITIONS };
 import type { AppState } from './state';
 import type { Avatar, Competition, FacultyCode, Person, Prize, Role, Slot, Team } from './types';
 
@@ -350,7 +351,7 @@ export function team(id: string, st: AppState): TeamView {
     c,
     members,
     memberList: members.map((m) => {
-      const p = PERSONS[m] || { id: m, name: m, first: m, fac: 'cs', facName: 'Fasilkom', skills: [], roles: [] };
+      const p = PERSONS[m] || { id: m, name: m, first: m, fac: 'SOCS' as const, facName: 'SOCS', skills: [], roles: [] };
       return { ...p, label: m === 'me' ? 'You' : p.name, isLeader: m === t.leader, isMe: m === 'me' };
     }),
     roleList: roles.map((r) => ({ ...r, qtyLabel: r.qty + (r.qty > 1 ? ' openings' : ' opening'), skillsLine: r.skills.join(' · ') })),

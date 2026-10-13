@@ -1,6 +1,6 @@
-import { TEAM_BY_ID, TEAMS_BY_COMP, comp, team } from './model';
-import type { AppState, Application, VertexApplication, VertexState } from './state';
-import type { ApplicationStatus } from './types';
+import { PERSONS, TEAMS, TEAM_BY_ID, TEAMS_BY_COMP, comp, team } from './model';
+import { defaultState, type AppState, type Application, type VertexApplication, type VertexState } from './state';
+import type { ApplicationStatus, Team } from './types';
 
 export interface CommandError extends Error {
   status?: number;
@@ -557,14 +557,200 @@ export function handleStoreRequest(
       return { nextState: { ...st, read: ['n1', 'n2', 'n3', 'n4', 'n5'] }, response: {} };
     }
 
-    // POST /login or /signup
-    if (route === '/login' || route === '/signup') {
-      return { nextState: { ...st, authed: true }, response: {} };
+    // POST /teams
+    if (route === '/teams') {
+      if (!st.authed) throw bad('Sign in required', 401);
+      const b = (body as {
+        name?: string;
+        about?: string;
+        capacity?: number;
+        competition_id?: string;
+        share_contact?: boolean;
+        presentation?: { avail?: string; level?: string; comms?: string; lang?: string };
+        roles?: { name: string; skills?: string; capacity: number }[];
+      }) || {};
+      if (!b.name || !b.competition_id) {
+        throw bad('Team name and competition are required', 400);
+      }
+      const cv = comp(b.competition_id);
+      if (cv.left < 0) {
+        throw bad('Registration has closed for this competition', 409);
+      }
+      const target = b.capacity || 3;
+      if (target < cv.min || target > cv.max) {
+        throw bad(`Capacity must be between ${cv.min} and ${cv.max}`, 400);
+      }
+      const compTeams = TEAMS_BY_COMP[b.competition_id] || [];
+      const inOtherTeam = compTeams.some((id) => team(id, st).isMember);
+      if (inOtherTeam) {
+        throw bad('You are already a member of a team in this competition', 409);
+      }
+
+      const tid = 't_' + b.name.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 15) + '_' + Date.now().toString(36);
+      const leaderId = st.actorId || 'me';
+
+      const newRoles = (b.roles || []).map((r, i) => ({
+        id: 'r_' + i + '_' + Date.now().toString(36),
+        name: r.name,
+        qty: r.capacity || 1,
+        skills: r.skills ? r.skills.split(',').map((s) => s.trim()).filter(Boolean) : [],
+        note: '',
+      }));
+
+      const newTeamRecord: Team = {
+        id: tid,
+        name: b.name,
+        comp: b.competition_id,
+        leader: leaderId,
+        members: [leaderId],
+        target,
+        about: b.about || '',
+        avail: ((b.presentation?.avail || 'Flexible') as Team['avail']),
+        level: ((b.presentation?.level || 'Beginner friendly') as Team['level']),
+        comms: b.presentation?.comms || 'WhatsApp',
+        lang: b.presentation?.lang || 'English',
+        roles: newRoles,
+        recruiting: true,
+      };
+
+      TEAM_BY_ID[tid] = newTeamRecord;
+      TEAMS.push(newTeamRecord);
+      TEAMS_BY_COMP[b.competition_id] = [...(TEAMS_BY_COMP[b.competition_id] || []), tid];
+
+      const newManagedState: VertexState = {
+        target,
+        closed: false,
+        added: [],
+        filled: [],
+        apps: [],
+      };
+
+      const nextManaged = {
+        ...(st.managed ?? {}),
+        [tid]: newManagedState,
+      };
+
+      const nextState: AppState = {
+        ...st,
+        managed: nextManaged,
+      };
+
+      return { nextState, response: { id: tid } };
+    }
+
+    // POST /signup
+    if (route === '/signup') {
+      const b = (body as { email?: string; password?: string; name?: string }) || {};
+      const newUserId = genId('usr');
+      const userName = b.name?.trim() || 'New Member';
+      const userAccount: import('../store/apiStore').Account = {
+        id: newUserId,
+        name: userName,
+        email: b.email || '',
+        campus: 'Anggrek',
+        skills: '',
+        availability: 'Flexible',
+        about: '',
+        contact: '',
+        share_contact: false,
+        admin: false,
+      };
+      if (PERSONS.me) {
+        PERSONS.me = {
+          ...PERSONS.me,
+          id: 'me',
+          name: userName,
+          first: userName.split(' ')[0],
+          initials: userName.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase(),
+          program: 'Student',
+          fac: 'SOCS',
+          facName: 'School of Computer Science',
+          skills: [],
+          roles: [],
+          interests: [],
+          avail: 'Flexible',
+          level: 'Beginner',
+          complete: 0.2,
+          about: '',
+          mutual: 0,
+          connections: 0,
+        };
+      }
+      const nextState: AppState = {
+        ...st,
+        authed: true,
+        actorId: newUserId,
+        account: userAccount,
+        saved: [],
+        apps: {},
+        conns: {},
+        invites: {},
+        read: [],
+        managed: {},
+        vx: {
+          target: 2,
+          closed: false,
+          added: [],
+          filled: [],
+          apps: [],
+        },
+      };
+      return { nextState, response: userAccount };
+    }
+
+    // POST /login
+    if (route === '/login') {
+      const b = (body as { email?: string; password?: string }) || {};
+      if (!b.email || b.email === 'demo@compmate.id') {
+        const demoAccount: import('../store/apiStore').Account = {
+          id: 'me',
+          name: 'Maya Chen',
+          email: 'maya.chen@binus.ac.id',
+          campus: 'Anggrek',
+          skills: 'Product Management, UI/UX, Research',
+          availability: 'Weekends',
+          about: 'CS student passionate about building accessible digital products.',
+          contact: 'maya.chen@binus.ac.id',
+          share_contact: true,
+          admin: false,
+        };
+        return {
+          nextState: {
+            ...st,
+            authed: true,
+            actorId: 'me',
+            account: demoAccount,
+          },
+          response: demoAccount,
+        };
+      }
+      const userId = genId('usr');
+      const account: import('../store/apiStore').Account = {
+        id: userId,
+        name: b.email.split('@')[0],
+        email: b.email,
+        campus: 'Anggrek',
+        skills: '',
+        availability: 'Flexible',
+        about: '',
+        contact: b.email,
+        share_contact: false,
+        admin: false,
+      };
+      return {
+        nextState: {
+          ...st,
+          authed: true,
+          actorId: userId,
+          account,
+        },
+        response: account,
+      };
     }
 
     // POST /logout
     if (route === '/logout') {
-      return { nextState: { ...st, authed: false }, response: {} };
+      return { nextState: { ...st, authed: false, account: null }, response: {} };
     }
   }
 
@@ -624,6 +810,66 @@ export function handleStoreRequest(
       const nextSaved = st.saved.includes(cid) ? st.saved : [...st.saved, cid];
       return { nextState: { ...st, saved: nextSaved }, response: {} };
     }
+    // PUT /profile
+    if (route === '/profile') {
+      if (!st.authed) throw bad('Sign in required', 401);
+      const b = (body as {
+        name?: string;
+        campus?: string;
+        skills?: string;
+        availability?: string;
+        about?: string;
+        contact?: string;
+        share_contact?: boolean;
+        presentation?: {
+          program?: string;
+          fac?: string;
+          roles?: string[];
+          interests?: string[];
+          level?: string;
+        };
+      }) || {};
+      const currentAccount = st.account || {
+        id: st.actorId || 'me',
+        name: PERSONS.me?.name || 'You',
+        email: '',
+        campus: 'Anggrek',
+        skills: '',
+        availability: 'Flexible',
+        about: '',
+        contact: '',
+        share_contact: false,
+        admin: false,
+      };
+      const updatedAccount: import('../store/apiStore').Account = {
+        ...currentAccount,
+        name: b.name ?? currentAccount.name,
+        campus: b.campus ?? currentAccount.campus,
+        skills: b.skills ?? currentAccount.skills,
+        availability: b.availability ?? currentAccount.availability,
+        about: b.about ?? currentAccount.about,
+        contact: b.contact ?? currentAccount.contact,
+        share_contact: b.share_contact ?? currentAccount.share_contact,
+      };
+      if (PERSONS.me) {
+        const rolesList = b.presentation?.roles || (PERSONS.me.roles ?? []);
+        const skillsList = b.skills ? b.skills.split(',').map((x) => x.trim()).filter(Boolean) : PERSONS.me.skills;
+        PERSONS.me = {
+          ...PERSONS.me,
+          name: updatedAccount.name,
+          first: updatedAccount.name.split(' ')[0],
+          program: b.presentation?.program ?? PERSONS.me.program,
+          about: updatedAccount.about,
+          avail: ((updatedAccount.availability || 'Flexible') as import('./types').PersonSeed['avail']),
+          level: ((b.presentation?.level || 'Beginner') as import('./types').PersonSeed['level']),
+          roles: rolesList,
+          rolesLine: rolesList.join(' · '),
+          skills: skillsList,
+          interests: b.presentation?.interests ?? PERSONS.me.interests,
+        };
+      }
+      return { nextState: { ...st, account: updatedAccount }, response: updatedAccount };
+    }
   }
 
   if (method === 'DELETE') {
@@ -642,6 +888,31 @@ export function handleStoreRequest(
       const nextConns = { ...st.conns };
       delete nextConns[pid];
       return { nextState: { ...st, conns: nextConns }, response: {} };
+    }
+
+    // DELETE /teams/:id
+    const delTeamMatch = route.match(/^\/teams\/([^/]+)$/);
+    if (delTeamMatch) {
+      const tid = delTeamMatch[1];
+      const t = TEAM_BY_ID[tid];
+      if (!t) throw bad('Team not found', 404);
+      if (t.leader !== (st.actorId || 'me') && !team(tid, st).mine) {
+        throw bad('Permission denied', 403);
+      }
+      delete TEAM_BY_ID[tid];
+      const idx = TEAMS.findIndex((x) => x.id === tid);
+      if (idx >= 0) TEAMS.splice(idx, 1);
+      if (TEAMS_BY_COMP[t.comp]) {
+        TEAMS_BY_COMP[t.comp] = TEAMS_BY_COMP[t.comp].filter((id) => id !== tid);
+      }
+      const nextManaged = { ...(st.managed ?? {}) };
+      delete nextManaged[tid];
+      return { nextState: { ...st, managed: nextManaged }, response: {} };
+    }
+
+    // DELETE /account
+    if (route === '/account') {
+      return { nextState: defaultState(), response: {} };
     }
   }
 
