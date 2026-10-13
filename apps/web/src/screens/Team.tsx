@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { PERSONS, TEAMS_BY_COMP, team } from '../data/model';
+import { canApply as checkCanApply } from '../data/selectors';
 import { bestFor, match } from '../data/matching';
 import { AppLink } from '../app/AppLink';
 import { useNav } from '../app/nav';
@@ -25,42 +26,62 @@ export function Team({ tid, authed: authedProp }: TeamProps) {
   const nav = useNav();
   const t = team(tid, st);
   const app = st.apps[t.id];
-  const busy = TEAMS_BY_COMP[t.comp].some((id) => id !== t.id && team(id, st).isMember);
-  const canApply = !t.mine && !t.isMember && !app && !busy && !t.complete && !t.closed && t.c.left >= 0 && t.canApply !== false;
-  const best = authed && canApply ? bestFor('me', t.id, st) : null;
+  const busy = TEAMS_BY_COMP[t.comp]?.some((id) => id !== t.id && team(id, st).isMember);
+  const generalApplyCheck = checkCanApply(t.id, st);
+  const isApplicable = generalApplyCheck.ok;
+  const best = authed && isApplicable ? bestFor('me', t.id, st) : null;
   const mySkills = new Set(PERSONS.me.skills);
 
   const roles = t.roleList.map((r) => {
-    const mm = authed && canApply ? match('me', t.id, r.id, st) : null;
+    const roleCheck = checkCanApply(t.id, st, r.id);
+    const mm = authed && roleCheck.ok ? match('me', t.id, r.id, st) : null;
     const top = !!best && !!mm && mm.role.id === best.role.id && best.kind === 'strong';
+    let btnLabel = 'Apply to this role';
+    if (t.mine) {
+      btnLabel = 'Find people for this role';
+    } else if (t.isMember) {
+      btnLabel = "You're on this team";
+    } else if (app) {
+      btnLabel = 'Application ' + app.status;
+    } else if (busy) {
+      btnLabel = 'You are in another team for this competition';
+    } else if (t.c.left < 0 || t.c.status === 'closed') {
+      btnLabel = 'Registration closed';
+    } else if (t.complete || t.filled >= t.target || t.open <= 0) {
+      btnLabel = 'Team complete';
+    } else if (r.qty <= 0) {
+      btnLabel = 'Role filled';
+    } else if (t.closed || t.recruiting === false) {
+      btnLabel = 'Not recruiting';
+    }
     return {
       ...r,
       mm,
       top,
-      btnLabel: t.mine
-        ? 'Find people for this role'
-        : app
-          ? 'Application ' + app.status
-          : busy
-            ? 'You are in another team for this competition'
-            : t.isMember
-              ? "You're on this team"
-              : 'Apply to this role',
+      canApply: roleCheck.ok,
+      btnLabel,
     };
   });
-  const primary: [string, boolean] = t.mine
-    ? ['Manage team', true]
-    : t.isMember
-      ? ["You're on this team", false]
-      : app
-        ? ['Application ' + app.status, false]
-        : busy
-          ? ['Already in a team for this competition', false]
-          : !canApply && authed
-            ? ['Not recruiting', false]
-          : roles.length
-            ? ['Apply as ' + (best ? best.role.name : roles[0].name), true]
-            : ['Not recruiting', false];
+  let primary: [string, boolean] = ['Not recruiting', false];
+  if (t.mine) {
+    primary = ['Manage team', true];
+  } else if (t.isMember) {
+    primary = ["You're on this team", false];
+  } else if (app) {
+    primary = ['Application ' + app.status, false];
+  } else if (busy) {
+    primary = ['Already in a team for this competition', false];
+  } else if (t.c.left < 0 || t.c.status === 'closed') {
+    primary = ['Registration closed', false];
+  } else if (t.complete || t.filled >= t.target || t.open <= 0) {
+    primary = ['Team complete', false];
+  } else if (t.closed || t.recruiting === false) {
+    primary = ['Not recruiting', false];
+  } else if (!isApplicable && authed) {
+    primary = [generalApplyCheck.reason || 'Not recruiting', false];
+  } else if (roles.length) {
+    primary = ['Apply as ' + (best ? best.role.name : roles[0].name), true];
+  }
   const onPrimary = () => {
     if (t.mine) nav('manage',t.id);
     else if (primary[1]) nav('apply', { team: t.id, role: best ? best.role.id : t.roleList[0].id });
@@ -251,11 +272,11 @@ export function Team({ tid, authed: authedProp }: TeamProps) {
                 </div>
                 <button
                   type="button"
-                  onClick={() => (t.mine ? nav('manage') : canApply && nav('apply', { team: t.id, role: r.id }))}
-                  disabled={!canApply && !t.mine}
+                  onClick={() => (t.mine ? nav('manage') : r.canApply && nav('apply', { team: t.id, role: r.id }))}
+                  disabled={!r.canApply && !t.mine}
                   className={cx(
                     'mt-[18px] h-[46px] w-full cursor-pointer rounded-[12px] border-0 text-[14px] font-bold hover:brightness-95',
-                    canApply || t.mine ? 'bg-brand text-white' : 'bg-slate-100 text-slate-500',
+                    r.canApply || t.mine ? 'bg-brand text-white' : 'bg-slate-100 text-slate-500',
                   )}
                 >
                   {r.btnLabel}

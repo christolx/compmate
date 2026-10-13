@@ -4,6 +4,7 @@
 // profile completeness 5. Related skills count for half.
 import { COMPETITIONS, RELATED_INTERESTS, ROLE_FAMILIES, TAXONOMY, TEAMS } from './seed';
 import { PERSONS, SKILL_CATEGORY, TEAM_BY_ID, comp, team } from './model';
+import { isRecruiting, canApply } from './selectors';
 import type { AppState } from './state';
 import type { MatchKind, Role } from './types';
 
@@ -129,7 +130,7 @@ export function bestFor(pid: string, tid: string, st: AppState): Match | null {
 /** Teams the sample user could still join, best match first. */
 export function teamsForMe(st: AppState): { id: string; m: Match }[] {
   const busy = TEAMS.filter((t) => team(t.id, st).members.includes('me')).map((t) => t.comp);
-  return TEAMS.filter((t) => !busy.includes(t.comp) && !st.apps[t.id] && t.canApply !== false && !team(t.id,st).closed && !team(t.id,st).complete && comp(t.comp).left>=0)
+  return TEAMS.filter((t) => !busy.includes(t.comp) && !st.apps[t.id] && t.canApply !== false && isRecruiting(t.id, st) && canApply(t.id, st).ok)
     .map((t) => ({ id: t.id, m: bestFor('me', t.id, st) }))
     .filter((x): x is { id: string; m: Match } => !!x.m?.kind)
     .sort((a, b) => b.m.score - a.m.score);
@@ -138,7 +139,7 @@ export function teamsForMe(st: AppState): { id: string; m: Match }[] {
 /** Open competitions for the sample user, with the reasons spelled out. */
 export function compsForMe(): { id: string; s: number; reason: string }[] {
   const me = PERSONS.me;
-  return COMPETITIONS.filter((c) => !comp(c.id).upcoming && comp(c.id).left>=0)
+  return COMPETITIONS.filter((c) => !comp(c.id).upcoming && comp(c.id).left>=0 && comp(c.id).status !== 'closed')
     .map((c) => {
       const exact = c.skills.filter((s) => me.skills.includes(s));
       let s = 0;

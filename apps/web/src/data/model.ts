@@ -22,8 +22,16 @@ export function formatShortDate(iso: string) {
   const x = parseDate(iso);
   return `${x.getDate()} ${MONTHS[x.getMonth()]}`;
 }
-export function daysUntil(iso: string) {
-  return Math.round((parseDate(iso).getTime() - TODAY.getTime()) / 864e5);
+let currentClock: Date = TODAY;
+export function setClock(d: Date | null) {
+  currentClock = d ?? TODAY;
+  compCache.clear();
+}
+export function getClock(): Date {
+  return currentClock;
+}
+export function daysUntil(iso: string, at = currentClock) {
+  return Math.round((parseDate(iso).getTime() - at.getTime()) / 864e5);
 }
 /** "Tuesday, 6 October" */
 export let todayLabel = `${WEEKDAYS[TODAY.getDay()]}, ${TODAY.getDate()} ${LONG_MONTHS[TODAY.getMonth()]}`;
@@ -105,8 +113,9 @@ export interface CompetitionView extends Omit<Competition, 'eligibility' | 'priz
 
 const compCache = new Map<string, CompetitionView>();
 
-export function comp(id: string): CompetitionView {
-  const cached = compCache.get(id);
+export function comp(id: string, at = currentClock): CompetitionView {
+  const cacheKey = `${id}:${at.getTime()}`;
+  const cached = compCache.get(cacheKey);
   if (cached) return cached;
   const c = COMPETITION_BY_ID[id];
   if (!c) {
@@ -163,8 +172,8 @@ export function comp(id: string): CompetitionView {
       prizes: [],
     };
   }
-  const left = daysUntil(c.deadline);
-  const upcoming = daysUntil(c.open) > 0;
+  const left = daysUntil(c.deadline, at);
+  const upcoming = daysUntil(c.open, at) > 0;
   const closing = !upcoming && left >= 0 && left <= 7;
   const hue = HUES[(GROUPS.indexOf(c.group) + 6) % HUES.length];
   const faceIds = [...new Set(TEAMS.filter((t) => t.comp === id).flatMap((t) => t.members).filter((x) => x !== 'me'))]
@@ -177,7 +186,7 @@ export function comp(id: string): CompetitionView {
     upcoming,
     closing,
     hasPoster: !!c.poster,
-    status: upcoming ? 'upcoming' : closing ? 'closing' : 'open',
+    status: left < 0 ? 'closed' : upcoming ? 'upcoming' : closing ? 'closing' : 'open',
     statusLabel: left<0 ? 'Registration closed' : upcoming ? 'Opens ' + formatShortDate(c.open) : closing ? 'Closing soon' : 'Registration open',
     leftLabel: left<0 ? 'Deadline passed' : upcoming ? 'Opens ' + formatShortDate(c.open) : left === 0 ? 'Closes today' : left === 1 ? '1 day left' : left + ' days left',
     leftNum: upcoming ? formatShortDate(c.open) : String(Math.max(0,left)),
@@ -203,13 +212,13 @@ export function comp(id: string): CompetitionView {
     timelineList: milestones.map(({ label, date }, i, arr) => ({
       label,
       date: formatDate(date),
-      past: daysUntil(date) < 0,
-      next: daysUntil(date) >= 0 && (i === 0 || daysUntil(arr[i - 1].date) < 0),
+      past: daysUntil(date, at) < 0,
+      next: daysUntil(date, at) >= 0 && (i === 0 || daysUntil(arr[i - 1].date, at) < 0),
     })),
     eligibility: c.eligibility || ['Active university students in Indonesia', 'Members may come from any faculty'],
     prizes: c.prizes || [],
   };
-  compCache.set(id, vm);
+  compCache.set(cacheKey, vm);
   return vm;
 }
 
@@ -340,7 +349,10 @@ export function team(id: string, st: AppState): TeamView {
     ...t,
     c,
     members,
-    memberList: members.map((m) => ({ ...PERSONS[m], label: m === 'me' ? 'You' : PERSONS[m].name, isLeader: m === t.leader, isMe: m === 'me' })),
+    memberList: members.map((m) => {
+      const p = PERSONS[m] || { id: m, name: m, first: m, fac: 'cs', facName: 'Fasilkom', skills: [], roles: [] };
+      return { ...p, label: m === 'me' ? 'You' : p.name, isLeader: m === t.leader, isMe: m === 'me' };
+    }),
     roleList: roles.map((r) => ({ ...r, qtyLabel: r.qty + (r.qty > 1 ? ' openings' : ' opening'), skillsLine: r.skills.join(' · ') })),
     filled,
     target,

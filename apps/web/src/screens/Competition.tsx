@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { TEAM_BY_ID, comp, teamsFor } from '../data/model';
+import { isRecruiting } from '../data/selectors';
 import { teamsForMe } from '../data/matching';
 import { AppLink } from '../app/AppLink';
 import { useNav } from '../app/nav';
@@ -51,10 +52,11 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
   }, [posterOpen]);
 
   const c = comp(cid);
-  const all = noTeams ? [] : teamsFor(c.id, st).filter((t) => t.roleList.length && !t.closed);
+  const compTeams = noTeams ? [] : teamsFor(c.id, st);
+  const inComp = compTeams.some((t) => t.isMember);
+  const all = compTeams.filter((t) => isRecruiting(t));
   const roleNames = [...new Set(all.flatMap((t) => t.roleList.map((r) => r.name)))];
   const shown = all.filter((t) => role === 'all' || t.roleList.some((r) => r.name === role));
-  const inComp = all.some((t) => t.isMember);
   const bestMatch = authed && !inComp ? teamsForMe(st).find((x) => TEAM_BY_ID[x.id].comp === c.id && x.m.kind === 'strong') : undefined;
   const best = bestMatch ? { id: bestMatch.id, name: TEAM_BY_ID[bestMatch.id].name, role: bestMatch.m.role.name } : null;
   const saved = authed && st.saved.includes(c.id);
