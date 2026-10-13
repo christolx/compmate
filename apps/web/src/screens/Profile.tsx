@@ -80,12 +80,21 @@ export function Profile({ pid }: { pid: string }) {
               BINUS University · verified student
             </div>
             <div className="mt-3.5 flex flex-wrap gap-4 text-[13px]">
-              {p.links.map((l) => (
-                <span key={l.label} className="inline-flex items-center gap-1.5 font-semibold text-ink">
-                  <span className="font-medium text-slate-500">{l.label}</span>
-                  <span>{l.value}</span> ↗
-                </span>
-              ))}
+              {p.links.map((l) => {
+                const href = l.value.startsWith('http://') || l.value.startsWith('https://') ? l.value : `https://${l.value}`;
+                return (
+                  <a
+                    key={l.label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 font-semibold text-ink no-underline hover:text-brand"
+                  >
+                    <span className="font-medium text-slate-500">{l.label}</span>
+                    <span>{l.value}</span> ↗
+                  </a>
+                );
+              })}
             </div>
             {!me && p.mutual > 0 && (
               <div className="mt-3 flex items-center gap-2 text-[13px] text-slate-600">

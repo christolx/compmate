@@ -10,6 +10,31 @@ import { TopNav } from '../components/TopNav';
 import { cx } from '../lib/cx';
 import { useAppState, useStore } from '../store/store';
 
+async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // fallback below
+  }
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
 interface TeamProps {
   tid: string;
   authed?: boolean;
@@ -24,6 +49,11 @@ export function Team({ tid, authed: authedProp }: TeamProps) {
   const authed = authedProp ?? st.authed;
   const m = useIsMobile();
   const nav = useNav();
+  const handleShare = () => {
+    void copyToClipboard(window.location.href).then((ok) => {
+      nav('toast', ok ? 'Team link copied' : 'Unable to copy link');
+    });
+  };
   const t = team(tid, st);
   const app = st.apps[t.id];
   const busy = TEAMS_BY_COMP[t.comp]?.some((id) => id !== t.id && team(id, st).isMember);
@@ -154,7 +184,7 @@ export function Team({ tid, authed: authedProp }: TeamProps) {
         </div>
         {!m && (
           <div className="flex gap-2">
-            <button type="button" onClick={() => void navigator.clipboard.writeText(window.location.href).then(()=>nav('toast','Team link copied')).catch(()=>nav('toast','Unable to copy link'))} aria-label="Share team" className="grid h-12 w-12 cursor-pointer place-items-center rounded-[12px] border border-slate-200 bg-white text-slate-700">
+            <button type="button" onClick={handleShare} aria-label="Share team" className="grid h-12 w-12 cursor-pointer place-items-center rounded-[12px] border border-slate-200 bg-white text-slate-700 hover:border-slate-300">
               <ShareIcon size={18} />
             </button>
             <button type="button" onClick={onPrimary} disabled={!primary[1]} className={cx('h-12 rounded-[12px] px-[22px] text-[15px]', primaryClass)}>
@@ -286,7 +316,7 @@ export function Team({ tid, authed: authedProp }: TeamProps) {
             {roles.length === 0 && <div className="rounded-[16px] bg-canvas p-5 text-[14px] text-slate-600">All roles are filled. This team is no longer recruiting.</div>}
           </div>
           <p className="mt-4 mb-0 text-[12px] leading-[1.55] text-slate-500">
-            Contact details stay private. If you're accepted, {t.leaderFirst} shares the team's {t.comms} group with you.
+            Contact details stay private. Consented contacts are shared with team members after acceptance.
           </p>
         </aside>
       </div>

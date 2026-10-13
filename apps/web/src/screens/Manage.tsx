@@ -72,7 +72,7 @@ export function Manage({ tid='vertex', tab: initialTab = 'apps' }: {tid?:string;
           btn: 'Accept ' + p.first,
           btnBg: 'var(--color-brand)',
         }
-      : { title: `Decline ${p.first}?`, body: `${p.first} gets a short, neutral notification. Their application becomes final.`, btn: 'Decline', btnBg: '#DC2626' };
+      : { title: `Decline ${p.first}?`, body: `Their application status will be updated to declined and becomes final.`, btn: 'Decline', btnBg: '#DC2626' };
   })();
 
   const update=async(body:unknown)=>{setSaving(true);setErr('');try{await store.request?.('/teams/'+tid,'PATCH',body)}catch(e){setErr((e as Error).message)}finally{setSaving(false)}};

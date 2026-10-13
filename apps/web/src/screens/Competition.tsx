@@ -73,6 +73,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
   const openPoster = () => c.hasPoster && setPosterOpen(true);
   const save = { onClick: () => nav('save', c.id), 'aria-label': saved ? 'Remove from saved' : 'Save competition' };
   const saveStyle = { borderColor: saved ? '#BFD3FE' : '#E2E8F0', background: saved ? '#EFF4FF' : '#FFFFFF', color: saved ? 'var(--color-brand)' : '#0F172A' };
+  const officialHref = c.url ? (c.url.startsWith('http://') || c.url.startsWith('https://') ? c.url : `https://${c.url}`) : null;
 
   const statusPill = (small: boolean) => (
     <span
@@ -256,9 +257,24 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
                   Find a team
                 </button>
                 <div className="mt-2 flex gap-2">
-                  <button type="button" onClick={() => nav('official', c.id)} className="h-[46px] flex-1 cursor-pointer rounded-[12px] border border-slate-200 bg-white text-[14px] font-bold text-ink hover:border-slate-300">
-                    Official registration ↗
-                  </button>
+                  {officialHref ? (
+                    <a
+                      href={officialHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="grid h-[46px] flex-1 place-items-center rounded-[12px] border border-slate-200 bg-white text-[14px] font-bold text-ink no-underline hover:border-slate-300"
+                    >
+                      Official registration ↗
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => nav('official', c.id)}
+                      className="h-[46px] flex-1 cursor-pointer rounded-[12px] border border-slate-200 bg-white text-[14px] font-bold text-ink hover:border-slate-300"
+                    >
+                      Official registration ↗
+                    </button>
+                  )}
                   <button
                     type="button"
                     {...save}
@@ -313,9 +329,24 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
               <button type="button" onClick={toTeams} className="h-[50px] cursor-pointer rounded-[12px] border-0 bg-white text-[15px] font-bold text-ink">
                 Find a team
               </button>
-              <button type="button" onClick={() => nav('official', c.id)} className="h-[46px] cursor-pointer rounded-[12px] border border-white/25 bg-transparent text-[14px] font-bold text-white">
-                Official registration ↗
-              </button>
+              {officialHref ? (
+                <a
+                  href={officialHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="grid h-[46px] place-items-center rounded-[12px] border border-white/25 bg-transparent text-[14px] font-bold text-white no-underline hover:border-white/40"
+                >
+                  Official registration ↗
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => nav('official', c.id)}
+                  className="h-[46px] cursor-pointer rounded-[12px] border border-white/25 bg-transparent text-[14px] font-bold text-white"
+                >
+                  Official registration ↗
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -527,13 +558,34 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
           <button type="button" {...save} className="grid h-[50px] w-[50px] flex-none cursor-pointer place-items-center rounded-[12px] border border-solid" style={saveStyle}>
             <BookmarkIcon size={19} fill={saved ? 'var(--color-brand)' : 'none'} />
           </button>
-          <button
-            type="button"
-            onClick={() => (tab === 'teams' ? nav('official', c.id) : nav('create', c.id))}
-            className="h-[50px] flex-1 cursor-pointer rounded-[12px] border border-slate-200 bg-white text-[14px] font-bold text-ink"
-          >
-            {tab === 'teams' ? 'Official site ↗' : 'Create a team'}
-          </button>
+          {tab === 'teams' ? (
+            officialHref ? (
+              <a
+                href={officialHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="grid h-[50px] flex-1 place-items-center rounded-[12px] border border-slate-200 bg-white text-[14px] font-bold text-ink no-underline"
+              >
+                Official site ↗
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={() => nav('official', c.id)}
+                className="h-[50px] flex-1 cursor-pointer rounded-[12px] border border-slate-200 bg-white text-[14px] font-bold text-ink"
+              >
+                Official site ↗
+              </button>
+            )
+          ) : (
+            <button
+              type="button"
+              onClick={() => nav('create', c.id)}
+              className="h-[50px] flex-1 cursor-pointer rounded-[12px] border border-slate-200 bg-white text-[14px] font-bold text-ink"
+            >
+              Create a team
+            </button>
+          )}
           <button
             type="button"
             onClick={() => (tab === 'teams' ? nav('create', c.id) : setTab('teams'))}
