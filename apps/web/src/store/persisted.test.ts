@@ -186,3 +186,37 @@ describe('createPersistentStore', () => {
     expect(items.has(KEY)).toBe(false);
   });
 });
+
+describe('P1-5 entity guards', () => {
+  it('guards missing competition ID in comp() without throwing reading deadline', async () => {
+    const { comp } = await import('../data/model');
+    expect(() => comp('nonexistent-competition')).not.toThrow();
+    const c = comp('nonexistent-competition');
+    expect(c.title).toBe('Competition not found');
+    expect(c.left).toBe(-1);
+    expect(c.statusLabel).toBe('Registration closed');
+  });
+
+  it('guards missing team ID in team() without throwing', async () => {
+    const { team } = await import('../data/model');
+    expect(() => team('nonexistent-team', defaultState())).not.toThrow();
+    const t = team('nonexistent-team', defaultState());
+    expect(t.name).toBe('Team not found');
+    expect(t.closed).toBe(true);
+  });
+
+  it('guards missing person ID in avatar() without throwing', async () => {
+    const { avatar } = await import('../data/model');
+    expect(() => avatar('nonexistent-person')).not.toThrow();
+    const a = avatar('nonexistent-person');
+    expect(a.name).toBe('Student');
+  });
+
+  it('survives corrupted state with vx: {} without crashing', async () => {
+    const { team } = await import('../data/model');
+    const corruptState = { ...defaultState(), vx: {} as unknown as AppState['vx'] };
+    expect(() => team('vertex', corruptState)).not.toThrow();
+    const tv = team('vertex', corruptState);
+    expect(tv.name).toBe('Vertex');
+  });
+});

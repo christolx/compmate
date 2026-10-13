@@ -109,7 +109,9 @@ function invite(pid: string, value: unknown): AppState['invites'][string] | unde
 function vertex(value: unknown, d: VertexState): VertexState {
   const team = TEAM_BY_ID.vertex;
   if (!team || !isObject(value)) return d;
-  const { min, max } = COMPETITION_BY_ID[team.comp];
+  const compObj = COMPETITION_BY_ID[team.comp];
+  const min = compObj?.min ?? 2;
+  const max = compObj?.max ?? 20;
   const { target, closed } = value;
   return {
     target: typeof target === 'number' && Number.isInteger(target) && target >= min && target <= max ? target : d.target,

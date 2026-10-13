@@ -16,6 +16,7 @@ const STATUS_COLORS = {
   open: { fg: '#15803D', bg: '#ECFDF3' },
   closing: { fg: '#B45309', bg: '#FFF7E6' },
   upcoming: { fg: '#475569', bg: '#F1F5F9' },
+  closed: { fg: '#475569', bg: '#F1F5F9' },
 };
 
 interface CompetitionProps {

@@ -61,6 +61,9 @@ for (const c of COMPETITIONS) TEAMS_BY_COMP[c.id] = TEAMS.filter((t) => t.comp =
 
 export function avatar(id: string): Avatar {
   const p = PERSONS[id];
+  if (!p) {
+    return { id, name: id === 'me' ? 'You' : 'Student', initials: 'ST', bg: '#2563EB', fg: '#FFFFFF' };
+  }
   return { id, name: id === 'me' ? 'You' : p.name, initials: p.initials, bg: p.bg, fg: p.fg };
 }
 
@@ -71,7 +74,7 @@ export interface CompetitionView extends Omit<Competition, 'eligibility' | 'priz
   upcoming: boolean;
   closing: boolean;
   hasPoster: boolean;
-  status: 'upcoming' | 'closing' | 'open';
+  status: 'upcoming' | 'closing' | 'open' | 'closed';
   statusLabel: string;
   leftLabel: string;
   leftNum: string;
@@ -106,6 +109,60 @@ export function comp(id: string): CompetitionView {
   const cached = compCache.get(id);
   if (cached) return cached;
   const c = COMPETITION_BY_ID[id];
+  if (!c) {
+    return {
+      id,
+      title: 'Competition not found',
+      org: '',
+      cat: 'Competition',
+      group: 'Technology',
+      interest: 'General',
+      open: '2026-01-01',
+      deadline: '2026-01-01',
+      event: '2026-01-01',
+      loc: 'Online',
+      place: 'Online',
+      fee: 0,
+      min: 1,
+      max: 5,
+      facs: [],
+      skills: [],
+      teamsCount: 0,
+      openRoles: 0,
+      interested: 0,
+      overview: '',
+      left: -1,
+      upcoming: false,
+      closing: false,
+      hasPoster: false,
+      status: 'closed',
+      statusLabel: 'Registration closed',
+      leftLabel: 'Deadline passed',
+      leftNum: '0',
+      leftUnit: 'closed',
+      dlFg: '#0F172A',
+      deadlineShort: '1 Jan',
+      deadlineFull: '1 Jan 2026',
+      eventLabel: '1 Jan 2026',
+      teamShort: '1–5',
+      teamLong: 'Teams of 1–5',
+      feeLabel: 'Free',
+      feeShort: 'Free',
+      free: true,
+      recruitLabel: 'No teams yet',
+      hasTeams: false,
+      faces: [],
+      hueBg: '#EFF4FF',
+      hueFg: '#1D4ED8',
+      catUpper: 'COMPETITION',
+      initials: 'CM',
+      facList: [],
+      featuredOnly: false,
+      timelineList: [],
+      eligibility: [],
+      prizes: [],
+    };
+  }
   const left = daysUntil(c.deadline);
   const upcoming = daysUntil(c.open) > 0;
   const closing = !upcoming && left >= 0 && left <= 7;
@@ -196,6 +253,49 @@ export interface TeamView extends Omit<Team, 'members' | 'target'> {
 
 export function team(id: string, st: AppState): TeamView {
   const t = TEAM_BY_ID[id];
+  if (!t) {
+    const fallbackC = comp('');
+    return {
+      id,
+      name: 'Team not found',
+      comp: '',
+      leader: '',
+      members: [],
+      target: 1,
+      avail: 'Flexible',
+      level: 'Beginner friendly',
+      comms: '',
+      lang: '',
+      about: '',
+      roles: [],
+      c: fallbackC,
+      memberList: [],
+      roleList: [],
+      filled: 0,
+      open: 0,
+      eligible: false,
+      complete: true,
+      closed: true,
+      kind: 'closed',
+      slots: [],
+      initial: 'T',
+      sizeLabel: '0 of 0 members',
+      statusLabel: 'Closed',
+      statusFg: '#475569',
+      statusBg: '#F1F5F9',
+      eligText: 'Team not found',
+      eligFg: '#B45309',
+      eligDot: '#F59E0B',
+      skillsLine: '',
+      roleNames: '',
+      firstRole: '',
+      leaderName: '',
+      leaderFirst: '',
+      mine: false,
+      isMember: false,
+      segs: [],
+    };
+  }
   const c = comp(t.comp);
   let members = t.members.slice();
   let filledRoles: string[] = [];
