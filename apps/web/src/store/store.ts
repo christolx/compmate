@@ -1,4 +1,5 @@
 import { createContext, useContext, useSyncExternalStore } from 'react';
+import { handleStoreRequest } from '../data/commands';
 import { defaultState, type AppState } from '../data/state';
 import { loadPersistedState, serializeState } from './persisted';
 
@@ -54,6 +55,13 @@ export function createPersistentStore(storage: Storage | undefined = browserStor
       state = { ...state, ...(typeof patch === 'function' ? patch(state) : patch) };
       save();
       emit();
+    },
+    async request<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
+      const result = handleStoreRequest(state, path, method, body);
+      state = result.nextState;
+      save();
+      emit();
+      return result.response as T;
     },
     reset() {
       state = defaultState();

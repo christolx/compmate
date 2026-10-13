@@ -201,15 +201,27 @@ export function team(id: string, st: AppState): TeamView {
   let filledRoles: string[] = [];
   let target = t.target;
   let closed = t.recruiting === false;
-  if (st.loaded === undefined && id === 'apex' && st.apps.apex?.status === 'accepted') {
-    members.push('me');
-    filledRoles.push('presenter');
-  }
-  if (st.loaded === undefined && id === 'vertex') {
-    members = members.concat(st.vx.added);
-    filledRoles = st.vx.filled;
-    target = st.vx.target;
-    closed = st.vx.closed;
+  if (st.loaded === undefined) {
+    const userApp = st.apps[id];
+    if (userApp?.status === 'accepted') {
+      if (!members.includes('me')) {
+        members.push('me');
+      }
+      if (userApp.role && !filledRoles.includes(userApp.role)) {
+        filledRoles.push(userApp.role);
+      }
+    }
+    const m = st.managed?.[id] || (id === 'vertex' ? st.vx : undefined);
+    if (m) {
+      if (Array.isArray(m.added)) {
+        members = members.concat(m.added.filter((x) => !members.includes(x)));
+      }
+      if (Array.isArray(m.filled)) {
+        filledRoles = filledRoles.concat(m.filled);
+      }
+      if (typeof m.target === 'number') target = m.target;
+      if (typeof m.closed === 'boolean') closed = m.closed;
+    }
   }
   const roles = t.roles.filter((r) => !filledRoles.includes(r.id) && (r.filled ?? 0) < r.qty).map(r => ({...r,qty:r.qty-(r.filled ?? 0)}));
   const filled = members.length;

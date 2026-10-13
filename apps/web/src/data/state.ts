@@ -5,12 +5,15 @@ export interface Application {
   role: string;
   status: ApplicationStatus;
   when: string;
+  msg?: string;
+  shareContact?: boolean;
 }
 
 export interface VertexApplication extends Application {
   id: string;
   pid: string;
   msg: string;
+  shareContact?: boolean;
 }
 
 /** The sample user leads Vertex, so its roster lives in app state. */
