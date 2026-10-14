@@ -28,6 +28,17 @@ describe('restored frontend API state',()=>{
   expect(store.get().authed).toBe(false);expect(store.get().error).toContain('Network unavailable');
   expect(ALL_COMPETITIONS).toHaveLength(0);expect(Object.keys(TEAM_BY_ID)).toHaveLength(0);expect(PERSONS.me.name).toBe('You');
  });
+ it('preserves signed-in data through outage and recovers using same API store',async()=>{
+  vi.stubGlobal('fetch',mockAPI());const store=createApiStore();await store.refresh!();
+  const before=store.get();
+  vi.stubGlobal('fetch',vi.fn().mockRejectedValue(new Error('offline')));await store.refresh!();
+  expect(store.get().error).toContain('Network unavailable');
+  expect(store.get().account).toEqual(before.account);expect(store.get().managed).toEqual(before.managed);
+  expect(Object.keys(TEAM_BY_ID)).toEqual(['real-team']);expect(PERSONS.me.name).toBe('Student');
+  await expect(store.request!('/signup','POST',{})).rejects.toThrow('Network unavailable');
+  vi.stubGlobal('fetch',mockAPI());await store.refresh!();
+  expect(store.get().error).toBeUndefined();expect(store.get().account?.id).toBe('student');
+ });
  it('loads anonymous catalog only from server without private dashboard',async()=>{
   const fetch=mockAPI(false);vi.stubGlobal('fetch',fetch);const store=createApiStore();await store.refresh!();
   expect(ALL_COMPETITIONS.map(c=>c.id)).toEqual(['challenge']);expect(store.get().saved).toEqual([]);

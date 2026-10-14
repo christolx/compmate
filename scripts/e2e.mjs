@@ -23,6 +23,14 @@ function createTeam(s,title,name){open(s,'/competitions');click(s,'link',title);
 function screenshot(s,name){ab(s,'screenshot',`${out}/${name}.png`,'--full');}
 writeFileSync(`${out}/summary.json`,JSON.stringify({result:'running',ui:'restored',base,stamp,modes,startedAt:new Date().toISOString()},null,2));
 try{
+ // Initial API outage must show retry screen, never switch to local demo.
+ const outage=`restore-outage-${stamp}`;sessions.push(outage);open(outage,'/');
+ ab(outage,'network','route',base+'/api/v1/me','--abort');ab(outage,'reload');
+ text(outage,'Unable to load CompMate');text(outage,'Network unavailable');
+ const failedBody=ab(outage,'get','text','body');
+ assert(!failedBody.includes('Team not found')&&!failedBody.includes('Maya')&&!failedBody.includes('Vertex'),'API outage rendered demo or missing-entity cards');
+ assert(ab(outage,'eval',"localStorage.getItem('compmate-v2') === null").includes('true'),'API outage wrote local prototype state');
+ ab(outage,'network','unroute');button(outage,'Retry');text(outage,'National Business Case Competition');
  const admin=`restore-admin-${stamp}`;sessions.push(admin);
  if(process.env.E2E_ADMIN_EMAIL)login(admin,process.env.E2E_ADMIN_EMAIL,process.env.E2E_ADMIN_PASSWORD);
  else{assert(process.env.DATABASE_URL,'Set DATABASE_URL for local operator bootstrap');assert(['127.0.0.1','localhost'].includes(new URL(base).hostname),'Local admin bootstrap only');const email=`e2e-admin-${stamp}@example.test`;signup(admin,'Curator',email);execFileSync('go',['run','./cmd/api','-promote-admin',email],{cwd:resolve('apps/api'),env:process.env,stdio:'pipe'});}
@@ -56,7 +64,7 @@ try{
   }
   assert(ab(applicant,'eval','document.documentElement.scrollWidth > window.innerWidth').includes('false'),'Horizontal overflow');screenshot(applicant,`${mode}-applicant`);assert(!ab(applicant,'errors').includes('Error:'),'Uncaught browser error');console.log(`PASS ${mode}: restored UI two-user create/apply/accept/contact, dialogs, privacy, offline errors, session recovery`);
  }
- writeFileSync(`${out}/summary.json`,JSON.stringify({result:'passed',ui:'restored',base,stamp,scenarios:['seeded identity',...modes,'connections',...(modes.includes('desktop')?['invitations','moderation']:[])],completedAt:new Date().toISOString()},null,2));
+ writeFileSync(`${out}/summary.json`,JSON.stringify({result:'passed',ui:'restored',base,stamp,scenarios:['API outage and retry','seeded identity',...modes,'connections',...(modes.includes('desktop')?['invitations','moderation']:[])],completedAt:new Date().toISOString()},null,2));
 }catch(e){writeFileSync(`${out}/summary.json`,JSON.stringify({result:'failed',ui:'restored',base,stamp,error:e.message,completedAt:new Date().toISOString()},null,2));for(const s of sessions){try{snap(s);screenshot(s,`${s}-failure`)}catch{}}throw e}
 finally{
  for(const s of sessions){try{ab(s,'close')}catch{}}
