@@ -50,6 +50,11 @@ DB credentials stay server-side. Default local seed imports original 19 profiles
 Seed dates remain original; expired events show deadline passed. These are sample
 records, not verified real events. Restart preserves edits/deletions.
 
+Sample profiles include working external destinations labeled “Example link”.
+Competitions missing organizer URLs use “Example registration” links. Add real
+LinkedIn, portfolio, and Instagram URLs through Edit profile. Sample link backfill
+preserves custom URLs and account edits on subsequent API starts.
+
 Seed login: `maya@compmate.local` / `compmate-demo-password`. Other seeded
 profiles use `<id>@compmate.local` with same password; see
 `apps/api/internal/formation/seed/catalog.json`. New signups get their own empty
