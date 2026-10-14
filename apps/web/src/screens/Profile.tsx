@@ -1,4 +1,4 @@
-import { externalUrl } from '../lib/externalUrl';
+import { profileLinkDestination } from '../lib/exampleLinks';
 import { useNavigate } from 'react-router';
 import { PERSONS, SKILL_CATEGORY, avatar, team } from '../data/model';
 import { match } from '../data/matching';
@@ -82,18 +82,18 @@ export function Profile({ pid }: { pid: string }) {
             </div>
             <div className="mt-3.5 flex flex-wrap gap-4 text-[13px]">
               {p.links.map((l) => {
-                const href = externalUrl(l.value);
-                if (!href) return <span key={l.label} className="inline-flex items-center gap-1.5 font-semibold text-ink"><span className="font-medium text-slate-500">{l.label}</span><span>{l.value}</span></span>;
+                const { href, example } = profileLinkDestination(l);
                 return (
                   <a
                     key={l.label}
                     href={href}
+                    aria-label={`${l.label}${example ? ' (example)' : ''}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 font-semibold text-ink no-underline hover:text-brand"
                   >
                     <span className="font-medium text-slate-500">{l.label}</span>
-                    <span>{l.value}</span> ↗
+                    <span>{example ? 'Example link' : l.value}</span> ↗
                   </a>
                 );
               })}
@@ -131,7 +131,9 @@ export function Profile({ pid }: { pid: string }) {
                   btn && (
                     <button
                       type="button"
-                      onClick={() => (conn === 'none' ? nav('connect', pid) : conn === 'sent' ? nav('withdraw', pid) : undefined)}
+                      disabled={conn === 'connected'}
+                      title={conn === 'connected' ? 'Already connected. Remove connection below to disconnect.' : undefined}
+                      onClick={() => (conn === 'none' ? nav('connect', pid) : nav('withdraw', pid))}
                       className="h-11 cursor-pointer rounded-[12px] px-[18px] text-[14px] font-bold"
                       style={{ border: btn.bd, background: btn.bg, color: btn.fg }}
                     >

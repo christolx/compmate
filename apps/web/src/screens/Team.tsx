@@ -304,7 +304,7 @@ export function Team({ tid, authed: authedProp }: TeamProps) {
                 </div>
                 <button
                   type="button"
-                  onClick={() => (t.mine ? nav('manage') : r.canApply && nav('apply', { team: t.id, role: r.id }))}
+                  onClick={() => (t.mine ? nav('people', { rank: t.id }) : r.canApply && nav('apply', { team: t.id, role: r.id }))}
                   disabled={!r.canApply && !t.mine}
                   className={cx(
                     'mt-[18px] h-[46px] w-full cursor-pointer rounded-[12px] border-0 text-[14px] font-bold hover:brightness-95',

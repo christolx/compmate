@@ -1,3 +1,4 @@
+import { exampleRegistrationUrl } from '../lib/exampleLinks';
 import { externalUrl } from '../lib/externalUrl';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
@@ -144,7 +145,7 @@ export function AppShell() {
         case 'invite': {const v=a[0] as {pid:string;tid:string;rid:string};command('/teams/'+v.tid+'/invitations','POST',{user_id:v.pid,role_id:v.rid},'Team invitation sent');return;}
         case 'create': return gate('create a team',()=>go('/teams/new?competition='+a[0]));
         case 'official':
-          { const url=externalUrl(COMPETITION_BY_ID[a[0] as string]?.url);if(url)window.open(url,'_blank','noopener,noreferrer');else flash('No valid official registration link provided for this competition.');return; }
+          { const cid=a[0] as string;const url=externalUrl(COMPETITION_BY_ID[cid]?.url)??exampleRegistrationUrl(cid);window.open(url,'_blank','noopener,noreferrer');return; }
         case 'toast':
           return flash(a[0] as string);
       }

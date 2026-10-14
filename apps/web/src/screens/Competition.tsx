@@ -1,3 +1,4 @@
+import { exampleRegistrationUrl, isExampleUrl } from '../lib/exampleLinks';
 import { externalUrl } from '../lib/externalUrl';
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { TEAM_BY_ID, comp, teamsFor } from '../data/model';
@@ -71,10 +72,11 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
 
   const scrollTo = (ref: RefObject<HTMLElement | null>) => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   const toTeams = () => (m ? setTab('teams') : scrollTo(teamsRef));
-  const openPoster = () => c.hasPoster && setPosterOpen(true);
+  const openPoster = () => setPosterOpen(true);
   const save = { onClick: () => nav('save', c.id), 'aria-label': saved ? 'Remove from saved' : 'Save competition' };
   const saveStyle = { borderColor: saved ? '#BFD3FE' : '#E2E8F0', background: saved ? '#EFF4FF' : '#FFFFFF', color: saved ? 'var(--color-brand)' : '#0F172A' };
-  const officialHref = externalUrl(c.url);
+  const officialHref = externalUrl(c.url) ?? exampleRegistrationUrl(c.id);
+  const officialLabel = isExampleUrl(officialHref) ? 'Example registration ↗' : 'Official registration ↗';
 
   const statusPill = (small: boolean) => (
     <span
@@ -135,7 +137,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
                 <button
                   type="button"
                   onClick={openPoster}
-                  aria-label="View full poster"
+                  aria-label={c.hasPoster ? 'View full poster' : 'View sample poster'}
                   className="relative aspect-[4/5] cursor-zoom-in overflow-hidden rounded-[14px] border-0 p-0 shadow-[0_0_0_1px_rgba(15,23,42,.06),0_20px_40px_-24px_rgba(15,23,42,.35)]"
                   style={{ background: c.hueBg }}
                 >
@@ -258,23 +260,15 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
                   Find a team
                 </button>
                 <div className="mt-2 flex gap-2">
-                  {officialHref ? (
+                  {(
                     <a
                       href={officialHref}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="grid h-[46px] flex-1 place-items-center rounded-[12px] border border-slate-200 bg-white text-[14px] font-bold text-ink no-underline hover:border-slate-300"
                     >
-                      Official registration ↗
+                      {officialLabel}
                     </a>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => nav('official', c.id)}
-                      className="h-[46px] flex-1 cursor-pointer rounded-[12px] border border-slate-200 bg-white text-[14px] font-bold text-ink hover:border-slate-300"
-                    >
-                      Official registration ↗
-                    </button>
                   )}
                   <button
                     type="button"
@@ -330,23 +324,15 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
               <button type="button" onClick={toTeams} className="h-[50px] cursor-pointer rounded-[12px] border-0 bg-white text-[15px] font-bold text-ink">
                 Find a team
               </button>
-              {officialHref ? (
+              {(
                 <a
                   href={officialHref}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="grid h-[46px] place-items-center rounded-[12px] border border-white/25 bg-transparent text-[14px] font-bold text-white no-underline hover:border-white/40"
                 >
-                  Official registration ↗
+                  {officialLabel}
                 </a>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => nav('official', c.id)}
-                  className="h-[46px] cursor-pointer rounded-[12px] border border-white/25 bg-transparent text-[14px] font-bold text-white"
-                >
-                  Official registration ↗
-                </button>
               )}
             </div>
           </div>
@@ -366,9 +352,9 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
               </div>
             )}
             <div className="absolute inset-x-0 bottom-0 h-[90px] bg-[linear-gradient(transparent,rgba(15,23,42,.45))]" />
-            {c.hasPoster && (
+            {(
               <button type="button" onClick={openPoster} className="absolute right-3 bottom-3 h-8 cursor-pointer rounded-[9px] border-0 bg-white/95 px-3 text-[12px] font-bold whitespace-nowrap text-ink">
-                View full poster
+                {c.hasPoster ? 'View full poster' : 'View sample poster'}
               </button>
             )}
           </div>
@@ -560,23 +546,15 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
             <BookmarkIcon size={19} fill={saved ? 'var(--color-brand)' : 'none'} />
           </button>
           {tab === 'teams' ? (
-            officialHref ? (
+            (
               <a
                 href={officialHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="grid h-[50px] flex-1 place-items-center rounded-[12px] border border-slate-200 bg-white text-[14px] font-bold text-ink no-underline"
               >
-                Official site ↗
+                {isExampleUrl(officialHref) ? 'Example site ↗' : 'Official site ↗'}
               </a>
-            ) : (
-              <button
-                type="button"
-                onClick={() => nav('official', c.id)}
-                className="h-[50px] flex-1 cursor-pointer rounded-[12px] border border-slate-200 bg-white text-[14px] font-bold text-ink"
-              >
-                Official site ↗
-              </button>
             )
           ) : (
             <button
@@ -597,15 +575,20 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
         </div>
       )}
 
-      {posterOpen && c.hasPoster && (
+      {posterOpen && (
         <div
           role="dialog"
           aria-label={`${c.title} poster`}
           onClick={() => setPosterOpen(false)}
           className="fixed inset-0 z-[60] flex animate-[cm-fade_.18s] items-center justify-center bg-[rgba(15,23,42,.88)] p-6"
         >
-          <img src={c.poster} alt={`${c.title} poster`} className="max-h-full max-w-full rounded-[10px] shadow-[0_30px_80px_rgba(0,0,0,.5)]" />
-          <button type="button" aria-label="Close" className="absolute top-4 right-4 h-10 w-10 cursor-pointer rounded-full border-0 bg-white/15 text-[20px] text-white">
+          {c.hasPoster ? <img src={c.poster} alt={`${c.title} poster`} className="max-h-full max-w-full rounded-[10px] shadow-[0_30px_80px_rgba(0,0,0,.5)]" /> :
+            <div className="poster-stripes flex aspect-[4/5] max-h-[80vh] w-full max-w-[480px] flex-col justify-between rounded-[14px] p-8" style={{ backgroundColor: c.hueBg, color: c.hueFg }}>
+              <span className="text-[13px] font-bold uppercase tracking-widest">{c.cat} · Sample poster</span>
+              <div><h2 className="text-[32px] leading-tight font-extrabold">{c.title}</h2><p>{c.org}</p><p>Registration closes {c.deadlineFull}</p></div>
+              <span className="text-[13px] font-semibold">Organizer artwork pending. This preview uses competition details.</span>
+            </div>}
+          <button type="button" aria-label="Close" onClick={() => setPosterOpen(false)} className="absolute top-4 right-4 h-10 w-10 cursor-pointer rounded-full border-0 bg-white/15 text-[20px] text-white">
             ×
           </button>
         </div>
