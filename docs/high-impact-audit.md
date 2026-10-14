@@ -1,5 +1,9 @@
 # CompMate — High-impact audit
 
+> Historical audit: 7 October prototype. Go/PostgreSQL and API-backed frontend
+> were added afterward. See [current follow-up](audit-fixes-summary.md) before
+> treating findings as outstanding work.
+
 Short answer: UI discovery sudah kuat. Big returns berikutnya: domain rules, data konsisten, identity nyata, core loop selesai. Register page harus nyambung ke fondasi ini.
 
 Audit: 7 Oct 2026. Scope: seluruh screen/component, routing, store, seed/model/matching, design board, PRD, build config, tests. Source trace + runtime probes; browser interaction belum diuji. Ini audit, belum fix app.
