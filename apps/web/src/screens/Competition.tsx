@@ -1,3 +1,4 @@
+import { externalUrl } from '../lib/externalUrl';
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { TEAM_BY_ID, comp, teamsFor } from '../data/model';
 import { isRecruiting } from '../data/selectors';
@@ -73,7 +74,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
   const openPoster = () => c.hasPoster && setPosterOpen(true);
   const save = { onClick: () => nav('save', c.id), 'aria-label': saved ? 'Remove from saved' : 'Save competition' };
   const saveStyle = { borderColor: saved ? '#BFD3FE' : '#E2E8F0', background: saved ? '#EFF4FF' : '#FFFFFF', color: saved ? 'var(--color-brand)' : '#0F172A' };
-  const officialHref = c.url ? (c.url.startsWith('http://') || c.url.startsWith('https://') ? c.url : `https://${c.url}`) : null;
+  const officialHref = externalUrl(c.url);
 
   const statusPill = (small: boolean) => (
     <span

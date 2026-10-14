@@ -1,3 +1,4 @@
+import { externalUrl } from '../lib/externalUrl';
 import { useNavigate } from 'react-router';
 import { PERSONS, SKILL_CATEGORY, avatar, team } from '../data/model';
 import { match } from '../data/matching';
@@ -81,7 +82,8 @@ export function Profile({ pid }: { pid: string }) {
             </div>
             <div className="mt-3.5 flex flex-wrap gap-4 text-[13px]">
               {p.links.map((l) => {
-                const href = l.value.startsWith('http://') || l.value.startsWith('https://') ? l.value : `https://${l.value}`;
+                const href = externalUrl(l.value);
+                if (!href) return <span key={l.label} className="inline-flex items-center gap-1.5 font-semibold text-ink"><span className="font-medium text-slate-500">{l.label}</span><span>{l.value}</span></span>;
                 return (
                   <a
                     key={l.label}
