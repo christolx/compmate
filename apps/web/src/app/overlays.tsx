@@ -212,7 +212,7 @@ export function NotificationsPanel({ onClose, position, onRead, onReadAll }: Ove
         <div className="flex items-center justify-between px-[18px] pt-4 pb-2">
           <div className="flex items-center gap-2">
             <span className="text-[16px] font-extrabold text-ink">Notifications</span>
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-500">Sample</span>
+            {st.loaded === undefined && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-500">Sample</span>}
           </div>
           <button type="button" onClick={onReadAll} className="cursor-pointer border-0 bg-transparent text-[13px] font-semibold text-brand">
             Mark all read
