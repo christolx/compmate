@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { defaultState } from './state';
-import { setClock, getClock, comp, team, type CompetitionView } from './model';
+import { setClock, getClock, comp, team, TEAM_BY_ID, PERSONS, type CompetitionView } from './model';
 import { isRecruiting, canApply, getCompetitionStatus, testDeadlineFilter } from './selectors';
 import { compsForMe, teamsForMe } from './matching';
 
@@ -9,6 +9,8 @@ describe('P1-4 Shared selectors and clock injection', () => {
     // Reset clock to 6 Oct 2026 (baseline fixture date)
     setClock(new Date(2026, 9, 6));
   });
+
+  afterEach(() => setClock(null));
 
   describe('isRecruiting', () => {
     it('returns true for a team with open seats and active competition', () => {
@@ -78,18 +80,49 @@ describe('P1-4 Shared selectors and clock injection', () => {
 
     it('blocks applying if the team is complete / full', () => {
       const st = defaultState();
-      st.managed = {
-        apex: {
-          added: ['other1'],
-          filled: ['designer'],
-          target: 2,
-          closed: false,
-          apps: [],
-        },
-      };
-      const res = canApply('apex', st);
+      const originalTarget = TEAM_BY_ID.apex.target;
+      TEAM_BY_ID.apex.target = 2;
+      let res;
+      try { res = canApply('apex', st); } finally { TEAM_BY_ID.apex.target = originalTarget; }
       expect(res.ok).toBe(false);
       expect(res.block).toBe('full');
+    });
+
+    it('respects server eligibility while allowing anonymous auth handoff', () => {
+      const st = defaultState();
+      const original = TEAM_BY_ID.apex.canApply;
+      TEAM_BY_ID.apex.canApply = false;
+      try {
+        st.authed = true;
+        expect(canApply('apex', st).ok).toBe(false);
+        expect(teamsForMe(st).some(t => t.id === 'apex')).toBe(false);
+        st.authed = false;
+        expect(canApply('apex', st).ok).toBe(true);
+      } finally { TEAM_BY_ID.apex.canApply = original; }
+    });
+
+    it('keeps final applications blocked to match API uniqueness', () => {
+      const st = defaultState();
+      for (const status of ['declined', 'withdrawn'] as const) {
+        st.apps.apex = { role: 'presenter', status, when: 'Today' };
+        expect(canApply('apex', st).block).toBe('applied');
+      }
+    });
+
+    it('blocks upcoming competitions across detail and recruitment selectors', () => {
+      const st = defaultState();
+      setClock(new Date(2020, 0, 1));
+      expect(canApply('apex', st).ok).toBe(false);
+      expect(isRecruiting('apex', st)).toBe(false);
+    });
+
+    it('renders a roster when leader profile is missing', () => {
+      const leaderId = TEAM_BY_ID.apex.leader;
+      const leader = PERSONS[leaderId];
+      delete PERSONS[leaderId];
+      try {
+        expect(team('apex', defaultState()).leaderName).toBe('Student');
+      } finally { PERSONS[leaderId] = leader; }
     });
 
     it('blocks applying if a specific requested role is filled', () => {

@@ -107,7 +107,7 @@ export function Team({ tid, authed: authedProp }: TeamProps) {
     primary = ['Team complete', false];
   } else if (t.closed || t.recruiting === false) {
     primary = ['Not recruiting', false];
-  } else if (!isApplicable && authed) {
+  } else if (!isApplicable) {
     primary = [generalApplyCheck.reason || 'Not recruiting', false];
   } else if (roles.length) {
     primary = ['Apply as ' + (best ? best.role.name : roles[0].name), true];

@@ -1,7 +1,6 @@
 // View models: everything the screens render is derived here from the seed
 // data plus the current app state, so components stay presentational.
 import { COMPETITIONS, FACULTIES, GROUPS, HUES, PEOPLE, TAXONOMY, TEAMS, TODAY, NOTIFICATIONS } from './seed';
-export { TEAMS, COMPETITIONS };
 import type { AppState } from './state';
 import type { Avatar, Competition, FacultyCode, Person, Prize, Role, Slot, Team } from './types';
 
@@ -311,27 +310,15 @@ export function team(id: string, st: AppState): TeamView {
   let filledRoles: string[] = [];
   let target = t.target;
   let closed = t.recruiting === false;
-  if (st.loaded === undefined) {
-    const userApp = st.apps[id];
-    if (userApp?.status === 'accepted') {
-      if (!members.includes('me')) {
-        members.push('me');
-      }
-      if (userApp.role && !filledRoles.includes(userApp.role)) {
-        filledRoles.push(userApp.role);
-      }
-    }
-    const m = st.managed?.[id] || (id === 'vertex' ? st.vx : undefined);
-    if (m) {
-      if (Array.isArray(m.added)) {
-        members = members.concat(m.added.filter((x) => !members.includes(x)));
-      }
-      if (Array.isArray(m.filled)) {
-        filledRoles = filledRoles.concat(m.filled);
-      }
-      if (typeof m.target === 'number') target = m.target;
-      if (typeof m.closed === 'boolean') closed = m.closed;
-    }
+  if (st.loaded === undefined && id === 'apex' && st.apps.apex?.status === 'accepted') {
+    members.push('me');
+    filledRoles.push('presenter');
+  }
+  if (st.loaded === undefined && id === 'vertex') {
+    members = members.concat(Array.isArray(st.vx.added) ? st.vx.added : []);
+    filledRoles = Array.isArray(st.vx.filled) ? st.vx.filled : [];
+    target = st.vx.target;
+    closed = st.vx.closed;
   }
   const roles = t.roles.filter((r) => !filledRoles.includes(r.id) && (r.filled ?? 0) < r.qty).map(r => ({...r,qty:r.qty-(r.filled ?? 0)}));
   const filled = members.length;
@@ -378,8 +365,8 @@ export function team(id: string, st: AppState): TeamView {
     skillsLine: [...new Set(roles.flatMap((r) => r.skills))].slice(0, 4).join(' · '),
     roleNames: roles.map((r) => r.name).join(', '),
     firstRole: roles.length ? roles[0].name : '',
-    leaderName: t.leader === 'me' ? 'you' : PERSONS[t.leader].name,
-    leaderFirst: t.leader === 'me' ? 'You' : PERSONS[t.leader].first,
+    leaderName: t.leader === 'me' ? 'you' : PERSONS[t.leader]?.name ?? 'Student',
+    leaderFirst: t.leader === 'me' ? 'You' : PERSONS[t.leader]?.first ?? 'Student',
     mine: t.leader === 'me',
     isMember: members.includes('me'),
     segs: Array.from({ length: target }, (_, i) => ({ bg: i < filled ? '#2563EB' : '#E2E8F0', mark: i === c.min - 1 && c.min < target })),

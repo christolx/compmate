@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ALL_COMPETITIONS, type CompetitionView } from '../data/model';
+import { testDeadlineFilter } from '../data/selectors';
 import { GROUPS, POPULAR_SEARCHES } from '../data/seed';
 import { useNav } from '../app/nav';
 import { useIsMobile } from '../app/viewport';
@@ -19,9 +20,9 @@ const FILTERS: Record<FilterKey, { title: string; opts: FilterOption[] }> = {
   dl: {
     title: 'Deadline',
     opts: [
-      { value: 'week', label: 'This week', test: (c) => c.left >= 0 && c.left <= 7 },
-      { value: '2w', label: 'Next 2 weeks', test: (c) => c.left >= 0 && c.left <= 14 },
-      { value: 'month', label: 'This month', test: (c) => c.left >= 0 && c.left <= 31 },
+      { value: 'week', label: 'This week', test: (c) => testDeadlineFilter(c, 'week') },
+      { value: '2w', label: 'Next 2 weeks', test: (c) => testDeadlineFilter(c, '2w') },
+      { value: 'month', label: 'This month', test: (c) => testDeadlineFilter(c, 'month') },
     ],
   },
   size: {

@@ -41,7 +41,7 @@ export function isRecruiting(
 
   // 1. Competition not expired
   const cv = comp(tv.comp, clock);
-  if (cv.left < 0 || cv.status === 'closed') return false;
+  if (cv.left < 0 || cv.status === 'closed' || cv.upcoming) return false;
 
   // 2. Team recruitment not closed
   if (tv.closed || tv.recruiting === false) return false;
@@ -81,6 +81,9 @@ export function canApply(
   const cv = comp(t.comp, clock);
 
   // Competition expired
+  if (cv.upcoming) {
+    return { ok: false, reason: 'Registration has not opened yet', block: 'closed' };
+  }
   if (cv.left < 0 || cv.status === 'closed') {
     return { ok: false, reason: 'Registration has closed', block: 'closed' };
   }
@@ -105,9 +108,9 @@ export function canApply(
     return { ok: false, reason: "You're already on this team", block: 'member' };
   }
 
-  // Already applied (pending or accepted)
+  // API retains one application per user/team, including final decisions.
   const existingApp = st.apps[teamId];
-  if (existingApp && (existingApp.status === 'pending' || existingApp.status === 'accepted')) {
+  if (existingApp) {
     return {
       ok: false,
       reason: 'Application ' + existingApp.status,
@@ -126,6 +129,11 @@ export function canApply(
       reason: 'You are already a member of another team for this competition',
       block: 'member',
     };
+  }
+
+  // Server eligibility includes restrictions absent from presentation data.
+  if (st.authed && t.canApply === false) {
+    return { ok: false, reason: 'You are not eligible to apply to this team' };
   }
 
   // Role availability
