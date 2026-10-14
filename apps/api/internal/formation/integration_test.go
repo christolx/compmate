@@ -463,6 +463,7 @@ func TestDefaultUISeedAndPreferences(t *testing.T) {
 	// Upgrade old fixture URLs without overwriting a user's custom links.
 	if _, err := h.db.Exec(ctx, `UPDATE profiles SET presentation=jsonb_set(presentation,'{links}','[{"label":"LinkedIn","value":"linkedin.com/in/mayaputri"},{"label":"Portfolio","value":"mayaputri.notion.site"}]') WHERE user_id='maya';
  UPDATE profiles SET presentation=jsonb_set(presentation,'{links}','[{"label":"Portfolio","value":"https://example.edu/my-work"}]') WHERE user_id='raka';
+ UPDATE profiles SET presentation=jsonb_set(presentation,'{links}','[{"label":"LinkedIn","value":"linkedin.com/in/nadiachen"}]') WHERE user_id='nadia';
  UPDATE competitions SET official_url='' WHERE id='ived';
  UPDATE competitions SET official_url='https://example.edu/custom-event' WHERE id='nbcc'`); err != nil {
 		t.Fatal(err)
@@ -471,6 +472,7 @@ func TestDefaultUISeedAndPreferences(t *testing.T) {
 		t.Fatal(err)
 	}
 	if h.count(`SELECT count(*) FROM profiles WHERE user_id='maya' AND presentation->'links'->0->>'example'='true'`) != 1 ||
+		h.count(`SELECT count(*) FROM profiles WHERE user_id='nadia' AND presentation->'links'->0->>'example'='true'`) != 1 ||
 		h.count(`SELECT count(*) FROM profiles WHERE user_id='raka' AND presentation->'links'->0->>'value'='https://example.edu/my-work'`) != 1 ||
 		h.count(`SELECT count(*) FROM competitions WHERE id='ived' AND official_url='https://example.com/?competition=ived'`) != 1 ||
 		h.count(`SELECT count(*) FROM competitions WHERE id='nbcc' AND official_url='https://example.edu/custom-event'`) != 1 {

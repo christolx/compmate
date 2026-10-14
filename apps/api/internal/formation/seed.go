@@ -55,17 +55,17 @@ func Seed(ctx context.Context, db *pgxpool.Pool) error {
 			meta, _ := json.Marshal(p)
 			// Replace only known fictional URLs from the original fixtures.
 			// Custom profile links remain untouched.
-			legacyLinks := `[]`
+			name, _ := p["name"].(string)
+			generatedLinks, _ := json.Marshal([]map[string]string{{"label": "LinkedIn", "value": "linkedin.com/in/" + strings.ToLower(strings.ReplaceAll(name, " ", ""))}})
+			legacyLinks := string(generatedLinks)
 			if user == "maya" {
 				legacyLinks = `[{"label":"LinkedIn","value":"linkedin.com/in/mayaputri"},{"label":"Portfolio","value":"mayaputri.notion.site"}]`
 			} else if user == "raka" {
 				legacyLinks = `[{"label":"LinkedIn","value":"linkedin.com/in/rakapratama"},{"label":"Portfolio","value":"rakapratama.com"},{"label":"Instagram","value":"@rakapratama"}]`
 			}
 			links, _ := json.Marshal(p["links"])
-			if user == "maya" || user == "raka" {
-				if _, err = tx.Exec(ctx, `UPDATE profiles SET presentation=jsonb_set(presentation,'{links}',$2::jsonb) WHERE user_id=$1 AND presentation->'links'=$3::jsonb AND EXISTS(SELECT 1 FROM users WHERE id=$1 AND seeded)`, user, links, legacyLinks); err != nil {
-					return err
-				}
+			if _, err = tx.Exec(ctx, `UPDATE profiles SET presentation=jsonb_set(presentation,'{links}',$2::jsonb) WHERE user_id=$1 AND presentation->'links'=$3::jsonb AND EXISTS(SELECT 1 FROM users WHERE id=$1 AND seeded)`, user, links, legacyLinks); err != nil {
+				return err
 			}
 			if _, err = tx.Exec(ctx, `UPDATE profiles SET presentation=$2::jsonb||presentation WHERE user_id=$1 AND EXISTS(SELECT 1 FROM users WHERE id=$1 AND seeded) AND presentation<>$2::jsonb||presentation`, user, meta); err != nil {
 				return err
