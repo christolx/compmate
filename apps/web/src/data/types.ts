@@ -8,7 +8,7 @@ export type ConnState = 'none' | 'sent' | 'incoming' | 'connected';
 export type ApplicationStatus = 'pending' | 'accepted' | 'declined' | 'withdrawn';
 
 export interface Experience { title: string; result: string; year: string; org: string }
-export interface ProfileLink { label: string; value: string }
+export interface ProfileLink { label: string; value: string; example?: boolean }
 export interface PastTeam { name: string; comp: string; role: string; result: string }
 
 export interface PersonSeed {

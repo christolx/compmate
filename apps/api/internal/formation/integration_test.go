@@ -457,6 +457,25 @@ func TestDefaultUISeedAndPreferences(t *testing.T) {
 	if h.count(`SELECT count(*) FROM users WHERE seeded`) != 19 || h.count(`SELECT count(*) FROM teams WHERE id='vertex'`) != 1 {
 		t.Fatal("old default data not seeded")
 	}
+	if h.count(`SELECT count(*) FROM profiles p JOIN users u ON u.id=p.user_id WHERE u.seeded AND jsonb_array_length(p.presentation->'links')=3`) != 19 {
+		t.Fatal("sample profiles missing external links")
+	}
+	// Upgrade old fixture URLs without overwriting a user's custom links.
+	if _, err := h.db.Exec(ctx, `UPDATE profiles SET presentation=jsonb_set(presentation,'{links}','[{"label":"LinkedIn","value":"linkedin.com/in/mayaputri"},{"label":"Portfolio","value":"mayaputri.notion.site"}]') WHERE user_id='maya';
+ UPDATE profiles SET presentation=jsonb_set(presentation,'{links}','[{"label":"Portfolio","value":"https://example.edu/my-work"}]') WHERE user_id='raka';
+ UPDATE competitions SET official_url='' WHERE id='ived';
+ UPDATE competitions SET official_url='https://example.edu/custom-event' WHERE id='nbcc'`); err != nil {
+		t.Fatal(err)
+	}
+	if err := Seed(ctx, h.db); err != nil {
+		t.Fatal(err)
+	}
+	if h.count(`SELECT count(*) FROM profiles WHERE user_id='maya' AND presentation->'links'->0->>'example'='true'`) != 1 ||
+		h.count(`SELECT count(*) FROM profiles WHERE user_id='raka' AND presentation->'links'->0->>'value'='https://example.edu/my-work'`) != 1 ||
+		h.count(`SELECT count(*) FROM competitions WHERE id='ived' AND official_url='https://example.com/?competition=ived'`) != 1 ||
+		h.count(`SELECT count(*) FROM competitions WHERE id='nbcc' AND official_url='https://example.edu/custom-event'`) != 1 {
+		t.Fatal("sample link backfill failed or overwrote custom links")
+	}
 	seededClient, _ := cookiejar.New(nil)
 	maya := &http.Client{Jar: seededClient}
 	h.req(maya, "POST", "/login", map[string]string{"email": "maya@compmate.local", "password": "compmate-demo-password"}, 200)

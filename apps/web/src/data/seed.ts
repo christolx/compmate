@@ -1,3 +1,4 @@
+import { EXAMPLE_PROFILE_LINKS, exampleRegistrationUrl } from '../lib/exampleLinks';
 // Sample data for the round 3 prototype. Every person is fictional; the sample
 // user ("me", Maya Putri) is shown as "You" almost everywhere.
 import type { Competition, FacultyCode, Notification, PersonSeed, Team } from './types';
@@ -63,7 +64,7 @@ export const PEOPLE: Record<string, PersonSeed> = {
       { title: 'National Marketing Case Competition', result: 'Semifinalist', year: '2026', org: 'MarkComm Forum' },
       { title: 'Startup Pitch Competition', result: 'Participant', year: '2025', org: 'Venture Society' },
     ],
-    links: [{ label: 'LinkedIn', value: 'linkedin.com/in/mayaputri' }, { label: 'Portfolio', value: 'mayaputri.notion.site' }],
+    links: EXAMPLE_PROFILE_LINKS,
   },
   raka: {
     name: 'Raka Pratama', program: 'Information Systems', fac: 'SOIS', roles: ['Presenter', 'Business Strategist'],
@@ -75,11 +76,7 @@ export const PEOPLE: Record<string, PersonSeed> = {
       { title: 'Innovation Hackathon', result: 'Participant', year: '2026', org: 'Innovate Indonesia' },
       { title: 'Campus Product Sprint', result: '2nd place', year: '2025', org: 'BINUS Student Association' },
     ],
-    links: [
-      { label: 'LinkedIn', value: 'linkedin.com/in/rakapratama' },
-      { label: 'Portfolio', value: 'rakapratama.com' },
-      { label: 'Instagram', value: '@rakapratama' },
-    ],
+    links: EXAMPLE_PROFILE_LINKS,
     pastTeams: [{ name: 'Helix', comp: 'National Business Case Challenge 2026', role: 'Presenter', result: 'Finalist' }],
   },
   kevin: { name: 'Kevin Wijaya', program: 'Computer Science', fac: 'SOCS', roles: ['Developer'], skills: ['Python', 'JavaScript', 'React', 'SQL'], interests: ['Hackathon', 'Programming'], avail: 'Weekends', level: 'Experienced', complete: 0.85, mutual: 6 },
@@ -284,3 +281,6 @@ export const NOTIFICATIONS: Notification[] = [
   { id: 'n4', text: 'Fikri Hidayat applied to join Vertex as Presenter.', time: 'Yesterday', go: { to: 'manage', id: 'vertex' } },
   { id: 'n5', text: 'Your team Vertex is now Competition Eligible.', time: '2 days ago', go: { to: 'manage', id: 'vertex' } },
 ];
+
+// Example organizer destinations keep sample registration actions usable.
+for (const c of COMPETITIONS) c.url ||= exampleRegistrationUrl(c.id);

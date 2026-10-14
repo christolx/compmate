@@ -53,7 +53,26 @@ func Seed(ctx context.Context, db *pgxpool.Pool) error {
 				user = "maya"
 			}
 			meta, _ := json.Marshal(p)
+			// Replace only known fictional URLs from the original fixtures.
+			// Custom profile links remain untouched.
+			legacyLinks := `[]`
+			if user == "maya" {
+				legacyLinks = `[{"label":"LinkedIn","value":"linkedin.com/in/mayaputri"},{"label":"Portfolio","value":"mayaputri.notion.site"}]`
+			} else if user == "raka" {
+				legacyLinks = `[{"label":"LinkedIn","value":"linkedin.com/in/rakapratama"},{"label":"Portfolio","value":"rakapratama.com"},{"label":"Instagram","value":"@rakapratama"}]`
+			}
+			links, _ := json.Marshal(p["links"])
+			if user == "maya" || user == "raka" {
+				if _, err = tx.Exec(ctx, `UPDATE profiles SET presentation=jsonb_set(presentation,'{links}',$2::jsonb) WHERE user_id=$1 AND presentation->'links'=$3::jsonb AND EXISTS(SELECT 1 FROM users WHERE id=$1 AND seeded)`, user, links, legacyLinks); err != nil {
+					return err
+				}
+			}
 			if _, err = tx.Exec(ctx, `UPDATE profiles SET presentation=$2::jsonb||presentation WHERE user_id=$1 AND EXISTS(SELECT 1 FROM users WHERE id=$1 AND seeded) AND presentation<>$2::jsonb||presentation`, user, meta); err != nil {
+				return err
+			}
+		}
+		for _, c := range data.Competitions {
+			if _, err = tx.Exec(ctx, `UPDATE competitions SET official_url=$2 WHERE id=$1 AND official_url='' AND title=$3 AND organizer=$4`, c["id"], c["url"], c["title"], c["org"]); err != nil {
 				return err
 			}
 		}
