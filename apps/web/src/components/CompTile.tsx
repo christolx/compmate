@@ -129,8 +129,8 @@ export function CompTile({ cid, variant = 'a', wide, reason, authed }: CompTileP
             Closing soon · <span>{c.leftLabel}</span>
           </span>
         )}
-        {(c.featuredOnly || c.left<0) && (
-          <span className="absolute top-3 left-3 inline-flex h-[26px] items-center rounded-[7px] bg-[rgba(15,23,42,.72)] px-[9px] text-[11px] font-bold tracking-[.02em] text-white">{c.left<0?'Deadline passed':'Featured'}</span>
+        {c.featuredOnly && (
+          <span className="absolute top-3 left-3 inline-flex h-[26px] items-center rounded-[7px] bg-[rgba(15,23,42,.72)] px-[9px] text-[11px] font-bold tracking-[.02em] text-white">Featured</span>
         )}
         <button
           type="button"

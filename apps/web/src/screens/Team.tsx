@@ -186,7 +186,7 @@ export function Team({ tid, authed: authedProp }: TeamProps) {
         </div>
         {!m && (
           <div className="flex gap-2">
-            <button type="button" onClick={handleShare} aria-label="Share team" className="grid h-12 w-12 cursor-pointer place-items-center rounded-[12px] border border-slate-200 bg-white text-slate-700 hover:border-slate-300">
+            <button type="button" onClick={handleShare} aria-label="Share team" className="grid h-12 w-12 cursor-pointer place-items-center rounded-[12px] border border-slate-200 bg-white text-slate-700">
               <ShareIcon size={18} />
             </button>
             <button type="button" onClick={onPrimary} disabled={!primary[1]} className={cx('h-12 rounded-[12px] px-[22px] text-[15px]', primaryClass)}>

@@ -186,7 +186,14 @@ export function LoginOverlay({ reason, signup=false, onClose, onLogin }: Overlay
         <button type="submit" disabled={busy} className="mt-5 h-[50px] w-full cursor-pointer rounded-[12px] border-0 bg-brand text-[15px] font-bold text-white">
           {busy?'Saving…':isSignup?'Create account':'Continue'}
         </button>
-        <div className="mt-3.5 flex justify-between text-[13px]"><button type="button" onClick={()=>setSignup(!isSignup)} className="cursor-pointer border-0 bg-transparent p-0 font-bold text-brand hover:text-brand-hover">{isSignup?'Already registered? Log in':'Create account'}</button><button type="button" onClick={onClose} className="cursor-pointer border-0 bg-transparent text-slate-500">Cancel</button></div>
+        <div className="mt-3.5 flex justify-between text-[13px]">
+          <button type="button" onClick={onClose} className="cursor-pointer border-0 bg-transparent p-0 font-semibold text-brand hover:text-brand-hover">
+            Cancel
+          </button>
+          <button type="button" onClick={() => setSignup(!isSignup)} className="cursor-pointer border-0 bg-transparent p-0 font-bold text-brand hover:text-brand-hover">
+            {isSignup ? 'Already registered? Log in' : 'Create account'}
+          </button>
+        </div>
       </form>
     </div>
   );

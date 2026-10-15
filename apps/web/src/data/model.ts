@@ -353,9 +353,9 @@ export function team(id: string, st: AppState): TeamView {
     slots,
     initial: t.name[0],
     sizeLabel: filled + ' of ' + target + ' members',
-    statusLabel: c.left<0 ? 'Deadline passed' : closed ? 'Closed' : complete ? 'Team complete' : 'Recruiting',
-    statusFg: closed ? '#475569' : complete ? '#15803D' : '#1D4ED8',
-    statusBg: closed ? '#F1F5F9' : complete ? '#ECFDF3' : '#EFF4FF',
+    statusLabel: c.left < 0 || closed ? 'Closed' : complete ? 'Team complete' : 'Recruiting',
+    statusFg: c.left < 0 || closed ? '#475569' : complete ? '#15803D' : '#1D4ED8',
+    statusBg: c.left < 0 || closed ? '#F1F5F9' : complete ? '#ECFDF3' : '#EFF4FF',
     eligText: complete
       ? 'Team complete'
       : eligible

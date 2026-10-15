@@ -90,10 +90,10 @@ export function Profile({ pid }: { pid: string }) {
                     aria-label={`${l.label}${example ? ' (example)' : ''}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 font-semibold text-ink no-underline hover:text-brand"
+                    className="inline-flex items-center gap-1.5 font-semibold text-ink no-underline hover:text-ink"
                   >
                     <span className="font-medium text-slate-500">{l.label}</span>
-                    <span>{example ? 'Example link' : l.value}</span> ↗
+                    <span>{l.value}</span> ↗
                   </a>
                 );
               })}
