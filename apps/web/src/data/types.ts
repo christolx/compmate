@@ -73,6 +73,8 @@ export interface Competition {
   facs: FacultyCode[];
   skills: string[];
   teamsCount: number;
+  /** Curated recommendation weight; separate from live recruiting totals. */
+  recommendationWeight?: number;
   openRoles: number;
   interested: number;
   featured?: boolean;

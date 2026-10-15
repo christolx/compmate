@@ -50,6 +50,14 @@ describe('restored frontend API state',()=>{
   expect(TEAM_BY_ID['real-team'].leader).toBe('me');expect(TEAM_BY_ID['real-team'].members).toEqual(['me']);expect(store.get().managed!['real-team'].apps[0]).toMatchObject({id:'committed-app',pid:'other',status:'pending'});
   expect(store.get().saved).toEqual(['challenge']);expect(store.get().apps).toEqual({});expect(TEAM_BY_ID.vertex).toBeUndefined();
  });
+ it('preserves original recommendation weight without replacing live team counts',async()=>{
+  const fetch=mockAPI();
+  vi.stubGlobal('fetch',async(input:string,init?:RequestInit)=>input==='/api/v1/competitions'
+   ?new Response(JSON.stringify([{...competition,presentation:{teamsCount:15}}]))
+   :fetch(input,init));
+  const store=createApiStore();await store.refresh!();
+  expect(ALL_COMPETITIONS[0]).toMatchObject({recommendationWeight:15,teamsCount:1});
+ });
  it('keeps committed state unchanged after rejected mutation',async()=>{
   vi.stubGlobal('fetch',mockAPI());const store=createApiStore();await store.refresh!();const before=store.get();
   await expect(store.request!('/teams/real-team/applications','POST',{role_id:'dev'})).rejects.toThrow('Role full');expect(store.get()).toBe(before);

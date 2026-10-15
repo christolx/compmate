@@ -52,7 +52,7 @@ const FILTERS: Record<FilterKey, { title: string; opts: FilterOption[] }> = {
 const FILTER_KEYS = Object.keys(FILTERS) as FilterKey[];
 
 const SORTS: Record<Sort, (a: CompetitionView, b: CompetitionView) => number> = {
-  rec: (a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || b.teamsCount - a.teamsCount,
+  rec: (a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || (b.recommendationWeight ?? b.teamsCount) - (a.recommendationWeight ?? a.teamsCount),
   deadline: (a, b) => a.left - b.left,
   teams: (a, b) => b.teamsCount - a.teamsCount,
   new: (a, b) => (a.open < b.open ? 1 : -1),
