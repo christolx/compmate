@@ -90,7 +90,9 @@ export function AppShell() {
 
       switch (route as NavRoute) {
         case 'home':
-          return go(store.get().authed ? paths.forYou() : paths.home());
+          return go(paths.home());
+        case 'forYou':
+          return gate("see what's next for you", () => go(paths.forYou()));
         case 'explore':
           return go(paths.explore(a[0] as ExploreQuery | undefined));
         case 'comp':
@@ -159,7 +161,7 @@ export function AppShell() {
     setOverlay(null);
     if (loginRequest) navigate(loginRequest.next, { replace: true });
     else if (then) setTimeout(then, 60);
-    else navigate(paths.forYou());
+    else navigate(paths.home());
     flash('Logged in');
   };
 

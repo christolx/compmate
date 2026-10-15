@@ -36,9 +36,8 @@ function RequireAuth({ reason, children }: { reason: string; children: ReactNode
 }
 
 function Home() {
-  const { authed } = useAppState();
   useTitle('');
-  return authed ? <Navigate to="/for-you" replace /> : <Discover />;
+  return <Discover />;
 }
 
 function ForYouRoute() {

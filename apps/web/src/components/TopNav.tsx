@@ -182,7 +182,10 @@ function AccountMenu() {
             <div className="text-[14px] font-bold text-ink">{current.first}</div>
             <div className="mt-1 text-[12px] text-slate-500">{st.account?.email||'Your account'}</div>
           </div>
-          <AppLink to="profile" args={['me']} onClick={() => setOpen(false)} className="mt-1 block rounded-[8px] px-3 py-3 text-[14px] font-semibold text-ink hover:bg-canvas hover:text-ink">
+          <AppLink to="forYou" onClick={() => setOpen(false)} className="mt-1 block rounded-[8px] px-3 py-3 text-[14px] font-semibold text-ink hover:bg-canvas hover:text-ink">
+            For you
+          </AppLink>
+          <AppLink to="profile" args={['me']} onClick={() => setOpen(false)} className="block rounded-[8px] px-3 py-3 text-[14px] font-semibold text-ink hover:bg-canvas hover:text-ink">
             Profile
           </AppLink>
           <a href="/privacy" className="block rounded-[8px] px-3 py-3 text-[14px] font-semibold text-ink hover:bg-canvas">Privacy</a>

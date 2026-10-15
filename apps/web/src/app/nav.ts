@@ -9,6 +9,7 @@ export type PeopleRank = string;
 /** Every navigation or action a screen can ask the app shell for. */
 export type NavArgs = {
   home: [];
+  forYou: [];
   explore: [query?: ExploreQuery];
   comp: [id: string];
   team: [id: string];
@@ -72,7 +73,7 @@ export const paths = {
   board: () => '/board',
 };
 
-export type PageRoute = 'home' | 'explore' | 'comp' | 'team' | 'people' | 'profile' | 'manage' | 'saved' | 'how';
+export type PageRoute = 'home' | 'forYou' | 'explore' | 'comp' | 'team' | 'people' | 'profile' | 'manage' | 'saved' | 'how';
 
 export function hrefFor(route: PageRoute, args: unknown[]): string {
   const fn = paths[route] as (...a: unknown[]) => string;

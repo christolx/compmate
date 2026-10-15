@@ -55,15 +55,25 @@ export function ForYou({ dir = 'a' }: ForYouProps) {
   const st = useAppState();
   const m = useIsMobile();
   const nav = useNav();
-  const RECOMMENDED_COMPS = compsForMe().slice(0,3).map(x=>x.id);
   const myTeams=Object.values(TEAM_BY_ID).filter(t=>t.members.includes('me')).map(seed=>{const t=team(seed.id,st);return {t,myRole:t.mine?'Leader':t.memberList.find(m=>m.isMe)?.roles[0]||'Member',cta:t.mine?'Manage':'View',eligShort:t.eligible?'Eligible':'Needs members',leads:t.mine}});
+  const RECOMMENDED_COMPS = compsForMe().filter(c => !myTeams.some(({t}) => t.comp === c.id)).slice(0, 3).map(c => c.id);
   const actions:Action[]=[];
   for(const {t} of myTeams.filter(x=>x.leads)) {
     const pending=(st.managed?.[t.id]||st.vx).apps.filter(a=>a.status==='pending');
+    if(t.c.left>=0)actions.push({icon:ICONS.clock,ibg:'#FFF7E6',ifg:'#B45309',title:t.c.title+' closes in '+t.c.left+' days',sub:t.eligible?t.name+' is eligible. Register the team on the official site.':t.name+' still needs members before registering.',cta:'Register ↗',go:()=>nav('official',t.comp),chip:'Registration deadline'});
     if(pending.length)actions.push({icon:ICONS.user,ibg:'#EFF4FF',ifg:'#1D4ED8',title:t.name+' has '+pending.length+' new applicant'+(pending.length>1?'s':''),sub:pending.map(a=>PERSONS[a.pid].first+' · '+TEAM_BY_ID[t.id].roles.find(r=>r.id===a.role)?.name).join('   '),cta:'Review',go:()=>nav('manage',t.id),primary:true,chip:pending.length+' applicants for '+t.name});
-    if(t.c.left>=0)actions.push({icon:ICONS.clock,ibg:'#FFF7E6',ifg:'#B45309',title:t.c.title+' closes in '+t.c.left+' days',sub:t.eligible?t.name+' is eligible. Register on the official site.':t.name+' still needs members before registering.',cta:'Register ↗',go:()=>nav('official',t.comp),chip:'Registration deadline'});
   }
-  for(const [tid,a] of Object.entries(st.apps)){const t=team(tid,st);actions.push({icon:a.status==='accepted'?ICONS.check:ICONS.send,ibg:'#F1F5F9',ifg:'#334155',title:a.status==='accepted'?"You're now on "+t.name:'Your application to '+t.name+' is '+a.status,sub:a.status==='accepted'?'Open your team to access consented member contacts.':(t.roles.find(r=>r.id===a.role)?.name||'Role')+' · sent '+a.when,cta:'View',go:()=>nav('team',tid),chip:'Application '+a.status});}
+  const recommendedTeam = teamsForMe(st).find(({ m }) => m.kind === 'strong');
+  if (recommendedTeam) {
+    const t = team(recommendedTeam.id, st);
+    actions.push({
+      icon: ICONS.spark, ibg: '#EEF0FF', ifg: '#4338CA',
+      title: t.name + ' needs a ' + recommendedTeam.m.role.name,
+      sub: 'Strong match for you · ' + t.c.title,
+      cta: 'View team', go: () => nav('team', t.id), chip: t.name + ' needs a ' + recommendedTeam.m.role.name,
+    });
+  }
+  for(const [tid,a] of Object.entries(st.apps)){const t=team(tid,st);actions.push({icon:a.status==='accepted'?ICONS.check:ICONS.send,ibg:a.status==='accepted'?'#ECFDF3':'#F1F5F9',ifg:a.status==='accepted'?'#15803D':'#334155',title:a.status==='accepted'?"You're now on "+t.name:'Your application to '+t.name+' is '+a.status,sub:a.status==='accepted'?'Open your team to access consented member contacts.':(t.roles.find(r=>r.id===a.role)?.name||'Role')+' · sent '+a.when,cta:'View',go:()=>nav('team',tid),chip:'Application '+a.status});}
   for(const [pid,status] of Object.entries(st.conns)){if(status==='incoming' && PERSONS[pid])actions.push({icon:ICONS.user,ibg:'#F1F5F9',ifg:'#334155',title:PERSONS[pid].name+' wants to connect',sub:PERSONS[pid].rolesLine,cta:'View',go:()=>nav('profile',pid),chip:'Connection request'});}
   for(const invitation of st.incomingInvites||[]){const t=TEAM_BY_ID[invitation.team_id];if(t)actions.unshift({icon:ICONS.user,ibg:'#EFF4FF',ifg:'#1D4ED8',title:t.name+' invited you to join',sub:t.roles.find(r=>r.id===invitation.role_id)?.name||'Team invitation',cta:'View invitation',go:()=>nav('team',t.id),chip:'Team invitation'});}
   const upNext=actions.slice(0,4);
@@ -73,7 +83,9 @@ export function ForYou({ dir = 'a' }: ForYouProps) {
     .filter((c) => c.left >= 0)
     .sort((a, b) => a.left - b.left)
     .slice(0, 3);
-  const recPeople=Object.keys(PERSONS).filter(id=>id!=='me').sort((a,b)=>relevance(b).score-relevance(a).score).slice(0,2);
+  const rankedPeople = Object.keys(PERSONS).filter(id => id !== 'me').sort((a, b) => relevance(b).score - relevance(a).score);
+  const incomingPeople = rankedPeople.filter(id => st.conns[id] === 'incoming');
+  const recPeople = [...new Set([...rankedPeople.slice(0, 1), ...incomingPeople, ...rankedPeople])].slice(0, 2);
   const recTeams = teamsForMe(st).map((x) => x.id);
 
   const h2 = cx('m-0 font-extrabold tracking-[-0.025em]', m ? 'text-[20px]' : 'text-[24px]');
