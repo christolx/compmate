@@ -135,7 +135,8 @@ npm run test:e2e
 ```
 
 E2E requires `agent-browser` on PATH (`npm install -g agent-browser@0.27.0`).
-It verifies default seeded Maya profile/inbox, creates disposable curator/student accounts and competitions through UI,
+It verifies all 10 seeded competition thumbnails, full posters and missing-artwork fallback,
+default seeded Maya profile/inbox, creates disposable curator/student accounts and competitions through UI,
 promotes curator through operator CLI using `DATABASE_URL`, exercises desktop
 and 390px mobile journeys, revocation, network failure, logout/login, keyboard
 focus and layout. Outputs screenshots/snapshots to `e2e-results/`.
@@ -144,7 +145,7 @@ preconfigured test admin; no automatic remote privilege bootstrap. Tests create
 visible fixtures; run only on designated test deployments.
 
 CI runs `make check` with PostgreSQL, E2E, backup restoration; uploads browser
-artifacts. Go integration tests skip explicitly if `TEST_DATABASE_URL` absent.
+artifacts plus API/web logs. Go integration tests skip explicitly if `TEST_DATABASE_URL` absent.
 
 ## Production
 

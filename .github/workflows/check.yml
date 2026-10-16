@@ -5,6 +5,7 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:18-bookworm
@@ -42,6 +43,7 @@ jobs:
             if curl -fsS http://127.0.0.1:5173/api/ready; then break; fi
             sleep 1
           done
+          curl -fsS http://127.0.0.1:5173/api/ready >/dev/null
           npm run test:e2e
       - name: Backup restore smoke test
         run: |
@@ -52,4 +54,7 @@ jobs:
         if: always()
         with:
           name: browser-evidence
-          path: e2e-results/
+          path: |
+            e2e-results/
+            /tmp/compmate-api.log
+            /tmp/compmate-web.log
