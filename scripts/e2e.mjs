@@ -31,15 +31,21 @@ try{
  assert(!failedBody.includes('Team not found')&&!failedBody.includes('Maya')&&!failedBody.includes('Vertex'),'API outage rendered demo or missing-entity cards');
  assert(ab(outage,'eval',"localStorage.getItem('compmate-v2') === null").includes('true'),'API outage wrote local prototype state');
  ab(outage,'network','unroute');button(outage,'Retry');text(outage,'National Business Case Competition');
- open(outage,'/competitions/ived');button(outage,'View sample poster');text(outage,'Organizer artwork pending');button(outage,'Close');assert(!snap(outage).includes('dialog \"Indonesian Varsity English Debate poster'),'Sample poster did not close');assert.equal(ab(outage,'get','attr',ref(outage,'link','Example registration ↗'),'href').trim(),'https://example.com/?competition=ived');
+ open(outage,'/competitions');
+ const seededImages=JSON.parse(ab(outage,'eval',`(async()=>{const ids=['nbcc','techno','dsc','nuiux','yivc','nmcc','spc','ived','nspc','eic'];return Promise.all(ids.map(async id=>{const image=document.querySelector('img[src="/posters/'+id+'.jpg"]');if(!image)return {id,loaded:false};await image.decode();return {id,loaded:image.naturalWidth>0};}));})()`));
+ assert(seededImages.length===10&&seededImages.every(image=>image.loaded),'Seeded competition thumbnail missing or broken');
+ screenshot(outage,'competition-thumbnails');
+ open(outage,'/competitions/ived');button(outage,'View full poster');ab(outage,'wait','--fn',"!!document.querySelector('[role=dialog] img[src=\"/posters/ived.jpg\"]')?.naturalWidth");button(outage,'Close');assert(!snap(outage).includes('dialog "Indonesian Varsity English Debate poster'),'Poster did not close');
  const admin=`restore-admin-${stamp}`;sessions.push(admin);
  if(process.env.E2E_ADMIN_EMAIL)login(admin,process.env.E2E_ADMIN_EMAIL,process.env.E2E_ADMIN_PASSWORD);
  else{assert(process.env.DATABASE_URL,'Set DATABASE_URL for local operator bootstrap');assert(['127.0.0.1','localhost'].includes(new URL(base).hostname),'Local admin bootstrap only');const email=`e2e-admin-${stamp}@example.test`;signup(admin,'Curator',email);execFileSync('go',['run','./cmd/api','-promote-admin',email],{cwd:resolve('apps/api'),env:process.env,stdio:'pipe'});}
  // Previous seed records now come from API; Maya keeps her own teams/apps.
  const seed=`restore-seed-${stamp}`;sessions.push(seed);login(seed,'maya@compmate.local','compmate-demo-password');text(seed,'Vertex has 2 new applicants');open(seed,'/teams/vertex/manage');text(seed,'Livia Santoso');text(seed,'Fikri Hidayat');screenshot(seed,'restored-manage-seeded');
+ open(seed,'/competitions/ived');ab(seed,'eval',"window.open=(url,target,features)=>{window.registrationOpened={url,target,features};return null}");button(seed,'Example registration ↗');assert.deepEqual(JSON.parse(ab(seed,'eval','window.registrationOpened')),{url:'https://example.com/?competition=ived',target:'_blank',features:'noopener,noreferrer'});
  open(seed,'/u/me');text(seed,'Maya Putri');assert.equal(ab(seed,'get','attr',ref(seed,'link','LinkedIn (example)'),'href').trim(),'https://www.linkedin.com/');screenshot(seed,'restored-profile-seeded');
  for(const mode of modes){
   const title=`E2E ${mode} ${stamp}`;curate(admin,title);
+  open(admin,'/competitions');click(admin,'link',title);button(admin,'View sample poster');text(admin,'Organizer artwork pending');button(admin,'Close');assert(!snap(admin).includes('dialog "'+title+' poster'),'Sample poster did not close');
   const leader=`restore-leader-${mode}-${stamp}`,applicant=`restore-applicant-${mode}-${stamp}`;sessions.push(leader,applicant);
   const ln=`Leader${mode}`,an=`Applicant${mode}`;const le=`leader-${mode}-${stamp}@example.test`,ae=`applicant-${mode}-${stamp}@example.test`;const lc=`leader-${mode}@private.test`,ac=`applicant-${mode}@private.test`;
   signup(leader,ln,le);signup(applicant,an,ae);assert(!ab(applicant,'get','text','body').includes('Vertex has'),'New account inherited seeded identity');
@@ -65,7 +71,7 @@ try{
   }
   assert(ab(applicant,'eval','document.documentElement.scrollWidth > window.innerWidth').includes('false'),'Horizontal overflow');screenshot(applicant,`${mode}-applicant`);assert(!ab(applicant,'errors').includes('Error:'),'Uncaught browser error');console.log(`PASS ${mode}: restored UI two-user create/apply/accept/contact, dialogs, privacy, offline errors, session recovery`);
  }
- writeFileSync(`${out}/summary.json`,JSON.stringify({result:'passed',ui:'restored',base,stamp,scenarios:['API outage and retry','seeded identity',...modes,'connections',...(modes.includes('desktop')?['invitations','moderation']:[])],completedAt:new Date().toISOString()},null,2));
+ writeFileSync(`${out}/summary.json`,JSON.stringify({result:'passed',ui:'restored',base,stamp,scenarios:['API outage and retry','competition thumbnails and poster fallback','seeded identity',...modes,'connections',...(modes.includes('desktop')?['invitations','moderation']:[])],completedAt:new Date().toISOString()},null,2));
 }catch(e){writeFileSync(`${out}/summary.json`,JSON.stringify({result:'failed',ui:'restored',base,stamp,error:e.message,completedAt:new Date().toISOString()},null,2));for(const s of sessions){try{snap(s);screenshot(s,`${s}-failure`)}catch{}}throw e}
 finally{
  for(const s of sessions){try{ab(s,'close')}catch{}}
