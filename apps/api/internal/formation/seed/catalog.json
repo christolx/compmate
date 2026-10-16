@@ -1062,7 +1062,8 @@
       "openRoles": 6,
       "interested": 38,
       "overview": "Design a mobile experience for a public service and test it with real users.",
-      "url": "https://example.com/?competition=nuiux"
+      "url": "https://example.com/?competition=nuiux",
+      "poster": "/posters/nuiux.jpg"
     },
     {
       "id": "yivc",
@@ -1092,7 +1093,8 @@
       "openRoles": 5,
       "interested": 29,
       "overview": "Value a listed company and defend your recommendation in front of investors.",
-      "url": "https://example.com/?competition=yivc"
+      "url": "https://example.com/?competition=yivc",
+      "poster": "/posters/yivc.jpg"
     },
     {
       "id": "nmcc",
@@ -1123,7 +1125,8 @@
       "openRoles": 8,
       "interested": 33,
       "overview": "Build a go-to-market plan for a local FMCG brand.",
-      "url": "https://example.com/?competition=nmcc"
+      "url": "https://example.com/?competition=nmcc",
+      "poster": "/posters/nmcc.jpg"
     },
     {
       "id": "spc",
@@ -1154,7 +1157,8 @@
       "openRoles": 10,
       "interested": 52,
       "overview": "Pitch an early-stage startup idea to angel investors.",
-      "url": "https://example.com/?competition=spc"
+      "url": "https://example.com/?competition=spc",
+      "poster": "/posters/spc.jpg"
     },
     {
       "id": "ived",
@@ -1184,7 +1188,8 @@
       "openRoles": 4,
       "interested": 19,
       "overview": "British Parliamentary format, three speakers per team.",
-      "url": "https://example.com/?competition=ived"
+      "url": "https://example.com/?competition=ived",
+      "poster": "/posters/ived.jpg"
     },
     {
       "id": "nspc",
@@ -1215,7 +1220,8 @@
       "openRoles": 3,
       "interested": 14,
       "overview": "Submit a paper on sustainable cities.",
-      "url": "https://example.com/?competition=nspc"
+      "url": "https://example.com/?competition=nspc",
+      "poster": "/posters/nspc.jpg"
     },
     {
       "id": "eic",
@@ -1244,7 +1250,8 @@
       "openRoles": 0,
       "interested": 11,
       "overview": "Prototype a low-cost solution for rural energy access.",
-      "url": "https://example.com/?competition=eic"
+      "url": "https://example.com/?competition=eic",
+      "poster": "/posters/eic.jpg"
     }
   ],
   "teams": [

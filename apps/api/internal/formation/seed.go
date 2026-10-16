@@ -72,6 +72,11 @@ func Seed(ctx context.Context, db *pgxpool.Pool) error {
 			}
 		}
 		for _, c := range data.Competitions {
+			if poster, ok := c["poster"].(string); ok && poster != "" {
+				if _, err = tx.Exec(ctx, `UPDATE competitions SET presentation=jsonb_set(presentation,'{poster}',to_jsonb($2::text)) WHERE id=$1 AND title=$3 AND organizer=$4 AND COALESCE(presentation->>'poster','')=''`, c["id"], poster, c["title"], c["org"]); err != nil {
+					return err
+				}
+			}
 			if _, err = tx.Exec(ctx, `UPDATE competitions SET official_url=$2 WHERE id=$1 AND official_url='' AND title=$3 AND organizer=$4`, c["id"], c["url"], c["title"], c["org"]); err != nil {
 				return err
 			}
