@@ -7,11 +7,23 @@ design reference.
 
 ## Run locally
 
-Requires Node.js 24+, Go 1.26+, PostgreSQL 18 (or Docker Compose).
+Requires Node.js 24+, Docker Compose and Make.
 
 ```sh
 npm ci
 cp .env.example .env
+make stack
+make dev
+```
+
+Open `http://127.0.0.1:5173`. `make stack` starts PostgreSQL + Go API in Docker;
+`make dev` runs the frontend. Vite proxies `/api` to Go on port 8080.
+`PUBLIC_ORIGIN` must match browser origin; `.env.example` uses this address.
+Stop backend services with `make down` (DB data persists).
+
+For native API development, install Go 1.26+, then replace `make stack` with:
+
+```sh
 make db
 set -a
 . ./.env
@@ -19,31 +31,9 @@ set +a
 make api
 ```
 
-For existing native PostgreSQL, skip `make db` and set `DATABASE_URL` to that
-DB before `make api`. Keep `PUBLIC_ORIGIN=http://127.0.0.1:5173` for this frontend.
+Run `make dev` in another terminal. For existing native PostgreSQL, skip `make db`
+and set `DATABASE_URL` to that DB before `make api`.
 
-Current local verification also supports a persistent native PostgreSQL cluster
-at `.local/postgres` (ignored by Git). If using that cluster after a restart:
-
-```sh
-pg_ctl -D .local/postgres -l .local/postgres.log -o "-h 127.0.0.1 -k $PWD/.local -p 55432" start
-set -a
-. ./.env
-set +a
-make api
-```
-
-Stop native DB with `pg_ctl -D .local/postgres stop` before switching to Docker
-on the same DB port. Both options use PostgreSQL and the same Go API/migrations.
-
-In another terminal:
-
-```sh
-npm run dev --workspace @compmate/web -- --host 127.0.0.1
-```
-
-Open `http://127.0.0.1:5173`. Vite proxies `/api` to Go on port 8080.
-`PUBLIC_ORIGIN` must match browser origin; `.env.example` uses this address.
 Migrations run transactionally at API startup, protected by a DB advisory lock.
 DB credentials stay server-side. Default local seed imports original 19 profiles,
 10 competitions, 11 teams, applications, saved items and connections once.
