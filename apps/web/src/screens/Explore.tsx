@@ -185,7 +185,7 @@ export function Explore({ mode = 'all', q: initialQ = '', cat: initialCat = 'All
         </div>
       </div>
 
-      <div className={cx('sticky z-10 bg-white/96 backdrop-blur-[10px]', m ? 'top-14' : 'top-[68px]')}>
+      <div className={cx('sticky z-10 bg-canvas', m ? 'top-14' : 'top-[68px]')}>
         <div className={cx('mx-auto box-border flex max-w-[1280px] flex-wrap items-center gap-2 py-3', m ? 'px-5' : 'px-8')}>
           {m ? (
             <button
