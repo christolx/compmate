@@ -46,7 +46,7 @@ export function Discover({ authed: authedProp }: { authed?: boolean }) {
 
   return (
     <div data-screen-label="Discover" className="min-h-full bg-canvas font-sans text-ink">
-      <TopNav authed={authed} active="explore" />
+      <TopNav authed={authed} active="" />
       <div className="bg-[linear-gradient(180deg,var(--color-hero)_0%,var(--color-canvas)_100%)]">
         <section className={cx('mx-auto box-border grid max-w-[1280px] items-center gap-12', m ? 'grid-cols-[minmax(0,1fr)] px-5 pt-7 pb-3' : 'grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] px-8 pt-16 pb-12')}>
           <div>
@@ -233,7 +233,7 @@ export function Discover({ authed: authedProp }: { authed?: boolean }) {
           </span>
         </div>
       </footer>
-      {m && <BottomNav active="explore" />}
+      {m && <BottomNav active="" />}
     </div>
   );
 }

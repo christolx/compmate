@@ -23,6 +23,13 @@ describe('landing and dashboard routes', () => {
     expect(html).toContain('Teams recruiting right now');
     expect(html).toContain('Trending competitions');
     expect(html).not.toContain('data-screen-label="For You"');
+    expect(html).not.toMatch(/<a[^>]*aria-current="page"[^>]*>Explore<\/a>/);
+  });
+
+  it.each([false, true])('marks Explore active only on competition listings with authed=%s', (authed) => {
+    const html = renderRoute('/competitions', authed);
+    expect(html).toContain('data-screen-label="Explore"');
+    expect(html).toMatch(/<a[^>]*aria-current="page"[^>]*>Explore<\/a>/);
   });
 
   it('keeps personal dashboard available separately after login', () => {

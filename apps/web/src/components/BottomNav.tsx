@@ -1,7 +1,7 @@
 import { AppLink } from '../app/AppLink';
 import { cx } from '../lib/cx';
 
-export type BottomNavActive = 'explore' | 'people' | 'teams' | 'saved' | 'profile';
+export type BottomNavActive = 'explore' | 'people' | 'teams' | 'saved' | 'profile' | '';
 
 const ITEMS = [
   { key: 'explore', label: 'Explore', icon: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM15.5 8.5l-2 5-5 2 2-5z', to: 'explore' },
