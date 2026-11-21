@@ -8,7 +8,7 @@
 - Use separate browser sessions for **leader** and **applicant**.
 - Use published competition with future deadline; match campus restriction.
 - Seed login: `maya@compmate.local` / `compmate-demo-password`.
-- Seed dates stay fixed → expired competitions block recruitment actions.
+- Seed dates roll forward on API start → sample competitions stay open.
 - Normal login/signup lands on `/`. Open `/for-you` for dashboard.
 
 ## 1. New student onboarding
@@ -140,6 +140,4 @@
 
 Findings from current UI/API code + [existing E2E script](../scripts/e2e.mjs). Live browser checks and tests not rerun for this document.
 
-- Expired seed deadlines can block recruitment.
-- **See my applications** currently routes to `/` → open `/for-you` directly.
 - Official registration opens external site; completion happens outside app.
