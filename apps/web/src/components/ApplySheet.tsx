@@ -220,7 +220,7 @@ export function ApplySheet({ tid, role: initialRole, block, sent: initialSent = 
             </p>
           </div>
           <div className={cx('flex flex-none gap-2 border-t border-hairline', pad.foot)}>
-            <button type="button" onClick={() => nav('home')} className="h-[50px] flex-1 cursor-pointer rounded-[12px] border-0 bg-slate-100 text-[14px] font-bold text-ink">
+            <button type="button" onClick={() => nav('forYou')} className="h-[50px] flex-1 cursor-pointer rounded-[12px] border-0 bg-slate-100 text-[14px] font-bold text-ink">
               See my applications
             </button>
             <button type="button" onClick={() => nav('closeApply')} className="h-[50px] flex-1 cursor-pointer rounded-[12px] border-0 bg-brand text-[14px] font-bold text-white">
