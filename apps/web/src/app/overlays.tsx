@@ -275,15 +275,21 @@ export function ApplyOverlay({ team, role, onClose }: OverlayProps & { team: str
   );
 }
 
-export function Toast({ message, onUndo, mobile }: { message: string; onUndo?: () => void; mobile: boolean }) {
+export function Toast({ message, onUndo, mobile, error }: { message: string; onUndo?: () => void; mobile: boolean; error?: boolean }) {
   return (
     <div
+      role={error ? 'alert' : undefined}
       className={cx(
-        'fixed left-1/2 z-[60] box-border flex w-max max-w-[calc(100%-32px)] -translate-x-1/2 animate-[cm-toast_.22s_ease-out] items-center gap-2.5 rounded-[12px] bg-ink px-4 py-3 text-[14px] font-medium text-white shadow-[0_12px_32px_rgba(15,23,42,.25)]',
+        'fixed left-1/2 z-[60] box-border flex w-max max-w-[calc(100%-32px)] -translate-x-1/2 animate-[cm-toast_.22s_ease-out] items-center gap-2.5 rounded-[12px] px-4 py-3 text-[14px] font-medium text-white shadow-[0_12px_32px_rgba(15,23,42,.25)]',
+        error ? 'bg-danger' : 'bg-ink',
         mobile ? 'bottom-[92px]' : 'bottom-6',
       )}
     >
-      <CheckIcon size={16} stroke="#4ADE80" className="flex-none" />
+      {error ? (
+        <span aria-hidden="true" className="grid h-[18px] w-[18px] flex-none place-items-center rounded-full bg-white text-[12px] font-extrabold text-danger">!</span>
+      ) : (
+        <CheckIcon size={16} stroke="#4ADE80" className="flex-none" />
+      )}
       <span>{message}</span>
       {onUndo && (
         <button type="button" onClick={onUndo} className="ml-1.5 cursor-pointer border-0 bg-transparent p-0 text-[14px] font-bold text-[#93C5FD]">

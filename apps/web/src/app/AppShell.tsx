@@ -39,7 +39,7 @@ export function AppShell() {
   const framed = phonePreview && !narrow;
   const mobile = narrow || framed;
   const [overlay, setOverlay] = useState<Overlay | null>(null);
-  const [toast, setToast] = useState<{ message: string; id: number; undo?: () => void } | null>(null);
+  const [toast, setToast] = useState<{ message: string; id: number; undo?: () => void; error?: boolean } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const stageRef = useRef<HTMLDivElement>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -52,6 +52,11 @@ export function AppShell() {
     clearTimeout(toastTimer.current);
     setToast((t) => ({ message, id: (t?.id ?? 0) + 1, undo }));
     toastTimer.current = setTimeout(() => setToast(null), undo ? 5000 : 3200);
+  }, []);
+  const flashError = useCallback((message: string) => {
+    clearTimeout(toastTimer.current);
+    setToast((t) => ({ message, id: (t?.id ?? 0) + 1, error: true }));
+    toastTimer.current = setTimeout(() => setToast(null), 5000);
   }, []);
   useEffect(() => () => clearTimeout(toastTimer.current), []);
 
@@ -72,7 +77,7 @@ export function AppShell() {
         else setOverlay({ kind: 'login', reason, then });
       };
       const command = (path: string, method: string, body: unknown, success: string) => {
-        void store.request?.(path,method,body).then(()=>flash(success)).catch(e=>flash(e.message));
+        void store.request?.(path,method,body).then(()=>flash(success)).catch(e=>flashError(e.message));
       };
 
       const notifPosition = () => {
@@ -119,7 +124,7 @@ export function AppShell() {
         case 'login':
           return setOverlay({ kind: 'login', signup: !!a[0] });
         case 'logout':
-          void store.request?.('/logout','POST',{}).then(()=>{setOverlay(null);navigate(paths.home(),{replace:true,state:null});flash('Logged out')}).catch(e=>flash(e.message));return;
+          void store.request?.('/logout','POST',{}).then(()=>{setOverlay(null);navigate(paths.home(),{replace:true,state:null});flash('Logged out')}).catch(e=>flashError(e.message));return;
         case 'notifications':
           return gate('see notifications', () => setOverlay({ kind: 'notif', ...notifPosition() }));
         case 'save': {
@@ -150,9 +155,11 @@ export function AppShell() {
           { const cid=a[0] as string;const url=externalUrl(COMPETITION_BY_ID[cid]?.url)??exampleRegistrationUrl(cid);window.open(url,'_blank','noopener,noreferrer');return; }
         case 'toast':
           return flash(a[0] as string);
+        case 'toastError':
+          return flashError(a[0] as string);
       }
     },
-    [store, navigate, flash, framed, mobile],
+    [store, navigate, flash, flashError, framed, mobile],
   );
 
   const login = () => {
@@ -252,8 +259,8 @@ export function AppShell() {
         <NotificationsPanel
           onClose={close}
           position={active}
-          onRead={(id) => {void store.request?.('/notifications/'+id+'/read','POST',{}).catch(e=>flash(e.message))}}
-          onReadAll={() => {void store.request?.('/notifications/read','POST',{}).catch(e=>flash(e.message))}}
+          onRead={(id) => {void store.request?.('/notifications/'+id+'/read','POST',{}).catch(e=>flashError(e.message))}}
+          onReadAll={() => {void store.request?.('/notifications/read','POST',{}).catch(e=>flashError(e.message))}}
         />
       )}
       {active?.kind === 'apply' && <ApplyOverlay team={active.team} role={active.role} onClose={close} />}
@@ -262,6 +269,7 @@ export function AppShell() {
           <Toast
             key={toast.id}
             message={toast.message}
+            error={toast.error}
             mobile={mobile}
             onUndo={
               toast.undo &&

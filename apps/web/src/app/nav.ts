@@ -37,6 +37,7 @@ export type NavArgs = {
   create: [cid: string];
   official: [cid: string];
   toast: [message: string];
+  toastError: [message: string];
 };
 export type NavRoute = keyof NavArgs;
 export type Nav = <K extends NavRoute>(route: K, ...args: NavArgs[K]) => void;
