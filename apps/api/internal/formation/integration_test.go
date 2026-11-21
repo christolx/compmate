@@ -457,6 +457,18 @@ func TestDefaultUISeedAndPreferences(t *testing.T) {
 	if h.count(`SELECT count(*) FROM users WHERE seeded`) != 19 || h.count(`SELECT count(*) FROM teams WHERE id='vertex'`) != 1 {
 		t.Fatal("old default data not seeded")
 	}
+	if h.count(`SELECT count(*) FROM competitions WHERE deadline>now() AND id<>$1`, h.competition) != 10 {
+		t.Fatal("seeded competitions should be open")
+	}
+	if _, err := h.db.Exec(ctx, `UPDATE competitions SET deadline=now()-interval '1 day' WHERE id='nbcc'`); err != nil {
+		t.Fatal(err)
+	}
+	if err := Seed(ctx, h.db); err != nil {
+		t.Fatal(err)
+	}
+	if h.count(`SELECT count(*) FROM competitions WHERE id='nbcc' AND deadline>now() AND presentation->>'deadline'=to_char(deadline AT TIME ZONE 'UTC','YYYY-MM-DD')`) != 1 {
+		t.Fatal("expired sample competition not rolled forward")
+	}
 	if h.count(`SELECT count(*) FROM profiles p JOIN users u ON u.id=p.user_id WHERE u.seeded AND jsonb_array_length(p.presentation->'links')=3`) != 19 {
 		t.Fatal("sample profiles missing external links")
 	}

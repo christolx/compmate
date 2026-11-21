@@ -37,7 +37,8 @@ and set `DATABASE_URL` to that DB before `make api`.
 Migrations run transactionally at API startup, protected by a DB advisory lock.
 DB credentials stay server-side. Default local seed imports original 19 profiles,
 10 competitions, 11 teams, applications, saved items and connections once.
-Seed dates remain original; expired events show deadline passed. These are sample
+Seed dates shift relative to today at seed time; expired sample competitions
+(unchanged title/organizer) roll forward on each API start so local demos stay open. These are sample
 records, not verified real events. Restart preserves edits/deletions.
 
 Sample profiles include working external destinations labeled “Example link”.

@@ -72,6 +72,15 @@ func Seed(ctx context.Context, db *pgxpool.Pool) error {
 			}
 		}
 		for _, c := range data.Competitions {
+			// Roll expired sample events forward so local demos stay usable.
+			// Only untouched seed listings (same title/organizer) move.
+			shifted, deadline, err := seedSchedule(c, time.Now())
+			if err != nil {
+				return err
+			}
+			if _, err = tx.Exec(ctx, `UPDATE competitions SET deadline=$2, presentation=presentation||$5::jsonb WHERE id=$1 AND title=$3 AND organizer=$4 AND deadline<now()`, c["id"], deadline, c["title"], c["org"], shifted); err != nil {
+				return err
+			}
 			if poster, ok := c["poster"].(string); ok && poster != "" {
 				if _, err = tx.Exec(ctx, `UPDATE competitions SET presentation=jsonb_set(presentation,'{poster}',to_jsonb($2::text)) WHERE id=$1 AND title=$3 AND organizer=$4 AND COALESCE(presentation->>'poster','')=''`, c["id"], poster, c["title"], c["org"]); err != nil {
 					return err
@@ -116,11 +125,11 @@ func Seed(ctx context.Context, db *pgxpool.Pool) error {
 		}
 	}
 	for _, c := range data.Competitions {
-		meta, _ := json.Marshal(c)
-		deadline, err := time.Parse("2006-01-02", str(c, "deadline"))
-		if err != nil {
+		if _, _, err = seedSchedule(c, time.Now()); err != nil {
 			return err
 		}
+		meta, _ := json.Marshal(c)
+		deadline, _ := time.Parse("2006-01-02", str(c, "deadline"))
 		deadline = deadline.Add(17 * time.Hour)
 		min := num(c, "min")
 		if min < 2 {
@@ -203,4 +212,54 @@ func Seed(ctx context.Context, db *pgxpool.Pool) error {
 		return err
 	}
 	return tx.Commit(ctx)
+}
+
+// seedAnchor is the demo date the original sample schedules were written for.
+var seedAnchor = time.Date(2026, 10, 6, 0, 0, 0, 0, time.UTC)
+
+// seedSchedule shifts a sample competition's dates (in place) by whole days so the
+// original spacing relative to seedAnchor is kept relative to now. It returns the
+// shifted date fields as JSON and the shifted deadline (17:00 UTC).
+func seedSchedule(c map[string]any, now time.Time) ([]byte, time.Time, error) {
+	days := int(now.UTC().Truncate(24*time.Hour).Sub(seedAnchor).Hours() / 24)
+	if days < 0 {
+		days = 0
+	}
+	shift := func(v any) (string, error) {
+		s, _ := v.(string)
+		d, err := time.Parse("2006-01-02", s)
+		if err != nil {
+			return "", fmt.Errorf("seed date %q: %w", s, err)
+		}
+		return d.AddDate(0, 0, days).Format("2006-01-02"), nil
+	}
+	out := map[string]any{}
+	for _, k := range []string{"open", "deadline", "event"} {
+		if _, ok := c[k]; !ok {
+			continue
+		}
+		v, err := shift(c[k])
+		if err != nil {
+			return nil, time.Time{}, err
+		}
+		c[k], out[k] = v, v
+	}
+	if steps, ok := c["timeline"].([]any); ok {
+		for _, step := range steps {
+			if m, ok := step.(map[string]any); ok {
+				v, err := shift(m["date"])
+				if err != nil {
+					return nil, time.Time{}, err
+				}
+				m["date"] = v
+			}
+		}
+		out["timeline"] = steps
+	}
+	deadline, err := time.Parse("2006-01-02", fmt.Sprint(c["deadline"]))
+	if err != nil {
+		return nil, time.Time{}, err
+	}
+	raw, err := json.Marshal(out)
+	return raw, deadline.Add(17 * time.Hour), err
 }
