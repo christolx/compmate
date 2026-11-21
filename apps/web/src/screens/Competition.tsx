@@ -54,6 +54,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
   }, [posterOpen]);
 
   const c = comp(cid);
+  const canCreate = c.left >= 0;
   const compTeams = noTeams ? [] : teamsFor(c.id, st);
   const inComp = compTeams.some((t) => t.isMember);
   const all = compTeams.filter((t) => isRecruiting(t));
@@ -442,7 +443,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
                 </h2>
                 <p className="mt-2 mb-0 max-w-[620px] text-[15px] leading-[1.55] text-slate-600">Apply for one specific role. Faculty doesn't matter here, skills do.</p>
               </div>
-              {!m && (
+              {!m && canCreate && (
                 <button type="button" onClick={() => nav('create', c.id)} className="h-[46px] cursor-pointer rounded-[12px] border border-slate-300 bg-white px-[18px] text-[14px] font-bold text-ink hover:border-slate-400">
                   + Create a team
                 </button>
@@ -493,7 +494,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
                 <div className="mt-5 text-center text-[13px] text-slate-500">
                   Showing {shown.length} of {teamsTotal} teams
                 </div>
-                <div className="mt-9 flex flex-wrap items-center justify-between gap-5 border-t border-slate-200 pt-7">
+                {canCreate ? <div className="mt-9 flex flex-wrap items-center justify-between gap-5 border-t border-slate-200 pt-7">
                   <div>
                     <div className="text-[17px] font-extrabold">Can't find the right team?</div>
                     <div className="mt-1 text-[14px] text-slate-600">
@@ -503,7 +504,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
                   <button type="button" onClick={() => nav('create', c.id)} className="h-[46px] cursor-pointer rounded-[12px] border-0 bg-ink px-5 text-[14px] font-bold text-white">
                     Create a team
                   </button>
-                </div>
+                </div> : <div className="mt-9 border-t border-slate-200 pt-7 text-[14px] text-slate-600">Registration closed. New teams can't be created for this competition.</div>}
               </>
             ) : (
               <div className="mt-7 rounded-[18px] border border-dashed border-slate-300 bg-white px-5 py-12 text-center">
@@ -512,13 +513,13 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
                   <span className="-ml-2 box-border h-11 w-11 rounded-full border-[1.5px] border-dashed border-seat bg-white shadow-[0_0_0_3px_#FFFFFF]" />
                   <span className="-ml-2 box-border h-11 w-11 rounded-full border-[1.5px] border-dashed border-seat bg-white shadow-[0_0_0_3px_#FFFFFF]" />
                 </div>
-                <div className="mt-4 text-[18px] font-extrabold">No team yet</div>
+                <div className="mt-4 text-[18px] font-extrabold">{canCreate ? 'No team yet' : 'Registration closed'}</div>
                 <p className="mx-auto mt-1.5 mb-0 max-w-[380px] text-[14px] leading-[1.55] text-slate-500">
-                  No teams are recruiting for this competition yet. Start one and students browsing this page will see your open roles first.
+                  {canCreate ? 'No teams are recruiting for this competition yet. Start one and students browsing this page will see your open roles first.' : 'The deadline has passed, so new teams can\'t be created for this competition.'}
                 </p>
-                <button type="button" onClick={() => nav('create', c.id)} className="mt-[18px] h-[46px] cursor-pointer rounded-[12px] border-0 bg-brand px-5 text-[14px] font-bold text-white">
+                {canCreate && <button type="button" onClick={() => nav('create', c.id)} className="mt-[18px] h-[46px] cursor-pointer rounded-[12px] border-0 bg-brand px-5 text-[14px] font-bold text-white">
                   Create the first team
-                </button>
+                </button>}
               </div>
             )}
           </div>
@@ -533,17 +534,18 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
           </button>
           <button
             type="button"
-            onClick={() => (tab === 'teams' ? nav('official', c.id) : nav('create', c.id))}
+            onClick={() => (tab === 'teams' || !canCreate ? nav('official', c.id) : nav('create', c.id))}
             className="h-[50px] flex-1 cursor-pointer rounded-[12px] border border-slate-200 bg-white text-[14px] font-bold text-ink"
           >
-            {tab === 'teams' ? (isExampleUrl(officialHref) ? 'Example site ↗' : 'Official site ↗') : 'Create a team'}
+            {tab === 'teams' || !canCreate ? (isExampleUrl(officialHref) ? 'Example site ↗' : 'Official site ↗') : 'Create a team'}
           </button>
           <button
             type="button"
+            disabled={tab === 'teams' && !canCreate}
             onClick={() => (tab === 'teams' ? nav('create', c.id) : setTab('teams'))}
-            className="h-[50px] flex-[1.3] cursor-pointer rounded-[12px] border-0 bg-brand text-[15px] font-bold text-white"
+            className="h-[50px] flex-[1.3] cursor-pointer rounded-[12px] border-0 bg-brand text-[15px] font-bold text-white disabled:cursor-default disabled:bg-slate-300 disabled:text-slate-600"
           >
-            {tab === 'teams' ? 'Create a team' : 'Find a team'}
+            {tab === 'teams' ? (canCreate ? 'Create a team' : 'Registration closed') : 'Find a team'}
           </button>
         </div>
       )}
