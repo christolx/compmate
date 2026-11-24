@@ -2,7 +2,7 @@ import { exampleRegistrationUrl } from '../lib/exampleLinks';
 import { externalUrl } from '../lib/externalUrl';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { COMPETITION_BY_ID, TEAM_BY_ID, team } from '../data/model';
+import { COMPETITION_BY_ID, PERSONS, TEAM_BY_ID, team } from '../data/model';
 
 
 import { useMediaQuery } from '../lib/useMediaQuery';
@@ -12,6 +12,7 @@ import { AppRoutes } from './AppRoutes';
 import { DemoDock } from './DemoDock';
 import { NavContext, paths, type ExploreQuery, type Nav, type NavRoute, type PeopleRank } from './nav';
 import { ApplyOverlay, LoginOverlay, NotificationsPanel, SearchOverlay, Toast } from './overlays';
+import { ConfirmDialog, type ConfirmRequest } from '../components/ConfirmDialog';
 import { ViewportContext } from './viewport';
 
 type Overlay =
@@ -39,6 +40,8 @@ export function AppShell() {
   const framed = phonePreview && !narrow;
   const mobile = narrow || framed;
   const [overlay, setOverlay] = useState<Overlay | null>(null);
+  const [confirm, setConfirm] = useState<ConfirmRequest | null>(null);
+  const closeConfirm = useCallback(() => setConfirm(null), []);
   const [toast, setToast] = useState<{ message: string; id: number; undo?: () => void; error?: boolean } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -147,7 +150,20 @@ export function AppShell() {
         case 'closeApply': return setOverlay(null);
         case 'acceptApex': return;
         case 'connect': command('/connections/'+a[0],'POST',{},'Connection request sent');return;
-        case 'withdraw': case 'ignoreConn': case 'removeConn': command('/connections/'+a[0],'DELETE',{},'Connection updated');return;
+        case 'ignoreConn': command('/connections/'+a[0],'DELETE',{},'Request ignored');return;
+        case 'withdraw': case 'removeConn': {
+          const pid = a[0] as string;
+          const name = PERSONS[pid]?.first ?? 'this student';
+          const removing = route === 'removeConn';
+          setConfirm({
+            title: removing ? `Remove ${name} from your connections?` : `Cancel your request to ${name}?`,
+            body: removing ? 'You can send a new request later.' : `${name} won't see your request anymore. You can send a new one later.`,
+            confirm: removing ? 'Remove connection' : 'Cancel request',
+            danger: removing,
+            run: () => store.request!('/connections/' + pid, 'DELETE', {}).then(() => flash(removing ? 'Connection removed' : 'Request cancelled')),
+          });
+          return;
+        }
         case 'acceptConn': command('/connections/'+a[0]+'/accept','POST',{},'Connection accepted');return;
         case 'invite': {const v=a[0] as {pid:string;tid:string;rid:string};command('/teams/'+v.tid+'/invitations','POST',{user_id:v.pid,role_id:v.rid},'Team invitation sent');return;}
         case 'create': return gate('create a team',()=>go('/teams/new?competition='+a[0]));
@@ -264,6 +280,7 @@ export function AppShell() {
         />
       )}
       {active?.kind === 'apply' && <ApplyOverlay team={active.team} role={active.role} onClose={close} />}
+      <ConfirmDialog request={confirm} onClose={closeConfirm} />
       <div role="status" aria-live="polite">
         {toast && (
           <Toast
