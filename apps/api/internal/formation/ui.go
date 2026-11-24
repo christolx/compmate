@@ -6,8 +6,19 @@ import (
 	"strings"
 )
 
+// catalog lists student profiles. Social signals are derived from real
+// connections; anonymous visitors get roster-level fields only.
 func (s *Server) catalog(w http.ResponseWriter, r *http.Request, a actor) (any, error) {
-	return jsonRow(r.Context(), s.db, `SELECT jsonb_build_object('people',(SELECT coalesce(jsonb_agg(p.presentation||jsonb_build_object('id',p.user_id,'name',p.name,'skills',p.skills,'availability',p.availability,'about',p.about,'campus',p.campus)),'[]') FROM profiles p))`)
+	return jsonRow(r.Context(), s.db, `WITH peers AS (
+ SELECT sender_id AS a, recipient_id AS b FROM connections WHERE status='connected'
+ UNION ALL SELECT recipient_id, sender_id FROM connections WHERE status='connected'),
+mine AS (SELECT b FROM peers WHERE a=$1)
+SELECT jsonb_build_object('people',(SELECT coalesce(jsonb_agg(
+ (p.presentation - ARRAY['mutual','connections','complete','mutual_ids'] - CASE WHEN $1='' THEN ARRAY['links','exp','pastTeams'] ELSE ARRAY[]::text[] END)
+ ||jsonb_build_object('id',p.user_id,'name',p.name,'skills',p.skills,'availability',p.availability,
+  'about',CASE WHEN $1='' THEN '' ELSE p.about END,'campus',CASE WHEN $1='' THEN '' ELSE p.campus END,
+  'connections',(SELECT count(*) FROM peers WHERE a=p.user_id),
+  'mutual_ids',(SELECT coalesce(jsonb_agg(x.b ORDER BY x.b),'[]') FROM (SELECT b FROM peers WHERE a=p.user_id AND p.user_id<>$1 AND b IN (SELECT b FROM mine)) x))),'[]') FROM profiles p))`, a.ID)
 }
 func (s *Server) preferences(w http.ResponseWriter, r *http.Request, a actor) (any, error) {
 	return jsonRow(r.Context(), s.db, `SELECT jsonb_build_object(

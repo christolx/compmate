@@ -560,3 +560,39 @@ func TestOneTeamPerCompetitionForLeaders(t *testing.T) {
 		t.Fatal("pending application should lapse after leading a team")
 	}
 }
+
+func TestCatalogDerivesSocialSignals(t *testing.T) {
+	h := setup(t)
+	alice, aid := h.signup("alice")
+	bob, bid := h.signup("bob")
+	carol, cid := h.signup("carol")
+	h.req(alice, "PUT", "/profile", map[string]any{"name": "Alice", "about": "ALICE_ABOUT", "presentation": map[string]any{"mutual": 999, "connections": 5000, "complete": 1}}, 200)
+	h.req(alice, "POST", "/connections/"+bid, map[string]any{}, 200)
+	h.req(bob, "POST", "/connections/"+aid+"/accept", map[string]any{}, 200)
+	h.req(carol, "POST", "/connections/"+bid, map[string]any{}, 200)
+	h.req(bob, "POST", "/connections/"+cid+"/accept", map[string]any{}, 200)
+	person := func(client *http.Client, id string) map[string]any {
+		people := h.req(client, "GET", "/catalog", nil, 200)["people"].([]any)
+		for _, p := range people {
+			if p.(map[string]any)["id"] == id {
+				return p.(map[string]any)
+			}
+		}
+		t.Fatalf("%s missing", id)
+		return nil
+	}
+	a := person(carol, aid)
+	if a["connections"] != float64(1) || a["mutual"] != nil || a["complete"] != nil {
+		t.Fatalf("self-reported signals leaked: %v", a)
+	}
+	if ids := a["mutual_ids"].([]any); len(ids) != 1 || ids[0] != bid {
+		t.Fatalf("mutual ids: %v", a["mutual_ids"])
+	}
+	if person(bob, aid)["about"] != "ALICE_ABOUT" {
+		t.Fatal("signed-in viewers should see about")
+	}
+	anon := person(http.DefaultClient, aid)
+	if anon["about"] != "" || anon["links"] != nil {
+		t.Fatalf("anonymous catalog too detailed: %v", anon)
+	}
+}

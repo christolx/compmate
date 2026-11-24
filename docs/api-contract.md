@@ -15,7 +15,7 @@ Request IDs in `X-Request-ID`. Private responses `Cache-Control: no-store`.
 | POST `/logout` | Any | `{}` → revoke current session |
 | GET `/me` | Signed in | Own profile + `id,email,admin` |
 | PUT `/profile` | Signed in | `name,campus,skills,availability,about,contact,share_contact,presentation?` → own profile |
-| GET `/catalog` | Public | Public profiles + display metadata; no canonical email/contact |
+| GET `/catalog` | Public | Profiles + display metadata; `connections` count and viewer `mutual_ids` derived from real connections. Anonymous: no about, campus or links. Never email/contact |
 | GET `/preferences` | Signed in | Own saved competitions and connection statuses |
 | PUT / DELETE `/saved/:id` | Signed in | `{}` → save/unsave |
 | POST / DELETE `/connections/:id` | Signed in | `{}` → request/remove connection |
