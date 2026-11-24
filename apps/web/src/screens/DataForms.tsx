@@ -231,10 +231,16 @@ export function TeamEditor() {
     setCap(n);
     if (roles.length === 1) setQty({ [roles[0]]: n - 1 });
   };
+  const clampCap = (n: number) => Math.min(maxCap, Math.max(minCap, Math.round(n) || minCap));
   const changeCap = (n: number) => {
     setCap(n);
-    if (roles.length === 1 && n >= 2) setQty({ [roles[0]]: n - 1 });
+    if (roles.length === 1 && n >= minCap && n <= maxCap) setQty({ [roles[0]]: n - 1 });
   };
+  const fixCap = () => {
+    const n = clampCap(cap);
+    if (n !== cap) changeCap(n);
+  };
+  const capOk = cap >= minCap && cap <= maxCap;
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -283,7 +289,7 @@ export function TeamEditor() {
               <option value="">Choose competition</option>
               {openComps.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.title} ({c.min}–{c.max} members)
+                  {c.title} ({c.min === c.max ? c.min : c.min + '–' + c.max} members)
                 </option>
               ))}
             </select>
@@ -303,7 +309,7 @@ export function TeamEditor() {
         ) : (
           <label className="block text-[13px] font-bold text-ink">
             Team capacity (including leader)
-            <input className={field} name="capacity" type="number" required value={cap || ''} min={minCap} max={maxCap} onChange={(e) => changeCap(Number(e.target.value))} />
+            <input className={field} name="capacity" type="number" required value={cap || ''} min={minCap} max={maxCap} onChange={(e) => changeCap(Number(e.target.value))} onBlur={fixCap} />
             {chosen && (
               <span className="mt-1 block text-[12px] font-medium text-slate-600">
                 {chosen.title} allows {minCap}–{maxCap} members.
@@ -361,15 +367,18 @@ export function TeamEditor() {
               className="h-10 cursor-pointer rounded-[10px] border border-field bg-white text-[13px] font-bold"
               onClick={() => {
                 setRoles([...roles, next]);
-                setQty({ ...qty, [next]: 1 });
+                // Give the new role any unassigned seats; with none left, grow capacity if the competition allows.
+                const free = cap - 1 - seats;
+                if (free <= 0 && cap < maxCap) setCap(cap + 1);
+                setQty({ ...qty, [next]: Math.max(1, free) });
                 setNext(next + 1);
               }}
               disabled={roles.length >= 19}
             >
               Add role
             </button>
-            <p role="status" className={'m-0 text-[13px] font-semibold ' + (seats === cap - 1 ? 'text-success' : 'text-danger')}>
-              Role seats assigned: {seats} of {Math.max(0, cap - 1)} (team capacity minus your seat).
+            <p role="status" className={'m-0 text-[13px] font-semibold ' + (capOk && seats === cap - 1 ? 'text-success' : 'text-danger')}>
+              {capOk ? `Role seats assigned: ${seats} of ${cap - 1} (team capacity minus your seat).` : `Team capacity must be ${minCap}–${maxCap}.`}
             </p>
             <label className="flex gap-3 text-[13px]">
               <input type="checkbox" name="share" />
@@ -382,7 +391,7 @@ export function TeamEditor() {
             {error}
           </p>
         )}
-        <button className={button} disabled={busy || (!editing && seats !== cap - 1)}>
+        <button className={button} disabled={busy || (!editing && (!capOk || seats !== cap - 1))}>
           {editing ? 'Save team' : 'Create team'}
         </button>
       </form>
