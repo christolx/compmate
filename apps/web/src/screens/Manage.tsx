@@ -320,13 +320,13 @@ export function Manage({ tid='vertex', tab: initialTab = 'apps' }: {tid?:string;
                 <div className="text-[13px] font-semibold text-slate-600">Target team size</div>
                 <div className="mt-2 flex items-center gap-3">
                   <div className="flex h-10 items-center rounded-[10px] border border-field">
-                    <button type="button" onClick={decrease} aria-label="Decrease target" className="h-full w-[38px] cursor-pointer border-0 bg-transparent text-[18px] text-slate-700">
+                    <button type="button" onClick={decrease} disabled={saving || t.target <= Math.max(t.c.min, t.filled)} aria-label="Decrease target" className="h-full w-[38px] cursor-pointer border-0 bg-transparent text-[18px] text-slate-700 disabled:cursor-not-allowed disabled:text-slate-300">
                       −
                     </button>
                     <span className="w-7 text-center font-extrabold" aria-live="polite">
                       {t.target}
                     </span>
-                    <button type="button" onClick={increase} aria-label="Increase target" className="h-full w-[38px] cursor-pointer border-0 bg-transparent text-[18px] text-slate-700">
+                    <button type="button" onClick={increase} disabled={saving || t.target >= t.c.max} aria-label="Increase target" className="h-full w-[38px] cursor-pointer border-0 bg-transparent text-[18px] text-slate-700 disabled:cursor-not-allowed disabled:text-slate-300">
                       +
                     </button>
                   </div>
