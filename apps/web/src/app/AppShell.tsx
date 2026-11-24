@@ -184,7 +184,7 @@ export function AppShell() {
     setOverlay(null);
     if (loginRequest) navigate(loginRequest.next, { replace: true });
     else if (then) setTimeout(then, 60);
-    else navigate(paths.home());
+    // Plain header login keeps you on the page you were reading.
     flash('Logged in');
   };
 
