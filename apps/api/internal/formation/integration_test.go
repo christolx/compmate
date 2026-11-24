@@ -282,12 +282,20 @@ func TestRecruitmentDeadlinesWithdrawalAndModeration(t *testing.T) {
 	h.decide(leader, bid, "decline", 200)
 	h.decide(leader, bid, "accept", 409)
 	h.req(other, "POST", "/reports", map[string]string{"team_id": tid, "reason": "Misleading description needs moderation"}, 200)
+	h.req(other, "POST", "/reports", map[string]string{"team_id": tid, "reason": "Misleading description needs moderation"}, 200)
+	h.req(newcomerReporter(h), "POST", "/reports", map[string]string{"team_id": tid, "reason": "Second reporter about this team"}, 200)
+	if h.count(`SELECT count(*) FROM reports WHERE team_id=$1`, tid) != 2 {
+		t.Fatal("repeat report by same student should not duplicate")
+	}
 	var rid string
-	if err := h.db.QueryRow(context.Background(), `SELECT id FROM reports WHERE team_id=$1`, tid).Scan(&rid); err != nil {
+	if err := h.db.QueryRow(context.Background(), `SELECT id FROM reports WHERE team_id=$1 LIMIT 1`, tid).Scan(&rid); err != nil {
 		t.Fatal(err)
 	}
 	h.req(other, "GET", "/admin/reports", nil, 403)
 	h.req(h.admin, "POST", "/admin/reports/"+rid+"/resolve", map[string]bool{"hide_team": true}, 200)
+	if h.count(`SELECT count(*) FROM reports WHERE team_id=$1 AND NOT resolved`, tid) != 0 {
+		t.Fatal("hiding a team should resolve all its open reports")
+	}
 	h.req(http.DefaultClient, "GET", "/teams/"+tid, nil, 404)
 	h.req(leader, "GET", "/teams/"+tid, nil, 200)
 	_, _, raw := h.request(http.DefaultClient, "GET", "/teams", nil)
@@ -595,4 +603,9 @@ func TestCatalogDerivesSocialSignals(t *testing.T) {
 	if anon["about"] != "" || anon["links"] != nil {
 		t.Fatalf("anonymous catalog too detailed: %v", anon)
 	}
+}
+
+func newcomerReporter(h *harness) *http.Client {
+	client, _ := h.signup("reporter2")
+	return client
 }

@@ -23,7 +23,8 @@ func (s *Server) report(w http.ResponseWriter, r *http.Request, a actor) (any, e
 	if !exists {
 		return nil, missing
 	}
-	_, err := s.db.Exec(r.Context(), `INSERT INTO reports(id,reporter_id,team_id,reason) VALUES($1,$2,$3,$4)`, id(), a.ID, v.Team, v.Reason)
+	// One open report per reporter and team; repeats are accepted but not duplicated.
+	_, err := s.db.Exec(r.Context(), `INSERT INTO reports(id,reporter_id,team_id,reason) SELECT $1,$2,$3,$4 WHERE NOT EXISTS(SELECT 1 FROM reports WHERE reporter_id=$2 AND team_id=$3 AND NOT resolved)`, id(), a.ID, v.Team, v.Reason)
 	return nil, err
 }
 func (s *Server) reports(w http.ResponseWriter, r *http.Request, a actor) (any, error) {
@@ -55,7 +56,8 @@ func (s *Server) resolve(w http.ResponseWriter, r *http.Request, a actor) (any, 
 	if _, _, err = lockTeam(ctx, tx, tid); err != nil {
 		return nil, err
 	}
-	if _, err = tx.Exec(ctx, `UPDATE reports SET resolved=true WHERE id=$1`, r.PathValue("id")); err != nil {
+	// A moderation decision covers every open report about the team.
+	if _, err = tx.Exec(ctx, `UPDATE reports SET resolved=true WHERE id=$1 OR (team_id=$2 AND NOT resolved)`, r.PathValue("id"), tid); err != nil {
 		return nil, err
 	}
 	if _, err = tx.Exec(ctx, `UPDATE teams SET moderated=$2 WHERE id=$1`, tid, v.Hide); err != nil {
