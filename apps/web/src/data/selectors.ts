@@ -1,4 +1,4 @@
-import { TEAM_BY_ID, TEAMS_BY_COMP, comp, getClock, team, type CompetitionView, type TeamView } from './model';
+import { COMPETITION_BY_ID, TEAM_BY_ID, TEAMS_BY_COMP, comp, getClock, team, type CompetitionView, type TeamView } from './model';
 import type { AppState } from './state';
 import type { Team } from './types';
 
@@ -133,6 +133,8 @@ export function canApply(
 
   // Server eligibility includes restrictions absent from presentation data.
   if (st.authed && t.canApply === false) {
+    const campus = COMPETITION_BY_ID[t.comp]?.campus;
+    if (campus && campus.toLowerCase() !== (st.account?.campus ?? '').trim().toLowerCase()) return { ok: false, reason: `Only ${campus} students can join this competition` };
     return { ok: false, reason: 'You are not eligible to apply to this team' };
   }
 
