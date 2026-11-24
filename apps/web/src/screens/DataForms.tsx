@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { useNavigate, useSearchParams, useParams } from 'react-router';
 import { COMPETITION_BY_ID, ALL_COMPETITIONS, PERSONS, TEAM_BY_ID } from '../data/model';
 import { isCompetitionRecruiting } from '../data/selectors';
-import { FACULTIES, GROUPS } from '../data/seed';
+import { FACULTIES, GROUPS, TEAMS } from '../data/seed';
 import { AppLink } from '../app/AppLink';
 import { useNav } from '../app/nav';
 import { useAppState, useStore } from '../store/store';
@@ -237,7 +237,8 @@ export function TeamEditor() {
   const navigate = useNavigate();
   const [roles, setRoles] = useState([0]);
   const [next, setNext] = useState(1);
-  const openComps = ALL_COMPETITIONS.filter((c) => isCompetitionRecruiting(c.id));
+  // One team per competition: hide listings where you're already on a team.
+  const openComps = ALL_COMPETITIONS.filter((c) => isCompetitionRecruiting(c.id) && !TEAMS.some((t) => t.comp === c.id && t.members.includes('me')));
   const requested = params.get('competition') || '';
   const [compId, setCompId] = useState(openComps.some((c) => c.id === requested) ? requested : '');
   const chosen = openComps.find((c) => c.id === compId);
@@ -303,7 +304,9 @@ export function TeamEditor() {
       <form onSubmit={submit} className="grid gap-5 rounded-[16px] border border-card bg-white p-6">
         {!editing && requested && !openComps.some((c) => c.id === requested) && (
           <p role="alert" className="m-0 rounded-[10px] bg-amber-50 px-4 py-3 text-[14px] text-amber-900">
-            {COMPETITION_BY_ID[requested]?.title || 'That competition'} is closed for new teams. Choose an open competition below.
+            {TEAMS.some((t) => t.comp === requested && t.members.includes('me'))
+              ? `You're already on a team for ${COMPETITION_BY_ID[requested]?.title}. Choose another competition below.`
+              : `${COMPETITION_BY_ID[requested]?.title || 'That competition'} is closed for new teams. Choose an open competition below.`}
           </p>
         )}
         {!editing && (
