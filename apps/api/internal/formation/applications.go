@@ -38,7 +38,7 @@ func (s *Server) apply(w http.ResponseWriter, r *http.Request, a actor) (any, er
 	if err = tx.QueryRow(ctx, `SELECT leader_id FROM teams WHERE id=$1`, tid).Scan(&leader); err != nil {
 		return nil, err
 	}
-	if err = notify(ctx, tx, leader, tid, "New application received"); err != nil {
+	if err = notify(ctx, tx, note{User: leader, Team: tid, Actor: a.ID, Role: v.Role, Kind: "application", Text: "{actor} applied to {team} as {role}"}); err != nil {
 		return nil, err
 	}
 	if err = event(ctx, tx, a.ID, "apply"); err != nil {
@@ -112,16 +112,17 @@ func (s *Server) decision(w http.ResponseWriter, r *http.Request, a actor) (any,
 	if _, err = tx.Exec(ctx, `UPDATE applications SET status=$2,decided_at=now() WHERE id=$1`, aid, target); err != nil {
 		return nil, err
 	}
-	recipient := user
-	if action == "withdraw" {
-		recipient = leader
-	}
 	if action == "accept" {
 		if _, err = tx.Exec(ctx, `UPDATE applications SET status='withdrawn',decided_at=now() WHERE user_id=$1 AND team_id<>$2 AND status='pending' AND team_id IN (SELECT other.id FROM teams other JOIN teams accepted ON accepted.competition_id=other.competition_id WHERE accepted.id=$2)`, user, tid); err != nil {
 			return nil, err
 		}
 	}
-	if err = notify(ctx, tx, recipient, tid, "Application "+target); err != nil {
+	n := map[string]note{
+		"accepted":  {User: user, Team: tid, Actor: leader, Role: role, Kind: "decision", Text: "You're in! {team} accepted you as {role}"},
+		"declined":  {User: user, Team: tid, Actor: leader, Role: role, Kind: "decision", Text: "{team} declined your application for {role}"},
+		"withdrawn": {User: leader, Team: tid, Actor: user, Role: role, Kind: "application", Text: "{actor} withdrew their application to {team}"},
+	}[target]
+	if err = notify(ctx, tx, n); err != nil {
 		return nil, err
 	}
 	if err = event(ctx, tx, a.ID, target); err != nil {

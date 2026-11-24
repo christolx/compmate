@@ -44,20 +44,26 @@ func (s *Server) connection(w http.ResponseWriter, r *http.Request, a actor) (an
 		return nil, err
 	}
 	if r.PathValue("action") == "accept" {
-		tag, err := s.db.Exec(r.Context(), `UPDATE connections SET status='connected' WHERE sender_id=$1 AND recipient_id=$2`, other, a.ID)
+		tag, err := s.db.Exec(r.Context(), `UPDATE connections SET status='connected' WHERE sender_id=$1 AND recipient_id=$2 AND status='pending'`, other, a.ID)
 		if err != nil {
 			return nil, err
 		}
 		if tag.RowsAffected() == 0 {
+			var connected bool
+			if err = s.db.QueryRow(r.Context(), `SELECT EXISTS(SELECT 1 FROM connections WHERE sender_id=$1 AND recipient_id=$2 AND status='connected')`, other, a.ID).Scan(&connected); err != nil || connected {
+				return nil, err
+			}
 			return nil, forbidden
 		}
-		return nil, nil
+		return nil, notify(r.Context(), s.db, note{User: other, Actor: a.ID, Kind: "connection", Text: "{actor} accepted your connection request"})
 	}
 	if r.PathValue("action") != "" {
 		return nil, missing
 	}
-	_, err := s.db.Exec(r.Context(), `INSERT INTO connections VALUES($1,$2,'pending',now())`, a.ID, other)
-	return nil, err
+	if _, err := s.db.Exec(r.Context(), `INSERT INTO connections VALUES($1,$2,'pending',now())`, a.ID, other); err != nil {
+		return nil, err
+	}
+	return nil, notify(r.Context(), s.db, note{User: other, Actor: a.ID, Kind: "connection", Text: "{actor} wants to connect with you"})
 }
 func (s *Server) readNotification(w http.ResponseWriter, r *http.Request, a actor) (any, error) {
 	tag, err := s.db.Exec(r.Context(), `UPDATE notifications SET read_at=now() WHERE id=$1 AND user_id=$2`, r.PathValue("id"), a.ID)

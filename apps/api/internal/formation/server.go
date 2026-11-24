@@ -428,8 +428,27 @@ func event(ctx context.Context, tx pgx.Tx, user, kind string) error {
 	_, err := tx.Exec(ctx, `INSERT INTO events(id,user_id,kind) VALUES($1,$2,$3)`, id(), user, kind)
 	return err
 }
-func notify(ctx context.Context, tx pgx.Tx, user, team, text string) error {
-	_, err := tx.Exec(ctx, `INSERT INTO notifications(id,user_id,team_id,text) VALUES($1,$2,$3,$4)`, id(), user, team, text)
+
+// note is one in-app notification. Text may use {actor}, {team} and {role},
+// which resolve to names at insert time so later renames don't rewrite history.
+type note struct {
+	User, Team, Actor, Role, Kind, Text string
+}
+
+// execer is satisfied by both *pgxpool.Pool and pgx.Tx.
+type execer interface {
+	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
+}
+
+func notify(ctx context.Context, tx execer, n note) error {
+	if n.Kind == "" {
+		n.Kind = "team"
+	}
+	_, err := tx.Exec(ctx, `INSERT INTO notifications(id,user_id,team_id,actor_id,kind,text)
+ SELECT $1,$2,NULLIF($3,''),NULLIF($4,''),$5,
+  replace(replace(replace($6,'{actor}',coalesce((SELECT name FROM profiles WHERE user_id=$4),'Someone')),
+   '{team}',coalesce((SELECT name FROM teams WHERE id=$3),'your team')),
+   '{role}',coalesce((SELECT name FROM roles WHERE id=$7),'a role'))`, id(), n.User, n.Team, n.Actor, n.Kind, n.Text, n.Role)
 	return err
 }
 

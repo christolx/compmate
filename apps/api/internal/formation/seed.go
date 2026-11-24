@@ -190,7 +190,7 @@ func Seed(ctx context.Context, db *pgxpool.Pool) error {
 		if err = tx.QueryRow(ctx, `SELECT leader_id FROM teams WHERE id=$1`, v.Team).Scan(&leader); err != nil {
 			return err
 		}
-		if err = notify(ctx, tx, leader, v.Team, fmt.Sprintf("New application from %s", v.User)); err != nil {
+		if err = notify(ctx, tx, note{User: leader, Team: v.Team, Actor: v.User, Role: v.Team + ":" + v.Role, Kind: "application", Text: "{actor} applied to {team} as {role}"}); err != nil {
 			return err
 		}
 	}

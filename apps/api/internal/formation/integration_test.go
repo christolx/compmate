@@ -666,3 +666,37 @@ func TestSignupErrorsNameTheProblem(t *testing.T) {
 		}
 	}
 }
+
+func TestNotificationsNamePeopleAndSurviveTeamDeletion(t *testing.T) {
+	h := setup(t)
+	leader, lid := h.signup("leader")
+	h.profile(leader, "Lena Leader", "", "", false)
+	applicant, aid := h.signup("applicant")
+	h.profile(applicant, "Andi Applicant", "", "", false)
+	tid := h.team(leader, "Rockets", 2, []roleInput{{Name: "Developer", Capacity: 1}})
+	app := h.apply(applicant, tid, h.role(leader, tid, 0), false)
+	text := func(client *http.Client) string {
+		n := h.req(client, "GET", "/dashboard", nil, 200)["notifications"].([]any)
+		return n[0].(map[string]any)["text"].(string)
+	}
+	if got := text(leader); got != "Andi Applicant applied to Rockets as Developer" {
+		t.Fatalf("leader note: %q", got)
+	}
+	h.decide(leader, app, "accept", 200)
+	if got := text(applicant); got != "You're in! Rockets accepted you as Developer" {
+		t.Fatalf("applicant note: %q", got)
+	}
+	h.req(leader, "DELETE", "/teams/"+tid, map[string]any{}, 200)
+	if got := text(applicant); got != "Rockets was deleted by its leader" {
+		t.Fatalf("deletion note: %q", got)
+	}
+	h.req(applicant, "POST", "/connections/"+lid, map[string]any{}, 200)
+	if got := text(leader); got != "Andi Applicant wants to connect with you" {
+		t.Fatalf("connection note: %q", got)
+	}
+	h.req(leader, "POST", "/connections/"+aid+"/accept", map[string]any{}, 200)
+	h.req(leader, "POST", "/connections/"+aid+"/accept", map[string]any{}, 200)
+	if got := text(applicant); got != "Lena Leader accepted your connection request" {
+		t.Fatalf("accept note: %q", got)
+	}
+}

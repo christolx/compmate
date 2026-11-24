@@ -382,6 +382,12 @@ func (s *Server) deleteTeam(w http.ResponseWriter, r *http.Request, a actor) (an
 	if leader != a.ID {
 		return nil, forbidden
 	}
+	// Tell members before the cascade removes the team; team-less notes survive deletion.
+	if _, err = tx.Exec(ctx, `INSERT INTO notifications(id,user_id,actor_id,kind,text)
+ SELECT replace(gen_random_uuid()::text,'-',''), m.user_id, $2, 'team', t.name||' was deleted by its leader'
+ FROM memberships m JOIN teams t ON t.id=m.team_id WHERE m.team_id=$1 AND m.user_id<>$2`, r.PathValue("id"), a.ID); err != nil {
+		return nil, err
+	}
 	if _, err = tx.Exec(ctx, `DELETE FROM teams WHERE id=$1`, r.PathValue("id")); err != nil {
 		return nil, err
 	}

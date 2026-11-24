@@ -46,7 +46,7 @@ func (s *Server) invite(w http.ResponseWriter, r *http.Request, a actor) (any, e
 	if _, err = tx.Exec(ctx, `INSERT INTO team_invitations(id,team_id,user_id,role_id) VALUES($1,$2,$3,$4)`, iid, tid, v.User, v.Role); err != nil {
 		return nil, err
 	}
-	if err = notify(ctx, tx, v.User, tid, "You received a team invitation"); err != nil {
+	if err = notify(ctx, tx, note{User: v.User, Team: tid, Actor: a.ID, Role: v.Role, Kind: "invitation", Text: "{actor} invited you to join {team} as {role}"}); err != nil {
 		return nil, err
 	}
 	if err = tx.Commit(ctx); err != nil {
@@ -123,7 +123,7 @@ func (s *Server) answerInvite(w http.ResponseWriter, r *http.Request, a actor) (
 	if _, err = tx.Exec(ctx, `UPDATE team_invitations SET status=$2 WHERE id=$1`, iid, target); err != nil {
 		return nil, err
 	}
-	if err = notify(ctx, tx, leader, tid, "Team invitation "+target); err != nil {
+	if err = notify(ctx, tx, note{User: leader, Team: tid, Actor: user, Role: role, Kind: "application", Text: "{actor} " + target + " your invitation to {team}"}); err != nil {
 		return nil, err
 	}
 	return nil, tx.Commit(ctx)
