@@ -462,11 +462,11 @@ export function Privacy() {
     <Page title="Privacy and account data">
       <section className={panel + ' text-[14px] leading-7'}>
         <p>
-          Profiles and team rosters show names publicly. Email, contact details and application messages are private. Messages are visible to applicant and team leader; admins can review submitted
-          team reports.
+          Team rosters show member names and roles publicly. Full profiles (introduction, campus, links) are visible only to signed-in students. Email, contact details and application messages
+          are private: messages are visible to the applicant and team leader, and admins can review submitted team reports.
         </p>
         <p>
-          Contacts are visible only to members of same team when both profile sharing and team consent are enabled. Revoke profile sharing at any time. Other members may retain contacts already
+          Contacts are visible only to members of the same team when both profile sharing and team consent are enabled. Revoke profile sharing at any time. Other members may retain contacts already
           viewed.
         </p>
         <p>
