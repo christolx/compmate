@@ -34,6 +34,14 @@ func (s *Server) invite(w http.ResponseWriter, r *http.Request, a actor) (any, e
 	if err = eligible(ctx, tx, tid, v.User, v.Role); err != nil {
 		return nil, err
 	}
+	// Declined/withdrawn applications are final, so an invite could never be accepted.
+	var final bool
+	if err = tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM applications WHERE team_id=$1 AND user_id=$2 AND status IN ('declined','withdrawn'))`, tid, v.User).Scan(&final); err != nil {
+		return nil, err
+	}
+	if final {
+		return nil, conflict("This student's previous application to your team is final")
+	}
 	iid := id()
 	if _, err = tx.Exec(ctx, `INSERT INTO team_invitations(id,team_id,user_id,role_id) VALUES($1,$2,$3,$4)`, iid, tid, v.User, v.Role); err != nil {
 		return nil, err

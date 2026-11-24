@@ -540,6 +540,10 @@ func TestInvitationsAndSameCompetitionAcceptance(t *testing.T) {
 	}
 	second := h.team(other, "Another team", 2, []roleInput{{Name: "Designer", Capacity: 1}})
 	h.req(applicant, "POST", "/teams/"+second+"/applications", map[string]any{"role_id": h.role(other, second, 0), "message": "Already in another team here"}, 409)
+	declined, did := h.signup("declined")
+	aid := h.apply(declined, tid, rid, false)
+	h.decide(leader, aid, "decline", 200)
+	h.req(leader, "POST", "/teams/"+tid+"/invitations", map[string]string{"user_id": did, "role_id": rid}, 409)
 }
 
 func TestOneTeamPerCompetitionForLeaders(t *testing.T) {
