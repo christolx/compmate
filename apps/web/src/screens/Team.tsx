@@ -247,11 +247,19 @@ export function Team({ tid, authed: authedProp }: TeamProps) {
                   <div className="mt-0.5 text-[13px] text-slate-600">
                     {mm.program} · {mm.facName}
                   </div>
+                  {m && (
+                    <div className="mt-1.5 text-[13px] text-slate-700">
+                      <span className="font-bold">{mm.roles[0]}</span>
+                      {mm.skills.length > 0 && <span className="text-slate-500"> · {mm.skills.slice(0, 3).join(' · ')}</span>}
+                    </div>
+                  )}
                 </div>
-                <div className="max-w-[45%] min-w-0 flex-[0_1_auto] text-right text-[13px] text-slate-700">
-                  <div className="font-bold">{mm.roles[0]}</div>
-                  <div className="truncate text-slate-500">{mm.skills.slice(0, 3).join(' · ')}</div>
-                </div>
+                {!m && (
+                  <div className="max-w-[45%] min-w-0 flex-[0_1_auto] text-right text-[13px] text-slate-700">
+                    <div className="font-bold">{mm.roles[0]}</div>
+                    <div className="truncate text-slate-500">{mm.skills.slice(0, 3).join(' · ')}</div>
+                  </div>
+                )}
               </AppLink>
             ))}
             {t.roleList.flatMap((r) =>
