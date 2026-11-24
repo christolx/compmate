@@ -38,7 +38,7 @@ Request IDs in `X-Request-ID`. Private responses `Cache-Control: no-store`.
 | POST `/applications/:id/accept` | Team leader | `{}`; pending + latest eligibility, repeated acceptance idempotent |
 | POST `/applications/:id/decline` | Team leader | `{}`; pending only, repeated decline idempotent |
 | GET `/dashboard` | Signed in | `teams,applications,inbox,notifications` |
-| GET `/teams/:id/contacts` | Current member | `[{id,name,contact}]`; contact null unless both consents enabled |
+| GET `/teams/:id/contacts` | Current member | `[{id,name,contact,connected}]`; contact null unless both consents enabled; `connected` = member confirmed "We connected" |
 | POST `/teams/:id/connected` | Member, team has ≥2 members | `{}`; record member outcome confirmation |
 | POST `/notifications/read` | Signed in | `{}`; own alerts only |
 | POST `/reports` | Signed in | `team_id,reason` |

@@ -143,7 +143,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, a actor) (any
 func (s *Server) contacts(w http.ResponseWriter, r *http.Request, a actor) (any, error) {
 	// Single statement keeps authorization and projection on same snapshot.
 	result, err := jsonRow(r.Context(), s.db, `SELECT CASE WHEN EXISTS(SELECT 1 FROM memberships WHERE team_id=$1 AND user_id=$2) THEN
- (SELECT coalesce(jsonb_agg(jsonb_build_object('id',m.user_id,'name',p.name,'contact',CASE WHEN m.share_contact AND p.share_contact THEN p.contact ELSE NULL END)),'[]') FROM memberships m JOIN profiles p ON p.user_id=m.user_id WHERE m.team_id=$1)
+ (SELECT coalesce(jsonb_agg(jsonb_build_object('id',m.user_id,'name',p.name,'contact',CASE WHEN m.share_contact AND p.share_contact THEN p.contact ELSE NULL END,'connected',m.connected_at IS NOT NULL)),'[]') FROM memberships m JOIN profiles p ON p.user_id=m.user_id WHERE m.team_id=$1)
  ELSE NULL END`, r.PathValue("id"), a.ID)
 	if err != nil {
 		return nil, err

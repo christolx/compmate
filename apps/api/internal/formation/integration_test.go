@@ -182,6 +182,9 @@ func TestFormationJourneyAndPrivacy(t *testing.T) {
 		}
 		h.req(client, "POST", "/teams/"+tid+"/connected", map[string]any{}, 200)
 	}
+	if _, _, raw := h.request(leader, "GET", "/teams/"+tid+"/contacts", nil); !strings.Contains(raw, `"connected":true`) {
+		t.Fatal("contacts should report who confirmed connecting")
+	}
 	h.decide(applicant, aid, "withdraw", 409)
 	h.profile(applicant, "Applicant", "Campus A", "APPLICANT_PRIVATE_CONTACT", false)
 	_, _, raw := h.request(leader, "GET", "/teams/"+tid+"/contacts", nil)
