@@ -22,17 +22,17 @@ const FILTERS: Record<FilterKey, { title: string; opts: FilterOption[] }> = {
   dl: {
     title: 'Deadline',
     opts: [
-      { value: 'week', label: 'This week', test: (c) => testDeadlineFilter(c, 'week') },
+      { value: 'week', label: 'Next 7 days', test: (c) => testDeadlineFilter(c, 'week') },
       { value: '2w', label: 'Next 2 weeks', test: (c) => testDeadlineFilter(c, '2w') },
-      { value: 'month', label: 'This month', test: (c) => testDeadlineFilter(c, 'month') },
+      { value: 'month', label: 'Next 31 days', test: (c) => testDeadlineFilter(c, 'month') },
     ],
   },
   size: {
     title: 'Team size',
     opts: [
       { value: 'solo', label: 'Solo allowed', test: (c) => c.part === 'either' },
-      { value: '2-3', label: '2–3 people', test: (c) => c.max <= 3 && c.max >= 2 },
-      { value: '4+', label: 'Up to 4–5', test: (c) => c.max >= 4 },
+      { value: '2-3', label: 'Small teams (up to 3)', test: (c) => c.max <= 3 },
+      { value: '4+', label: 'Bigger teams (4+)', test: (c) => c.max >= 4 },
     ],
   },
   fmt: {
