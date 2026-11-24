@@ -38,12 +38,12 @@ export function Profile({ pid }: { pid: string }) {
     : Object.keys(st.managed || {}).filter((tid) => {
         const tv = team(tid, st);
         const final = (st.managed?.[tid]?.apps ?? []).some((x) => x.pid === pid && (x.status === 'declined' || x.status === 'withdrawn'));
-        return !tv.members.includes(pid) && !final && isRecruiting(tv) && tv.roleList.some((r) => r.qty > (r.filled || 0));
+        return !tv.members.includes(pid) && !final && isRecruiting(tv) && tv.roleList.some((r) => r.qty > 0);
       });
   const [pickedTeam, setPickedTeam] = useState('');
   const ownedId = invited?.tid ?? (inviteTeams.includes(pickedTeam) ? pickedTeam : inviteTeams[0]);
   const vx = ownedId ? team(ownedId, st) : null;
-  const fit = vx ? vx.roleList.filter((r) => r.qty > (r.filled || 0)).map((r) => match(pid, ownedId!, r.id, st)).sort((a, b) => b.score - a.score)[0] ?? null : null;
+  const fit = vx ? vx.roleList.filter((r) => r.qty > 0).map((r) => match(pid, ownedId!, r.id, st)).sort((a, b) => b.score - a.score)[0] ?? null : null;
 
 
   const groups: Record<string, string[]> = {};
