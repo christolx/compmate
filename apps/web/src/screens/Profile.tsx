@@ -220,7 +220,7 @@ export function Profile({ pid }: { pid: string }) {
           <main className="min-w-0">
             <section>
               <h2 className="m-0 text-[13px] font-bold text-slate-500">About</h2>
-              <p className="mt-2 mb-0 max-w-[620px] text-[17px] leading-[1.65] text-ink-2">{p.about}</p>
+              <p className="mt-2 mb-0 max-w-[620px] text-[17px] leading-[1.65] whitespace-pre-line text-ink-2">{p.about}</p>
             </section>
             <section className="mt-10">
               <h2 className={sectionH2}>Competition experience</h2>

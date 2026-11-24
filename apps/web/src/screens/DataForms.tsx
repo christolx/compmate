@@ -60,6 +60,11 @@ function Area({ label, name, initial = '' }: { label: string; name: string; init
   );
 }
 const val = (f: FormData, k: string) => String(f.get(k) ?? '').trim();
+/** Trimmed, non-empty, case-insensitively unique entries ("React, react" → "React"). */
+const dedupe = (items: string[]) => {
+  const seen = new Set<string>();
+  return items.map((x) => x.trim()).filter((x) => x && !seen.has(x.toLowerCase()) && seen.add(x.toLowerCase()));
+};
 export function ProfileEditor() {
   const st = useAppState();
   const store = useStore();
@@ -82,14 +87,15 @@ export function ProfileEditor() {
       ]) {
         const raw = val(f, name);
         if (!raw) continue;
-        const value = externalUrl(raw);
-        if (!value) throw new Error(label + ' needs a valid web URL');
+        // Accept Instagram handles like @name as well as full links.
+        const value = label === 'Instagram' && /^@?[\w.]{1,30}$/.test(raw) && !raw.includes('.') ? `https://www.instagram.com/${raw.replace(/^@/, '')}/` : externalUrl(raw);
+        if (!value) throw new Error(`${label} needs a full web address, e.g. ${label === 'Instagram' ? '@yourname or instagram.com/yourname' : 'linkedin.com/in/yourname'}`);
         links.push({ label, value });
       }
       await store.request?.('/profile', 'PUT', {
         name: val(f, 'name'),
         campus: val(f, 'campus'),
-        skills: val(f, 'skills'),
+        skills: dedupe(val(f, 'skills').split(',')).join(', '),
         availability: val(f, 'avail'),
         about: val(f, 'about'),
         contact: val(f, 'contact'),
@@ -98,14 +104,8 @@ export function ProfileEditor() {
           links,
           program: val(f, 'program'),
           fac: val(f, 'fac'),
-          roles: val(f, 'roles')
-            .split(',')
-            .map((x) => x.trim())
-            .filter(Boolean),
-          interests: val(f, 'interests')
-            .split(',')
-            .map((x) => x.trim())
-            .filter(Boolean),
+          roles: dedupe(val(f, 'roles').split(',')),
+          interests: dedupe(val(f, 'interests').split(',')),
           level: val(f, 'level'),
         },
       });
@@ -154,7 +154,7 @@ export function ProfileEditor() {
         <Area label="About you" name="about" initial={p.about} />
         <fieldset className="grid gap-4 rounded-[12px] border border-field p-4">
           <legend className="text-[13px] font-bold">Public links</legend>
-          <p className="m-0 text-[13px] text-slate-500">Add your URLs to replace example destinations. These links appear on your public profile.</p>
+          <p className="m-0 text-[13px] text-slate-500">Optional. These links appear on your profile for signed-in students.</p>
           {[
             ['linkedin', 'LinkedIn'],
             ['portfolio', 'Portfolio'],
