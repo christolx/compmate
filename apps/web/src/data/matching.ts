@@ -76,7 +76,7 @@ export function match(pid: string, tid: string, rid: string, st: AppState): Matc
     } else if (p.skills.some((x) => SKILL_CATEGORY[x] === SKILL_CATEGORY[s])) related++;
   }
   parts.skills = role.skills.length ? Math.round((25 * (exact + related * 0.5)) / role.skills.length) : 0;
-  if (exact) reasons.push((you ? '' : 'Matches ') + exact + ' of ' + role.skills.length + ' skills' + (you ? ' match' : '') + (related ? ', ' + related + ' related' : ''));
+  if (exact) reasons.push((you ? '' : 'Matches ') + exact + ' of ' + role.skills.length + (role.skills.length === 1 ? ' skill' : ' skills') + (you ? ' match' : '') + (related ? ', ' + related + ' related' : ''));
 
   if (p.interests.includes(c.interest)) {
     parts.interest = 15;

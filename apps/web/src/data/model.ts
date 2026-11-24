@@ -1,4 +1,5 @@
 import { EXAMPLE_PROFILE_LINKS } from '../lib/exampleLinks';
+import { plural } from '../lib/plural';
 // View models: everything the screens render is derived here from the seed
 // data plus the current app state, so components stay presentational.
 import { COMPETITIONS, FACULTIES, GROUPS, HUES, PEOPLE, TAXONOMY, TEAMS, TODAY, NOTIFICATIONS } from './seed';
@@ -201,7 +202,7 @@ export function comp(id: string, at = currentClock): CompetitionView {
     feeLabel: c.fee ? 'Rp' + c.fee.toLocaleString('id-ID') + ' / team' : 'Free',
     feeShort: c.fee ? 'Rp' + c.fee / 1000 + 'k' : 'Free',
     free: !c.fee,
-    recruitLabel: c.teamsCount ? c.teamsCount + ' teams recruiting' : 'No teams yet',
+    recruitLabel: c.teamsCount ? plural(c.teamsCount, 'team') + ' recruiting' : 'No teams yet',
     hasTeams: c.teamsCount > 0,
     faces: faceIds.map(avatar),
     hueBg: hue[0],

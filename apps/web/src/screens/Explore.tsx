@@ -9,6 +9,7 @@ import { CompTile } from '../components/CompTile';
 import { CheckIcon, ChevronDownIcon, CloseIcon, FiltersIcon, SearchIcon } from '../components/icons';
 import { TopNav } from '../components/TopNav';
 import { cx } from '../lib/cx';
+import { plural } from '../lib/plural';
 import { useAppState } from '../store/store';
 
 type FilterKey = 'dl' | 'size' | 'fmt' | 'fee';
@@ -129,13 +130,17 @@ export function Explore({ mode = 'all', q: initialQ = '', cat: initialCat = 'All
   };
 
   const n = results.length;
-  const countLabel = n + (n === 1 ? ' competition' : ' competitions');
+  const countLabel = plural(n, 'competition');
   const nothingSaved = saved && !all.length;
   const sub = saved
     ? all.length
       ? all.length + ' saved · we remind you before registration closes'
       : 'Competitions you save show up here.'
-    : all.filter((c) => !c.upcoming).length + ' competitions open for registration · ' + all.reduce((a, c) => a + c.teamsCount, 0) + ' teams recruiting';
+    : [
+        plural(all.length, 'competition'),
+        all.filter((c) => c.status === 'open' || c.status === 'closing').length + ' open for registration',
+        plural(all.reduce((a, c) => a + c.teamsCount, 0), 'team') + ' recruiting',
+      ].join(' · ');
   const cols = m ? 'grid-cols-[repeat(auto-fill,minmax(300px,1fr))]' : 'grid-cols-[repeat(auto-fill,minmax(268px,1fr))]';
   const pick = (k: FilterKey, value: string) => update({ filters: { ...query.filters, [k]: query.filters[k] === value ? undefined : value } });
 

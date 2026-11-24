@@ -11,6 +11,7 @@ import { BookmarkIcon, CheckIcon } from '../components/icons';
 import { TeamTile } from '../components/TeamTile';
 import { TopNav } from '../components/TopNav';
 import { cx } from '../lib/cx';
+import { plural } from '../lib/plural';
 import { useAppState } from '../store/store';
 
 type Tab = 'overview' | 'teams' | 'details';
@@ -173,8 +174,8 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
                     className="mt-[22px] inline-flex cursor-pointer items-center gap-2.5 rounded-full border border-[#D6E2FD] bg-[#F5F8FF] py-1.5 pr-3.5 pl-1.5 transition-[border-color] duration-150 hover:border-[#93C5FD]"
                   >
                     {faces('md')}
-                    <span className="text-[14px] font-bold whitespace-nowrap text-brand-deep">{teamsTotal} teams recruiting</span>
-                    <span className="text-[14px] whitespace-nowrap text-slate-600 @max-lg:hidden">· {c.openRoles} open roles</span>
+                    <span className="text-[14px] font-bold whitespace-nowrap text-brand-deep">{plural(teamsTotal, 'team')} recruiting</span>
+                    <span className="text-[14px] whitespace-nowrap text-slate-600 @max-lg:hidden">· {plural(c.openRoles, 'open role')}</span>
                     <span className="font-bold text-brand">↓</span>
                   </button>
                 </div>
@@ -309,7 +310,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
               <h1 className="mt-3.5 mb-0 text-[40px] leading-[1.08] font-extrabold tracking-[-0.035em]">{c.title}</h1>
               <div className="mt-2 text-[15px] text-slate-300">by {c.org}</div>
               <div className="mt-[26px] flex gap-10">
-                <BigStat value={String(teamsTotal)} label="teams recruiting" />
+                <BigStat value={String(teamsTotal)} label={teamsTotal === 1 ? 'team recruiting' : 'teams recruiting'} />
                 <BigStat value={String(c.openRoles)} label="open roles" />
                 <BigStat value={c.leftNum} label={c.leftUnit} accent />
               </div>
@@ -410,7 +411,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
                 className="mt-5 flex w-full cursor-pointer items-center gap-2.5 rounded-[14px] border border-[#D6E2FD] bg-[#F5F8FF] px-3.5 py-3 text-left"
               >
                 {faces('sm')}
-                <span className="flex-1 text-[14px] font-bold text-brand-deep">{teamsTotal} teams are recruiting</span>
+                <span className="flex-1 text-[14px] font-bold text-brand-deep">{plural(teamsTotal, 'team')} {teamsTotal === 1 ? 'is' : 'are'} recruiting</span>
                 <span className="font-bold text-brand">→</span>
               </button>
             </div>
@@ -439,7 +440,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
               <div>
                 <div className="text-[13px] font-bold text-brand">Find your team</div>
                 <h2 className={cx('mt-1.5 mb-0 leading-[1.15] font-extrabold tracking-[-0.03em]', m ? 'text-[24px]' : 'text-[34px]')}>
-                  {teamsTotal ? teamsTotal + ' teams are currently recruiting' : 'Find your team'}
+                  {teamsTotal ? plural(teamsTotal, 'team') + (teamsTotal === 1 ? ' is' : ' are') + ' currently recruiting' : 'Find your team'}
                 </h2>
                 <p className="mt-2 mb-0 max-w-[620px] text-[15px] leading-[1.55] text-slate-600">Apply for one specific role. Faculty doesn't matter here, skills do.</p>
               </div>
@@ -492,7 +493,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
                 </div>
                 {shown.length === 0 && <div className="mt-4 p-7 text-center text-[14px] text-slate-500">No teams are looking for this role right now.</div>}
                 <div className="mt-5 text-center text-[13px] text-slate-500">
-                  Showing {shown.length} of {teamsTotal} teams
+                  Showing {shown.length} of {plural(teamsTotal, 'team')}
                 </div>
                 {canCreate ? <div className="mt-9 flex flex-wrap items-center justify-between gap-5 border-t border-slate-200 pt-7">
                   <div>
