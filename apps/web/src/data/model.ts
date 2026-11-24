@@ -217,7 +217,7 @@ export function comp(id: string, at = currentClock): CompetitionView {
       past: daysUntil(date, at) < 0,
       next: daysUntil(date, at) >= 0 && (i === 0 || daysUntil(arr[i - 1].date, at) < 0),
     })),
-    eligibility: c.eligibility || ['Active university students in Indonesia', 'Members may come from any faculty'],
+    eligibility: [...(c.campus ? [`Open to ${c.campus} students only`] : []), ...(c.eligibility || ['Active university students in Indonesia', 'Members may come from any faculty'])],
     prizes: c.prizes || [],
   };
   compCache.set(cacheKey, vm);

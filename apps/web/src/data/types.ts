@@ -84,6 +84,8 @@ export interface Competition {
   featured?: boolean;
   poster?: string;
   url?: string;
+  /** Only students whose profile campus matches may form or join teams. */
+  campus?: string;
   tagline?: string;
   overview: string;
   eligibility?: string[];

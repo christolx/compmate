@@ -55,9 +55,16 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
   }, [posterOpen]);
 
   const c = comp(cid);
-  const canCreate = isCompetitionRecruiting(c.id);
-  const closedTitle = c.upcoming ? 'Registration not open yet' : 'Registration closed';
-  const closedText = c.upcoming ? `Registration ${c.statusLabel.toLowerCase()}. Teams can form once it opens.` : "The deadline has passed, so new teams can't be created for this competition.";
+  const myCampus = st.account?.campus?.trim().toLowerCase() ?? '';
+  const campusBlocked = !!c.campus && authed && myCampus !== c.campus.toLowerCase();
+  const canCreate = isCompetitionRecruiting(c.id) && !campusBlocked;
+  const closedTitle = campusBlocked && isCompetitionRecruiting(c.id) ? `${c.campus} students only` : c.upcoming ? 'Registration not open yet' : 'Registration closed';
+  const closedText =
+    campusBlocked && isCompetitionRecruiting(c.id)
+      ? `Only ${c.campus} students can create or join teams here. If that's you, set your campus in Edit profile.`
+      : c.upcoming
+        ? `Registration ${c.statusLabel.toLowerCase()}. Teams can form once it opens.`
+        : "The deadline has passed, so new teams can't be created for this competition.";
   const compTeams = noTeams ? [] : teamsFor(c.id, st);
   const inComp = compTeams.some((t) => t.isMember);
   const all = compTeams.filter((t) => isRecruiting(t));
