@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useNavigate } from 'react-router';
 import { COMPETITION_BY_ID, PERSONS, TEAM_BY_ID, comp, team, todayLabel } from '../data/model';
 import { compsForMe, teamsForMe, relevance } from '../data/matching';
 import type { ApplicationStatus } from '../data/types';
@@ -11,6 +12,7 @@ import { Icon } from '../components/icons';
 import { PersonTile } from '../components/PersonTile';
 import { TeamTile } from '../components/TeamTile';
 import { TopNav } from '../components/TopNav';
+import { profileGaps } from '../lib/completeness';
 import { cx } from '../lib/cx';
 import { useAppState } from '../store/store';
 
@@ -55,6 +57,7 @@ export function ForYou({ dir = 'a' }: ForYouProps) {
   const st = useAppState();
   const m = useIsMobile();
   const nav = useNav();
+  const navigate = useNavigate();
   const myTeams=Object.values(TEAM_BY_ID).filter(t=>t.members.includes('me')).map(seed=>{const t=team(seed.id,st);return {t,myRole:t.mine?'Leader':t.memberList.find(m=>m.isMe)?.roles[0]||'Member',cta:t.mine?'Manage':'View',eligShort:t.eligible?'Eligible':'Needs members',leads:t.mine}});
   const RECOMMENDED_COMPS = compsForMe().filter(c => !myTeams.some(({t}) => t.comp === c.id)).slice(0, 3).map(c => c.id);
   const actions:Action[]=[];
@@ -76,8 +79,19 @@ export function ForYou({ dir = 'a' }: ForYouProps) {
   for(const [tid,a] of Object.entries(st.apps)){const t=team(tid,st);actions.push({icon:a.status==='accepted'?ICONS.check:ICONS.send,ibg:a.status==='accepted'?'#ECFDF3':'#F1F5F9',ifg:a.status==='accepted'?'#15803D':'#334155',title:a.status==='accepted'?"You're now on "+t.name:'Your application to '+t.name+' is '+a.status,sub:a.status==='accepted'?'Open your team to access consented member contacts.':(t.roles.find(r=>r.id===a.role)?.name||'Role')+' · sent '+a.when,cta:'View',go:()=>nav('team',tid),chip:'Application '+a.status});}
   for(const [pid,status] of Object.entries(st.conns)){if(status==='incoming' && PERSONS[pid])actions.push({icon:ICONS.user,ibg:'#F1F5F9',ifg:'#334155',title:PERSONS[pid].name+' wants to connect',sub:PERSONS[pid].rolesLine,cta:'View',go:()=>nav('profile',pid),chip:'Connection request'});}
   for(const invitation of st.incomingInvites||[]){const t=TEAM_BY_ID[invitation.team_id];if(t)actions.unshift({icon:ICONS.user,ibg:'#EFF4FF',ifg:'#1D4ED8',title:t.name+' invited you to join',sub:t.roles.find(r=>r.id===invitation.role_id)?.name||'Team invitation',cta:'View invitation',go:()=>nav('team',t.id),chip:'Team invitation'});}
+  const gaps = profileGaps(PERSONS.me);
+  // Lowest priority: live team activity comes first; new users see this alone.
+  if (gaps.length)
+    actions.push({
+      icon: ICONS.user, ibg: '#EFF4FF', ifg: '#1D4ED8',
+      title: `Complete your profile (${Math.round(PERSONS.me.complete * 100)}%)`,
+      sub: 'Add ' + gaps.slice(0, 3).join(', ') + ' so leaders can see what you bring.',
+      cta: 'Edit profile', go: () => navigate('/u/me/edit'), primary: !actions.length, chip: 'Complete your profile',
+    });
   const upNext=actions.slice(0,4);
-  const deadlines = st.saved
+  // Deadlines for competitions you're in a team for, plus saved ones.
+  const teamByComp = Object.fromEntries(myTeams.map(({ t }) => [t.comp, t.name]));
+  const deadlines = [...new Set([...Object.keys(teamByComp), ...st.saved])]
     .filter((id) => Object.hasOwn(COMPETITION_BY_ID, id))
     .map((id) => comp(id))
     .filter((c) => c.left >= 0)
@@ -104,6 +118,7 @@ export function ForYou({ dir = 'a' }: ForYouProps) {
             <main className="min-w-0">
               <section>
                 <h2 className="mt-0 mb-1.5 text-[13px] font-bold text-slate-500">Up next</h2>
+                {!upNext.length && <Empty>Nothing needs you right now. Save competitions or apply to a team, and updates land here.</Empty>}
                 {upNext.map((a) => (
                   <div key={a.title} className="flex items-center gap-3.5 border-b border-divider py-4">
                     <span className="grid h-10 w-10 flex-none place-items-center rounded-[12px]" style={{ background: a.ibg, color: a.ifg }}>
@@ -146,6 +161,7 @@ export function ForYou({ dir = 'a' }: ForYouProps) {
               <section className="mt-12">
                 <h2 className={h2}>Teams for you</h2>
                 <p className="mt-1 mb-[18px] text-[14px] text-slate-500">Open roles that fit your profile. Each card says why.</p>
+                {!recTeams.length && <Empty>No open roles match your profile yet. Add preferred roles and skills to get matched.</Empty>}
                 <div className={cx(row, 'grid-cols-[repeat(auto-fill,minmax(290px,1fr))] gap-5')}>
                   {recTeams.slice(0, 2).map((id) => (
                     <div key={id} className={cx('flex-none', m ? 'w-[300px]' : 'w-auto')}>
@@ -157,6 +173,15 @@ export function ForYou({ dir = 'a' }: ForYouProps) {
             </main>
             <aside className="flex flex-col gap-9">
               <RailSection title="Your teams">
+                {!myTeams.length && (
+                  <Empty>
+                    You're not on a team yet.{' '}
+                    <AppLink to="explore" className="font-bold">
+                      Find a competition
+                    </AppLink>{' '}
+                    to join or start one.
+                  </Empty>
+                )}
                 {myTeams.map(({ t, myRole, cta, eligShort, leads }) => {
                   const rowClass = 'flex w-full cursor-pointer items-center gap-3 border-b border-divider py-3.5 text-left';
                   const content = (
@@ -191,6 +216,7 @@ export function ForYou({ dir = 'a' }: ForYouProps) {
                 })}
               </RailSection>
               <RailSection title="Applications">
+                {!Object.keys(st.apps).length && <Empty>Applications you send show here with their status.</Empty>}
                 {Object.entries(st.apps).map(([id, a]) => {
                   const s = STATUS[a.status];
                   return (
@@ -209,6 +235,7 @@ export function ForYou({ dir = 'a' }: ForYouProps) {
                 })}
               </RailSection>
               <RailSection title="Upcoming deadlines">
+                {!deadlines.length && <Empty>Save competitions to track their deadlines here.</Empty>}
                 {deadlines.map((c) => {
                   const [day, mon] = c.deadlineShort.split(' ');
                   return (
@@ -221,7 +248,7 @@ export function ForYou({ dir = 'a' }: ForYouProps) {
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[14px] font-bold text-ink">{c.title}</span>
-                        <span className="block text-[12px] text-slate-500">{(c.id === 'techno' ? 'Vertex · ' : 'Saved · ') + c.leftLabel}</span>
+                        <span className="block text-[12px] text-slate-500">{(teamByComp[c.id] ?? 'Saved') + ' · ' + c.leftLabel}</span>
                       </span>
                     </AppLink>
                   );
@@ -261,9 +288,13 @@ export function ForYou({ dir = 'a' }: ForYouProps) {
           </>
         )}
       </div>
-      {m && <BottomNav active="explore" />}
+      {m && <BottomNav active="teams" />}
     </div>
   );
+}
+
+function Empty({ children }: { children: ReactNode }) {
+  return <p className="my-2 text-[14px] leading-[1.55] text-slate-500">{children}</p>;
 }
 
 function RailSection({ title, children }: { title: string; children: ReactNode }) {
