@@ -340,20 +340,80 @@ func (s *Server) profile(w http.ResponseWriter, r *http.Request, a actor) (any, 
 		return nil, bad("Profile fields exceed limits or name missing")
 	}
 	if v.Presentation != nil {
-		var obj map[string]any
-		if json.Unmarshal(v.Presentation, &obj) != nil || obj == nil {
-			return nil, bad("Invalid profile presentation")
+		clean, err := profilePresentation(v.Presentation)
+		if err != nil {
+			return nil, err
 		}
-		delete(obj, "contact")
-		delete(obj, "email")
-		delete(obj, "share_contact")
-		v.Presentation, _ = json.Marshal(obj)
+		v.Presentation = clean
 	}
 	_, err := s.db.Exec(r.Context(), `UPDATE profiles SET name=$2,campus=$3,skills=$4,availability=$5,about=$6,contact=$7,share_contact=$8,presentation=presentation||coalesce($9::jsonb,'{}') WHERE user_id=$1`, a.ID, v.Name, v.Campus, v.Skills, v.Availability, v.About, v.Contact, v.Share, v.Presentation)
 	if err != nil {
 		return nil, err
 	}
 	return s.me(w, r, a)
+}
+
+// profilePresentation keeps only display fields students edit themselves.
+// Derived signals (connections, mutuals, completeness) and private data are
+// computed or stored elsewhere, so clients can never self-report them.
+func profilePresentation(raw json.RawMessage) (json.RawMessage, error) {
+	var in map[string]json.RawMessage
+	if json.Unmarshal(raw, &in) != nil || in == nil {
+		return nil, bad("Invalid profile presentation")
+	}
+	invalid := bad("Invalid profile presentation")
+	out := map[string]any{}
+	for _, k := range []string{"program", "fac", "level"} {
+		if v, ok := in[k]; ok {
+			var s string
+			if json.Unmarshal(v, &s) != nil || len(s) > 120 {
+				return nil, invalid
+			}
+			out[k] = strings.TrimSpace(s)
+		}
+	}
+	if lvl, ok := out["level"]; ok && lvl != "" && lvl != "Beginner" && lvl != "Some experience" && lvl != "Experienced" {
+		return nil, invalid
+	}
+	for _, k := range []string{"roles", "interests"} {
+		if v, ok := in[k]; ok {
+			var list []string
+			if json.Unmarshal(v, &list) != nil || len(list) > 20 {
+				return nil, invalid
+			}
+			seen := map[string]bool{}
+			clean := []string{}
+			for _, s := range list {
+				s = strings.TrimSpace(s)
+				if s == "" || len(s) > 60 || seen[strings.ToLower(s)] {
+					continue
+				}
+				seen[strings.ToLower(s)] = true
+				clean = append(clean, s)
+			}
+			out[k] = clean
+		}
+	}
+	if v, ok := in["links"]; ok {
+		var links []struct {
+			Label string `json:"label"`
+			Value string `json:"value"`
+		}
+		if json.Unmarshal(v, &links) != nil || len(links) > 6 {
+			return nil, invalid
+		}
+		clean := []map[string]string{}
+		for _, l := range links {
+			u, err := url.Parse(l.Value)
+			if l.Label == "" || len(l.Label) > 40 || len(l.Value) > 300 || err != nil || (u.Scheme != "https" && u.Scheme != "http") || !strings.Contains(u.Hostname(), ".") {
+				return nil, bad(l.Label + " needs a valid web address")
+			}
+			clean = append(clean, map[string]string{"label": l.Label, "value": l.Value})
+		}
+		out["links"] = clean
+	}
+	b, err := json.Marshal(out)
+	return b, err
 }
 func event(ctx context.Context, tx pgx.Tx, user, kind string) error {
 	_, err := tx.Exec(ctx, `INSERT INTO events(id,user_id,kind) VALUES($1,$2,$3)`, id(), user, kind)
