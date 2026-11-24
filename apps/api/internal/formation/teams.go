@@ -127,6 +127,10 @@ func (s *Server) createTeam(w http.ResponseWriter, r *http.Request, a actor) (an
 		return nil, err
 	}
 	defer tx.Rollback(ctx)
+	// User lock first (same order as accept) serializes joins and creations per student.
+	if err = tx.QueryRow(ctx, `SELECT id FROM users WHERE id=$1 FOR UPDATE`, a.ID).Scan(new(string)); err != nil {
+		return nil, err
+	}
 	var min, max int
 	var deadline time.Time
 	var campus string
@@ -143,6 +147,13 @@ func (s *Server) createTeam(w http.ResponseWriter, r *http.Request, a actor) (an
 	}
 	if campus != "" && campus != myCampus {
 		return nil, forbidden
+	}
+	var member bool
+	if err = tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM memberships m JOIN teams t ON t.id=m.team_id WHERE t.competition_id=$1 AND m.user_id=$2)`, v.Competition, a.ID).Scan(&member); err != nil {
+		return nil, err
+	}
+	if member {
+		return nil, conflict("You already belong to a team in this competition")
 	}
 	if v.Capacity < min || v.Capacity > max {
 		return nil, bad("Capacity outside competition limits")
@@ -163,6 +174,10 @@ func (s *Server) createTeam(w http.ResponseWriter, r *http.Request, a actor) (an
 		}
 	}
 	if _, err = tx.Exec(ctx, `INSERT INTO memberships(team_id,user_id,share_contact) VALUES($1,$2,$3)`, tid, a.ID, v.Share); err != nil {
+		return nil, err
+	}
+	// Leading a team counts as joining: pending requests elsewhere in this competition lapse.
+	if _, err = tx.Exec(ctx, `UPDATE applications SET status='withdrawn',decided_at=now() WHERE user_id=$1 AND status='pending' AND team_id IN (SELECT id FROM teams WHERE competition_id=$2 AND id<>$3)`, a.ID, v.Competition, tid); err != nil {
 		return nil, err
 	}
 	if err = event(ctx, tx, a.ID, "create_team"); err != nil {

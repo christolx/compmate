@@ -242,14 +242,15 @@ func TestConcurrentLastSeatAndRoleLimits(t *testing.T) {
 		t.Fatal("last seat race broke atomicity")
 	}
 	h.req(h.admin, "POST", "/teams/"+tid+"/applications", map[string]any{"role_id": role, "message": "Full team must reject me"}, 409)
-	tid2 := h.team(leader, "Role limit", 3, []roleInput{{Name: "Designer", Capacity: 1}, {Name: "Developer", Capacity: 1}})
-	role2 := h.role(leader, tid2, 0)
+	leader2, _ := h.signup("leader2")
+	tid2 := h.team(leader2, "Role limit", 3, []roleInput{{Name: "Designer", Capacity: 1}, {Name: "Developer", Capacity: 1}})
+	role2 := h.role(leader2, tid2, 0)
 	roleOne, _ := h.signup("roleone")
 	roleTwo, _ := h.signup("roletwo")
 	c := h.apply(roleOne, tid2, role2, false)
 	d := h.apply(roleTwo, tid2, role2, true)
-	h.decide(leader, c, "accept", 200)
-	h.decide(leader, d, "accept", 409)
+	h.decide(leader2, c, "accept", 200)
+	h.decide(leader2, d, "accept", 409)
 	if h.count(`SELECT count(*) FROM memberships WHERE team_id=$1`, tid2) != 2 {
 		t.Fatal("role limit exceeded")
 	}
@@ -537,6 +538,21 @@ func TestInvitationsAndSameCompetitionAcceptance(t *testing.T) {
 	if h.count(`SELECT count(*) FROM memberships WHERE team_id=$1`, tid) != 2 || h.count(`SELECT count(*) FROM applications WHERE team_id=$1 AND user_id=$2 AND status='accepted'`, tid, uid) != 1 {
 		t.Fatal("invitation not atomic/shared")
 	}
-	second := h.team(leader, "Another team", 2, []roleInput{{Name: "Designer", Capacity: 1}})
-	h.req(applicant, "POST", "/teams/"+second+"/applications", map[string]any{"role_id": h.role(leader, second, 0), "message": "Already in another team here"}, 409)
+	second := h.team(other, "Another team", 2, []roleInput{{Name: "Designer", Capacity: 1}})
+	h.req(applicant, "POST", "/teams/"+second+"/applications", map[string]any{"role_id": h.role(other, second, 0), "message": "Already in another team here"}, 409)
+}
+
+func TestOneTeamPerCompetitionForLeaders(t *testing.T) {
+	h := setup(t)
+	leader, _ := h.signup("leader")
+	student, sid := h.signup("student")
+	h.team(leader, "First team", 2, []roleInput{{Name: "Developer", Capacity: 1}})
+	h.req(leader, "POST", "/teams", teamInput{Competition: h.competition, Name: "Second team", Capacity: 2, Roles: []roleInput{{Name: "Designer", Capacity: 1}}}, 409)
+	other, _ := h.signup("other")
+	tid := h.team(other, "Other team", 2, []roleInput{{Name: "Developer", Capacity: 1}})
+	h.apply(student, tid, h.role(other, tid, 0), false)
+	h.team(student, "Student team", 2, []roleInput{{Name: "Developer", Capacity: 1}})
+	if h.count(`SELECT count(*) FROM applications WHERE user_id=$1 AND status='withdrawn'`, sid) != 1 {
+		t.Fatal("pending application should lapse after leading a team")
+	}
 }
