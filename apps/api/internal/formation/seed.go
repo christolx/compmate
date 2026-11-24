@@ -17,6 +17,7 @@ var seedFiles embed.FS
 // Seed imports the previous UI fixtures once. Never overwrites account edits or decisions.
 // Local-only accounts use <id>@compmate.local / compmate-demo-password. Production disables SEED_DATA.
 func Seed(ctx context.Context, db *pgxpool.Pool) error {
+	now := time.Now() // one clock so every listing shifts by the same days
 	raw, err := seedFiles.ReadFile("seed/catalog.json")
 	if err != nil {
 		return err
@@ -74,11 +75,15 @@ func Seed(ctx context.Context, db *pgxpool.Pool) error {
 		for _, c := range data.Competitions {
 			// Roll expired sample events forward so local demos stay usable.
 			// Only untouched seed listings (same title/organizer) move.
-			shifted, deadline, err := seedSchedule(c, time.Now())
+			shifted, deadline, err := seedSchedule(c, now)
 			if err != nil {
 				return err
 			}
 			if _, err = tx.Exec(ctx, `UPDATE competitions SET deadline=$2, presentation=presentation||$5::jsonb WHERE id=$1 AND title=$3 AND organizer=$4 AND deadline<now()`, c["id"], deadline, c["title"], c["org"], shifted); err != nil {
+				return err
+			}
+			// Older seeds closed at 17:00 UTC, i.e. midnight WIB, which showed as the next day.
+			if _, err = tx.Exec(ctx, `UPDATE competitions SET deadline=deadline-interval '1 second' WHERE id=$1 AND title=$2 AND organizer=$3 AND (deadline AT TIME ZONE 'UTC')::time='17:00'`, c["id"], c["title"], c["org"]); err != nil {
 				return err
 			}
 			if poster, ok := c["poster"].(string); ok && poster != "" {
@@ -125,12 +130,11 @@ func Seed(ctx context.Context, db *pgxpool.Pool) error {
 		}
 	}
 	for _, c := range data.Competitions {
-		if _, _, err = seedSchedule(c, time.Now()); err != nil {
+		_, deadline, err := seedSchedule(c, now)
+		if err != nil {
 			return err
 		}
 		meta, _ := json.Marshal(c)
-		deadline, _ := time.Parse("2006-01-02", str(c, "deadline"))
-		deadline = deadline.Add(17 * time.Hour)
 		min := num(c, "min")
 		if min < 2 {
 			min = 2
@@ -214,12 +218,15 @@ func Seed(ctx context.Context, db *pgxpool.Pool) error {
 	return tx.Commit(ctx)
 }
 
+// seedClose ends sample registration at 23:59:59 WIB (UTC+7) on the listed date.
+const seedClose = 16*time.Hour + 59*time.Minute + 59*time.Second
+
 // seedAnchor is the demo date the original sample schedules were written for.
 var seedAnchor = time.Date(2026, 10, 6, 0, 0, 0, 0, time.UTC)
 
 // seedSchedule shifts a sample competition's dates (in place) by whole days so the
 // original spacing relative to seedAnchor is kept relative to now. It returns the
-// shifted date fields as JSON and the shifted deadline (17:00 UTC).
+// shifted date fields as JSON and the shifted deadline (end of day WIB).
 func seedSchedule(c map[string]any, now time.Time) ([]byte, time.Time, error) {
 	days := int(now.UTC().Truncate(24*time.Hour).Sub(seedAnchor).Hours() / 24)
 	if days < 0 {
@@ -261,5 +268,5 @@ func seedSchedule(c map[string]any, now time.Time) ([]byte, time.Time, error) {
 		return nil, time.Time{}, err
 	}
 	raw, err := json.Marshal(out)
-	return raw, deadline.Add(17 * time.Hour), err
+	return raw, deadline.Add(seedClose), err
 }

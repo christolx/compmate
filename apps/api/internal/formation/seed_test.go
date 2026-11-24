@@ -19,7 +19,7 @@ func TestSeedScheduleKeepsSpacingRelativeToNow(t *testing.T) {
 	if c["timeline"].([]any)[0].(map[string]any)["date"] != "2026-12-15" {
 		t.Fatal("timeline not shifted")
 	}
-	if !deadline.Equal(time.Date(2026, 11, 24, 17, 0, 0, 0, time.UTC)) || !deadline.After(now) {
+	if !deadline.Equal(time.Date(2026, 11, 24, 16, 59, 59, 0, time.UTC)) || !deadline.After(now) {
 		t.Fatalf("deadline %v", deadline)
 	}
 	before := map[string]any{"deadline": "2026-10-09"}
