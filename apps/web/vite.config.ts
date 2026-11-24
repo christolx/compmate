@@ -10,6 +10,8 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), tailwindcss()],
     server: {
+      // Match PUBLIC_ORIGIN (http://127.0.0.1:5173); Node may otherwise bind only to ::1.
+      host: '127.0.0.1',
       proxy: { '/api': process.env.API_PROXY_TARGET || env.API_PROXY_TARGET || 'http://127.0.0.1:8080' },
     },
     test: {
