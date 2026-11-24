@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { ALL_COMPETITIONS, comp, team } from '../data/model';
 import { GROUPS, POPULAR_SEARCHES, TEAMS } from '../data/seed';
 import { isCompetitionRecruiting, isRecruiting } from '../data/selectors';
@@ -230,11 +231,17 @@ export function Discover({ authed: authedProp }: { authed?: boolean }) {
           <span>
             <strong className="text-ink">CompMate</strong> · Competition Teammate
           </span>
-          <span className="flex gap-[18px]">
-            <span>About</span>
-            <span>For organizers</span>
-            <span>Privacy</span>
-          </span>
+          <nav aria-label="Footer" className="flex gap-[18px]">
+            <AppLink to="how" className="text-slate-500 hover:text-ink">
+              How it works
+            </AppLink>
+            <AppLink to="explore" className="text-slate-500 hover:text-ink">
+              Competitions
+            </AppLink>
+            <Link to="/privacy" className="text-slate-500 hover:text-ink">
+              Privacy
+            </Link>
+          </nav>
         </div>
       </footer>
       {m && <BottomNav active="" />}

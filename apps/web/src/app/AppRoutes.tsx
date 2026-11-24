@@ -90,8 +90,14 @@ function ProfileRoute() {
   return p ? <Profile key={id} pid={id} /> : <NotFound />;
 }
 
+function Titled({ title, children }: { title: string; children: ReactNode }) {
+  useTitle(title);
+  return children;
+}
+
 function NotFound() {
   const { authed } = useAppState();
+  useTitle('Page not found');
   return (
     <div className="relative min-h-full bg-white font-sans text-ink">
       <TopNav authed={authed} active="" />
@@ -115,11 +121,11 @@ export function AppRoutes() {
       <Route path="/competitions" element={<ExploreRoute />} />
       <Route path="/competitions/:id" element={<CompetitionRoute />} />
       <Route path="/teams/:id/manage" element={<RequireAuth reason="manage your team"><ManageRoute /></RequireAuth>} />
-      <Route path="/teams/new" element={<RequireAuth reason="create a team"><TeamEditor/></RequireAuth>} />
-      <Route path="/teams/:id/edit" element={<RequireAuth reason="edit your team"><TeamEditor/></RequireAuth>} />
-      <Route path="/u/me/edit" element={<RequireAuth reason="edit your profile"><ProfileEditor/></RequireAuth>} />
-      <Route path="/privacy" element={<Privacy/>} />
-      <Route path="/admin" element={<RequireAuth reason="curate competitions"><AdminCuration/></RequireAuth>} />
+      <Route path="/teams/new" element={<RequireAuth reason="create a team"><Titled title="Create team"><TeamEditor/></Titled></RequireAuth>} />
+      <Route path="/teams/:id/edit" element={<RequireAuth reason="edit your team"><Titled title="Edit team"><TeamEditor/></Titled></RequireAuth>} />
+      <Route path="/u/me/edit" element={<RequireAuth reason="edit your profile"><Titled title="Edit profile"><ProfileEditor/></Titled></RequireAuth>} />
+      <Route path="/privacy" element={<Titled title="Privacy"><Privacy/></Titled>} />
+      <Route path="/admin" element={<RequireAuth reason="curate competitions"><Titled title="Admin"><AdminCuration/></Titled></RequireAuth>} />
       <Route path="/teams/:id" element={<TeamRoute />} />
       <Route path="/people" element={<RequireAuth reason="see student profiles"><PeopleRoute /></RequireAuth>} />
       <Route path="/u/:id" element={<RequireAuth reason="see student profiles"><ProfileRoute /></RequireAuth>} />
