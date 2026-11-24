@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { ALL_COMPETITIONS, type CompetitionView } from '../data/model';
 import { isCompetitionRecruiting, testDeadlineFilter } from '../data/selectors';
 import { GROUPS, POPULAR_SEARCHES } from '../data/seed';
-import { useNav } from '../app/nav';
+import { NavContext, useNav } from '../app/nav';
 import { useIsMobile } from '../app/viewport';
 import { BottomNav } from '../components/BottomNav';
 import { CompTile } from '../components/CompTile';
@@ -76,13 +77,44 @@ interface ExploreProps {
   authed?: boolean;
 }
 
+/** URL form of a query, so searches survive reload and can be shared. Defaults are omitted. */
+function serialize(query: Query, defaultSort: Sort): string {
+  const sp = new URLSearchParams();
+  if (query.q) sp.set('q', query.q);
+  if (query.cat !== 'All') sp.set('cat', query.cat);
+  for (const k of FILTER_KEYS) if (query.filters[k]) sp.set(k, query.filters[k]!);
+  if (query.sort !== defaultSort) sp.set('sort', query.sort);
+  return sp.toString();
+}
+function parse(sp: URLSearchParams, defaultSort: Sort): Query {
+  const cat = sp.get('cat') ?? 'All';
+  const sort = sp.get('sort') as Sort;
+  const filters: Query['filters'] = {};
+  for (const k of FILTER_KEYS) {
+    const v = sp.get(k);
+    if (v && FILTERS[k].opts.some((o) => o.value === v)) filters[k] = v;
+  }
+  return { q: sp.get('q') ?? '', cat: GROUPS.includes(cat) ? cat : 'All', filters, sort: sort in SORTS ? sort : defaultSort };
+}
+
 export function Explore({ mode = 'all', q: initialQ = '', cat: initialCat = 'All', sheet: initialSheet = false, authed: authedProp }: ExploreProps) {
   const st = useAppState();
   const authed = authedProp ?? st.authed;
   const m = useIsMobile();
   const nav = useNav();
   const saved = mode === 'saved';
-  const [query, setQuery] = useState<Query>({ q: initialQ, cat: initialCat, filters: {}, sort: saved ? 'deadline' : 'rec' });
+  const defaultSort: Sort = saved ? 'deadline' : 'rec';
+  // The design board renders previews side by side; only the live page owns the URL.
+  const syncUrl = !useContext(NavContext).inert;
+  const [params, setParams] = useSearchParams();
+  const [query, setQuery] = useState<Query>(() => (syncUrl ? parse(params, defaultSort) : { q: initialQ, cat: initialCat, filters: {}, sort: defaultSort }));
+  // Follow URL changes made elsewhere (header search, category links, Back).
+  const urlString = params.toString();
+  const [seenUrl, setSeenUrl] = useState(urlString);
+  if (syncUrl && urlString !== seenUrl) {
+    setSeenUrl(urlString);
+    if (urlString !== serialize(query, defaultSort)) setQuery(parse(params, defaultSort));
+  }
   const [openFilter, setOpenFilter] = useState<FilterKey | null>(null);
   const [sheetOpen, setSheetOpen] = useState(initialSheet);
   const [loading, setLoading] = useState(false);
@@ -102,7 +134,13 @@ export function Explore({ mode = 'all', q: initialQ = '', cat: initialCat = 'All
 
   /** Every change shows a short skeleton, like a real results fetch. */
   const update = (patch: Partial<Query>) => {
-    setQuery((cur) => ({ ...cur, ...patch }));
+    const next = { ...query, ...patch };
+    setQuery(next);
+    if (syncUrl) {
+      const search = serialize(next, defaultSort);
+      setSeenUrl(search);
+      setParams(search, { replace: true });
+    }
     setOpenFilter(null);
     setLoading(true);
     clearTimeout(timer.current);

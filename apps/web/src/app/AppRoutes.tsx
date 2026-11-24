@@ -49,7 +49,7 @@ function ExploreRoute() {
   const [params] = useSearchParams();
   const cat = params.get('cat') ?? 'All';
   useTitle('Explore competitions');
-  return <Explore key={params.toString()} q={params.get('q') ?? ''} cat={GROUPS.includes(cat) ? cat : 'All'} />;
+  return <Explore q={params.get('q') ?? ''} cat={GROUPS.includes(cat) ? cat : 'All'} />;
 }
 
 function SavedRoute() {
