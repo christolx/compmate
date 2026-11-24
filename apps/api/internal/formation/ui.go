@@ -2,6 +2,7 @@ package formation
 
 import (
 	"encoding/json"
+	"github.com/jackc/pgx/v5/pgconn"
 	"net/http"
 	"strings"
 )
@@ -28,7 +29,14 @@ func (s *Server) preferences(w http.ResponseWriter, r *http.Request, a actor) (a
 func (s *Server) saveCompetition(w http.ResponseWriter, r *http.Request, a actor) (any, error) {
 	var err error
 	if r.Method == "PUT" {
-		_, err = s.db.Exec(r.Context(), `INSERT INTO saved_competitions VALUES($1,$2) ON CONFLICT DO NOTHING`, a.ID, r.PathValue("id"))
+		var tag pgconn.CommandTag
+		tag, err = s.db.Exec(r.Context(), `INSERT INTO saved_competitions SELECT $1,id FROM competitions WHERE id=$2 AND published ON CONFLICT DO NOTHING`, a.ID, r.PathValue("id"))
+		if err == nil && tag.RowsAffected() == 0 {
+			var saved bool
+			if err = s.db.QueryRow(r.Context(), `SELECT EXISTS(SELECT 1 FROM saved_competitions WHERE user_id=$1 AND competition_id=$2)`, a.ID, r.PathValue("id")).Scan(&saved); err == nil && !saved {
+				return nil, missing
+			}
+		}
 	} else {
 		_, err = s.db.Exec(r.Context(), `DELETE FROM saved_competitions WHERE user_id=$1 AND competition_id=$2`, a.ID, r.PathValue("id"))
 	}

@@ -348,6 +348,11 @@ func (s *Server) profile(w http.ResponseWriter, r *http.Request, a actor) (any, 
 	if len(strings.TrimSpace(v.Name)) < 2 || len(v.Name) > 80 || len(v.Campus) > 120 || len(v.Skills) > 500 || len(v.About) > 2000 || len(v.Contact) > 300 || len(v.Availability) > 200 {
 		return nil, bad("Profile fields exceed limits or name missing")
 	}
+	switch v.Availability {
+	case "", "Weekends", "Weekday evenings", "Flexible":
+	default:
+		return nil, bad("Availability must be Weekends, Weekday evenings or Flexible")
+	}
 	if v.Presentation != nil {
 		clean, err := profilePresentation(v.Presentation)
 		if err != nil {

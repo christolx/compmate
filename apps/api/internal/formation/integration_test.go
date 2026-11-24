@@ -700,3 +700,13 @@ func TestNotificationsNamePeopleAndSurviveTeamDeletion(t *testing.T) {
 		t.Fatalf("accept note: %q", got)
 	}
 }
+
+func TestProfileAndSavedValidation(t *testing.T) {
+	h := setup(t)
+	student, _ := h.signup("student")
+	h.req(student, "PUT", "/profile", map[string]any{"name": "Student", "availability": "Never"}, 400)
+	h.req(student, "PUT", "/profile", map[string]any{"name": "Student", "availability": "Weekends"}, 200)
+	h.req(student, "PUT", "/saved/does-not-exist", map[string]any{}, 404)
+	h.req(student, "PUT", "/saved/"+h.competition, map[string]any{}, 200)
+	h.req(student, "PUT", "/saved/"+h.competition, map[string]any{}, 200)
+}
