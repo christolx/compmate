@@ -20,6 +20,117 @@ type competitionInput struct {
 	Max         int       `json:"max_members"`
 	Campus      string    `json:"campus"`
 	Published   bool      `json:"published"`
+	// Display details (category, format, fee, dates, poster, skills); see competitionPresentation.
+	Presentation json.RawMessage `json:"presentation,omitempty"`
+}
+
+// validate returns the first problem with a curated listing, naming the field.
+func (v competitionInput) validate(creating bool, now time.Time) error {
+	u, err := url.Parse(v.URL)
+	switch {
+	case len(strings.TrimSpace(v.Title)) < 3 || len(v.Title) > 160:
+		return bad("Title needs 3–160 characters")
+	case len(strings.TrimSpace(v.Organizer)) < 2 || len(v.Organizer) > 160:
+		return bad("Organizer needs 2–160 characters")
+	case len(v.Description) > 4000:
+		return bad("Description is limited to 4,000 characters")
+	case err != nil || u.Scheme != "https" || u.Hostname() == "" || !strings.Contains(u.Hostname(), ".") || u.User != nil || len(v.URL) > 1000:
+		return bad("Official link must be a full https:// address")
+	case v.Deadline.IsZero():
+		return bad("Deadline required")
+	case creating && !v.Deadline.After(now):
+		return bad("Deadline must be in the future")
+	case v.Deadline.After(now.AddDate(2, 0, 0)):
+		return bad("Deadline must be within two years")
+	case v.Min < 2 || v.Max > 20:
+		return bad("Team size must be between 2 and 20")
+	case v.Max < v.Min:
+		return bad("Maximum members must be at least the minimum")
+	case len(v.Campus) > 120:
+		return bad("Campus is limited to 120 characters")
+	}
+	return nil
+}
+
+// competitionPresentation keeps the display fields admins curate.
+func competitionPresentation(raw json.RawMessage) (json.RawMessage, error) {
+	if raw == nil {
+		return nil, nil
+	}
+	var in struct {
+		Cat    *string   `json:"cat"`
+		Group  *string   `json:"group"`
+		Loc    *string   `json:"loc"`
+		Place  *string   `json:"place"`
+		Fee    *int      `json:"fee"`
+		Open   *string   `json:"open"`
+		Event  *string   `json:"event"`
+		Poster *string   `json:"poster"`
+		Skills *[]string `json:"skills"`
+	}
+	d := json.NewDecoder(strings.NewReader(string(raw)))
+	d.DisallowUnknownFields()
+	if d.Decode(&in) != nil {
+		return nil, bad("Invalid competition details")
+	}
+	out := map[string]any{}
+	text := func(k string, p *string, max int) error {
+		if p == nil {
+			return nil
+		}
+		if len(*p) > max {
+			return bad(k + " is too long")
+		}
+		out[strings.ToLower(k)] = strings.TrimSpace(*p)
+		return nil
+	}
+	if err := text("Cat", in.Cat, 60); err != nil {
+		return nil, err
+	}
+	if err := text("Group", in.Group, 40); err != nil {
+		return nil, err
+	}
+	if err := text("Place", in.Place, 120); err != nil {
+		return nil, err
+	}
+	if in.Loc != nil {
+		if *in.Loc != "Online" && *in.Loc != "Offline" && *in.Loc != "Hybrid" {
+			return nil, bad("Format must be Online, Offline or Hybrid")
+		}
+		out["loc"] = *in.Loc
+	}
+	if in.Fee != nil {
+		if *in.Fee < 0 || *in.Fee > 100_000_000 {
+			return nil, bad("Fee must be between 0 and 100,000,000")
+		}
+		out["fee"] = *in.Fee
+	}
+	for k, p := range map[string]*string{"open": in.Open, "event": in.Event} {
+		if p == nil || *p == "" {
+			continue
+		}
+		if _, err := time.Parse("2006-01-02", *p); err != nil {
+			return nil, bad("Dates must be YYYY-MM-DD")
+		}
+		out[k] = *p
+	}
+	if in.Poster != nil && *in.Poster != "" {
+		u, err := url.Parse(*in.Poster)
+		if err != nil || u.Scheme != "https" || u.Hostname() == "" || len(*in.Poster) > 1000 {
+			return nil, bad("Poster must be an https:// image address")
+		}
+		out["poster"] = *in.Poster
+	}
+	if in.Skills != nil {
+		skills := []string{}
+		for _, x := range *in.Skills {
+			if x = strings.TrimSpace(x); x != "" && len(x) <= 60 && len(skills) < 12 {
+				skills = append(skills, x)
+			}
+		}
+		out["skills"] = skills
+	}
+	return json.Marshal(out)
 }
 
 func (s *Server) competitions(w http.ResponseWriter, r *http.Request, a actor) (any, error) {
@@ -33,9 +144,13 @@ func (s *Server) curate(w http.ResponseWriter, r *http.Request, a actor) (any, e
 	if err := decode(w, r, &v); err != nil {
 		return nil, err
 	}
-	u, err := url.Parse(v.URL)
-	if err != nil || u.Scheme != "https" || u.Hostname() == "" || u.User != nil || len(v.URL) > 1000 || len(v.Title) < 3 || len(v.Title) > 160 || len(v.Organizer) < 2 || len(v.Organizer) > 160 || len(v.Description) > 4000 || len(v.Campus) > 120 || v.Deadline.IsZero() || v.Min < 2 || v.Max < v.Min || v.Max > 20 {
-		return nil, bad("Valid title, organizer, HTTPS official link, deadline and team size 2–20 required")
+	cid := r.PathValue("id")
+	if err := v.validate(cid == "", time.Now()); err != nil {
+		return nil, err
+	}
+	presentation, err := competitionPresentation(v.Presentation)
+	if err != nil {
+		return nil, err
 	}
 	ctx := r.Context()
 	tx, err := s.db.Begin(ctx)
@@ -43,10 +158,9 @@ func (s *Server) curate(w http.ResponseWriter, r *http.Request, a actor) (any, e
 		return nil, err
 	}
 	defer tx.Rollback(ctx)
-	cid := r.PathValue("id")
 	if cid == "" {
 		cid = id()
-		_, err = tx.Exec(ctx, `INSERT INTO competitions(id,title,organizer,description,official_url,deadline,min_members,max_members,campus,published) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`, cid, v.Title, v.Organizer, v.Description, v.URL, v.Deadline, v.Min, v.Max, v.Campus, v.Published)
+		_, err = tx.Exec(ctx, `INSERT INTO competitions(id,title,organizer,description,official_url,deadline,min_members,max_members,campus,published,presentation) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,coalesce($11::jsonb,'{}'))`, cid, v.Title, v.Organizer, v.Description, v.URL, v.Deadline, v.Min, v.Max, v.Campus, v.Published, presentation)
 	} else {
 		// Lock parent before team operations; same lock order throughout keeps eligibility edits atomic.
 		var exists string
@@ -60,7 +174,7 @@ func (s *Server) curate(w http.ResponseWriter, r *http.Request, a actor) (any, e
 		if incompatible {
 			return nil, conflict("Existing teams incompatible with new size limits")
 		}
-		_, err = tx.Exec(ctx, `UPDATE competitions SET title=$2,organizer=$3,description=$4,official_url=$5,deadline=$6,min_members=$7,max_members=$8,campus=$9,published=$10 WHERE id=$1`, cid, v.Title, v.Organizer, v.Description, v.URL, v.Deadline, v.Min, v.Max, v.Campus, v.Published)
+		_, err = tx.Exec(ctx, `UPDATE competitions SET title=$2,organizer=$3,description=$4,official_url=$5,deadline=$6,min_members=$7,max_members=$8,campus=$9,published=$10,presentation=presentation||coalesce($11::jsonb,'{}') WHERE id=$1`, cid, v.Title, v.Organizer, v.Description, v.URL, v.Deadline, v.Min, v.Max, v.Campus, v.Published, presentation)
 	}
 	if err != nil {
 		return nil, err
