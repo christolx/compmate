@@ -134,7 +134,7 @@ export function Explore({ mode = 'all', q: initialQ = '', cat: initialCat = 'All
   const nothingSaved = saved && !all.length;
   const sub = saved
     ? all.length
-      ? all.length + ' saved · we remind you before registration closes'
+      ? all.length + ' saved · check each card for its deadline'
       : 'Competitions you save show up here.'
     : [
         plural(all.length, 'competition'),
@@ -310,7 +310,7 @@ export function Explore({ mode = 'all', q: initialQ = '', cat: initialCat = 'All
             <div className="mt-4 text-[18px] font-bold">{nothingSaved ? 'Nothing saved yet.' : 'No competitions match these filters.'}</div>
             <p className="mx-auto mt-1.5 mb-0 max-w-[420px] text-[14px] leading-[1.55] text-slate-500">
               {nothingSaved
-                ? 'Save competitions and come back to them later. We remind you before registration closes.'
+                ? 'Save competitions and come back to them later. Deadlines show on each card.'
                 : 'Try removing a filter, or search for a skill like “Presentation” or an organizer.'}
             </p>
             <div className="mt-[18px] flex flex-wrap justify-center gap-2">
