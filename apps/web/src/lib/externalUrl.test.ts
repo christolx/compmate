@@ -8,7 +8,7 @@ describe('external web links', () => {
     expect(externalUrl('//example.edu/event')).toBe('https://example.edu/event');
   });
   it('rejects executable, malformed and credential-bearing links', () => {
-    for (const value of [undefined, '', 'javascript:alert(1)', 'data:text/html,test', 'https://', 'https://user:password@example.edu']) {
+    for (const value of [undefined, '', 'javascript:alert(1)', 'data:text/html,test', 'https://', 'https://user:password@example.edu', 'not a url', 'qa_insta', 'https://localhost']) {
       expect(externalUrl(value)).toBeNull();
     }
   });
