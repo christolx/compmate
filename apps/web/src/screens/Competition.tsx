@@ -169,7 +169,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
                   <div className="flex flex-wrap items-center gap-2.5">
                     <span className="text-[13px] font-bold text-brand">{c.cat}</span>
                     <span className="text-slate-300">·</span>
-                    <span className="text-[13px] text-slate-600">National · {c.loc}</span>
+                    <span className="text-[13px] text-slate-600">{c.place && c.place !== c.loc ? c.place + ' · ' : ''}{c.loc}</span>
                     {statusPill(false)}
                   </div>
                   <h1 className="mt-3 mb-0 text-[clamp(28px,3.1vw,40px)] leading-[1.08] font-extrabold tracking-[-0.035em] text-balance">{c.title}</h1>
@@ -449,7 +449,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
               <div>
                 <div className="text-[13px] font-bold text-brand">Find your team</div>
                 <h2 className={cx('mt-1.5 mb-0 leading-[1.15] font-extrabold tracking-[-0.03em]', m ? 'text-[24px]' : 'text-[34px]')}>
-                  {teamsTotal ? plural(teamsTotal, 'team') + (teamsTotal === 1 ? ' is' : ' are') + ' currently recruiting' : 'Find your team'}
+                  {teamsTotal ? plural(teamsTotal, 'team') + (teamsTotal === 1 ? ' is' : ' are') + ' currently recruiting' : 'No teams recruiting yet'}
                 </h2>
                 <p className="mt-2 mb-0 max-w-[620px] text-[15px] leading-[1.55] text-slate-600">Apply for one specific role. Faculty doesn't matter here, skills do.</p>
               </div>
@@ -519,7 +519,11 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
             ) : (
               <div className="mt-7 rounded-[18px] border border-dashed border-slate-300 bg-white px-5 py-12 text-center">
                 <div className="flex justify-center pl-2">
-                  <span className="-ml-2 grid h-11 w-11 place-items-center rounded-full bg-brand text-[12px] font-bold text-white shadow-[0_0_0_3px_#FFFFFF]">You</span>
+                  {authed && canCreate ? (
+                    <span className="-ml-2 grid h-11 w-11 place-items-center rounded-full bg-brand text-[12px] font-bold text-white shadow-[0_0_0_3px_#FFFFFF]">You</span>
+                  ) : (
+                    <span className="-ml-2 box-border h-11 w-11 rounded-full border-[1.5px] border-dashed border-seat bg-white shadow-[0_0_0_3px_#FFFFFF]" />
+                  )}
                   <span className="-ml-2 box-border h-11 w-11 rounded-full border-[1.5px] border-dashed border-seat bg-white shadow-[0_0_0_3px_#FFFFFF]" />
                   <span className="-ml-2 box-border h-11 w-11 rounded-full border-[1.5px] border-dashed border-seat bg-white shadow-[0_0_0_3px_#FFFFFF]" />
                 </div>
