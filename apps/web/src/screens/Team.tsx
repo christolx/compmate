@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { PERSONS, TEAMS_BY_COMP, team } from '../data/model';
 import { canApply as checkCanApply } from '../data/selectors';
 import { bestFor, match } from '../data/matching';
 import { AppLink } from '../app/AppLink';
 import { useNav } from '../app/nav';
 import { useIsMobile } from '../app/viewport';
+import { ConfirmDialog, type ConfirmRequest } from '../components/ConfirmDialog';
 import { CheckIcon, Icon, ShareIcon } from '../components/icons';
 import { TopNav } from '../components/TopNav';
 import { cx } from '../lib/cx';
@@ -48,6 +49,7 @@ export function Team({ tid, authed: authedProp }: TeamProps) {
   const store=useStore();
   const invitation=st.incomingInvites?.find(i=>i.team_id===tid);
   const [shareInvite,setShareInvite]=useState(false);
+  const [confirm, setConfirm] = useState<ConfirmRequest | null>(null);
   const authed = authedProp ?? st.authed;
   const m = useIsMobile();
   const nav = useNav();
@@ -57,6 +59,7 @@ export function Team({ tid, authed: authedProp }: TeamProps) {
     });
   };
   const t = team(tid, st);
+  const invitedRole = invitation ? t.roleList.find((r) => r.id === invitation.role_id)?.name : undefined;
   const app = st.apps[t.id];
   const busy = TEAMS_BY_COMP[t.comp]?.some((id) => id !== t.id && team(id, st).isMember);
   const generalApplyCheck = checkCanApply(t.id, st);
@@ -123,6 +126,36 @@ export function Team({ tid, authed: authedProp }: TeamProps) {
   return (
     <div data-screen-label="Team" className="relative min-h-full bg-canvas font-sans text-ink">
       <TopNav authed={authed} active="explore" backTitle={m ? 'Team' : ''} />
+      {invitation && (
+        <section aria-label="Team invitation" className={cx('mx-auto box-border max-w-[1120px] pt-5', m ? 'px-4' : 'px-8')}>
+          <div className="rounded-[14px] border border-brand-tint bg-brand-tint p-5">
+            <h2 className="m-0 text-[18px] font-extrabold">
+              {t.leaderFirst} invited you to join {t.name}
+              {invitedRole ? ' as ' + invitedRole : ''}
+            </h2>
+            <label className="mt-3 flex gap-3 text-[13px]">
+              <input type="checkbox" checked={shareInvite} onChange={(e) => setShareInvite(e.target.checked)} />
+              Share my contact with teammates after joining (profile sharing must also be enabled).
+            </label>
+            <div className="mt-4 flex flex-wrap gap-3">
+              {(['accept', 'decline'] as const).map((action) => (
+                <button
+                  key={action}
+                  className={cx('h-10 cursor-pointer rounded-[10px] px-4 text-[14px] font-bold', action === 'accept' ? 'border-0 bg-brand text-white' : 'border border-slate-300 bg-white text-ink')}
+                  onClick={() => {
+                    void store
+                      .request?.('/invitations/' + invitation.id + '/' + action, 'POST', { share_contact: shareInvite })
+                      .then(() => nav('toast', 'Invitation ' + (action === 'accept' ? 'accepted' : 'declined')))
+                      .catch((e) => nav('toastError', e.message));
+                  }}
+                >
+                  {action === 'accept' ? 'Accept invitation' : 'Decline'}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
       {!m && (
         <nav aria-label="Breadcrumb" className="mx-auto flex max-w-[1120px] gap-2 px-8 pt-5 text-[13px] text-slate-500">
           <AppLink to="explore" className="cursor-pointer text-slate-500 hover:text-slate-500">
@@ -274,7 +307,7 @@ export function Team({ tid, authed: authedProp }: TeamProps) {
               )),
             )}
           </section>
-          {authed && store.request && <TeamReport tid={tid}/>}
+          {authed && store.request && !t.isMember && <TeamReport tid={tid}/>}
         </main>
         <aside className={cx('top-[92px]', m ? 'static' : 'sticky')}>
           <h2 className="mt-0 mb-3.5 text-[20px] font-bold tracking-[-0.015em]">Open roles</h2>
@@ -331,11 +364,26 @@ export function Team({ tid, authed: authedProp }: TeamProps) {
         </aside>
       </div>
       {m && <div aria-hidden="true" className="h-[79px]" />}
-      {invitation && <section className="mx-auto box-border max-w-[1140px] px-5 pb-6"><div className="rounded-[14px] border border-card bg-white p-5"><h2 className="mt-0 text-[18px] font-extrabold">You're invited to join {t.name}</h2><label className="flex gap-3 text-[13px]"><input type="checkbox" checked={shareInvite} onChange={e=>setShareInvite(e.target.checked)}/>Share my contact after joining (profile sharing must also be enabled).</label><div className="mt-4 flex gap-3">{(['accept','decline'] as const).map(action=><button key={action} className="h-10 cursor-pointer rounded-[10px] border-0 bg-brand px-4 text-[14px] font-bold text-white" onClick={()=>{void store.request?.('/invitations/'+invitation.id+'/'+action,'POST',{share_contact:shareInvite}).then(()=>nav('toast','Invitation '+(action==='accept'?'accepted':'declined'))).catch(e=>nav('toastError',e.message))}}>{action==='accept'?'Accept invitation':'Decline invitation'}</button>)}</div></div></section>}
       {(t.isMember || app?.status==='pending') && <div className={cx("mx-auto box-border max-w-[1140px] px-5",m?"pb-28":"pb-8")}>
-        {app?.status==='pending' && <button className="h-10 cursor-pointer rounded-[10px] border border-slate-200 bg-white px-4 text-[14px] font-semibold text-danger" onClick={()=>{void store.request?.('/applications/'+app.id+'/withdraw','POST',{}).then(()=>nav('toast','Application withdrawn')).catch(e=>nav('toastError',e.message))}}>Withdraw application</button>}
+        {app?.status === 'pending' && (
+          <button
+            className="h-10 cursor-pointer rounded-[10px] border border-slate-200 bg-white px-4 text-[14px] font-semibold text-danger"
+            onClick={() =>
+              setConfirm({
+                title: 'Withdraw your application?',
+                body: `Withdrawing is final: you won't be able to apply to ${t.name} again.`,
+                confirm: 'Withdraw application',
+                danger: true,
+                run: () => store.request!('/applications/' + app.id + '/withdraw', 'POST', {}).then(() => nav('toast', 'Application withdrawn')),
+              })
+            }
+          >
+            Withdraw application
+          </button>
+        )}
         {t.isMember && <MemberContacts tid={tid}/>}
       </div>}
+      <ConfirmDialog request={confirm} onClose={() => setConfirm(null)} />
       {m && (
         <div className="fixed inset-x-0 bottom-0 z-[15] border-t border-line bg-white/97 px-4 pt-2.5 pb-4 backdrop-blur-[10px]">
           <button type="button" onClick={onPrimary} disabled={!primary[1]} className={cx('h-[52px] w-full rounded-[12px] text-[15px]', primaryClass)}>
@@ -352,10 +400,97 @@ function TeamReport({tid}:{tid:string}) {
  return <details className="mt-6 rounded-[14px] border border-card bg-white p-5"><summary className="cursor-pointer text-[13px] font-bold text-slate-600">Report this team</summary><form className="mt-4 grid gap-3" onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);setBusy(true);setError('');setNotice('');void store.request!('/reports','POST',{team_id:tid,reason:String(f.get('reason'))}).then(()=>setNotice('Report submitted for moderation')).catch(e=>setError(e.message)).finally(()=>setBusy(false))}}><label className="text-[13px] font-bold">Report reason<textarea name="reason" required minLength={10} maxLength={2000} className="mt-2 box-border block h-24 w-full rounded-[10px] border border-field p-3 text-[14px]"/></label><button disabled={busy} className="h-10 cursor-pointer rounded-[10px] border-0 bg-brand px-4 text-[14px] font-bold text-white">Submit report</button>{notice&&<p role="status" className="m-0 text-[13px] text-success">{notice}</p>}{error&&<p role="alert" className="m-0 text-[13px] text-danger">{error}</p>}</form></details>;
 }
 
-function MemberContacts({tid}:{tid:string}) {
- const store=useStore();const nav=useNav();const [contacts,setContacts]=useState<{id:string;name:string;contact:string|null}[]>([]);
- return <section className="mt-6 rounded-[14px] border border-card bg-white p-5"><h2 className="mt-0 text-[18px] font-extrabold">Member contacts</h2><p className="text-[13px] text-slate-500">Only shared contacts are visible. Refresh for current consent.</p>
- <button className="h-10 cursor-pointer rounded-[10px] border-0 bg-brand px-4 text-[14px] font-bold text-white" onClick={()=>{void store.request?.<{id:string;name:string;contact:string|null}[]>('/teams/'+tid+'/contacts').then(setContacts).catch(e=>nav('toastError',e.message))}}>Show / refresh contacts</button>
- {contacts.map(c=><p key={c.id} className="text-[14px]">{c.name}: {c.contact||'Contact not shared'}</p>)}
- <button className="ml-3 h-10 cursor-pointer rounded-[10px] border border-slate-200 bg-white px-4 text-[14px] font-semibold" onClick={()=>{void store.request?.('/teams/'+tid+'/connected','POST',{}).then(()=>nav('toast','Connection confirmed')).catch(e=>nav('toastError',e.message))}}>We connected</button></section>
+type Contact = { id: string; name: string; contact: string | null; connected?: boolean };
+
+/** mailto:/tel:/https: link for a shared contact, or null when it's a plain handle. */
+function contactHref(value: string): string | null {
+  const v = value.trim();
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'mailto:' + v;
+  if (/^\+?[\d\s()-]{7,}$/.test(v)) return 'tel:' + v.replace(/[\s()-]/g, '');
+  if (/^https?:\/\//i.test(v)) return v;
+  return null;
+}
+
+function MemberContacts({ tid }: { tid: string }) {
+  const store = useStore();
+  const nav = useNav();
+  const st = useAppState();
+  const [contacts, setContacts] = useState<Contact[] | null>(null);
+  const [error, setError] = useState('');
+  const fetchContacts = useCallback(() => store.request?.<Contact[]>('/teams/' + tid + '/contacts') ?? Promise.resolve([]), [store, tid]);
+  const load = () => {
+    setError('');
+    fetchContacts()
+      .then(setContacts)
+      .catch((e) => setError(e.message));
+  };
+  useEffect(() => {
+    let active = true;
+    fetchContacts()
+      .then((c) => active && setContacts(c))
+      .catch((e) => active && setError(e.message));
+    return () => {
+      active = false;
+    };
+  }, [fetchContacts]);
+  const meConnected = contacts?.find((c) => c.id === st.actorId)?.connected;
+  return (
+    <section className="mt-6 rounded-[14px] border border-card bg-white p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="m-0 text-[18px] font-extrabold">Member contacts</h2>
+        <button type="button" onClick={load} className="cursor-pointer border-0 bg-transparent p-0 text-[13px] font-bold text-brand">
+          Refresh
+        </button>
+      </div>
+      <p className="mt-1 text-[13px] text-slate-500">Only contacts members chose to share are shown.</p>
+      {error && (
+        <p role="alert" className="text-[13px] text-danger">
+          {error}
+        </p>
+      )}
+      {!contacts && !error && <p className="text-[14px] text-slate-500">Loading contacts…</p>}
+      {contacts && (
+        <ul className="m-0 grid list-none gap-2 p-0">
+          {contacts.map((c) => {
+            const href = c.contact ? contactHref(c.contact) : null;
+            return (
+              <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 rounded-[10px] bg-canvas px-3.5 py-2.5 text-[14px]">
+                <span className="font-semibold">
+                  {c.id === st.actorId ? 'You' : c.name}
+                  {c.connected && <span className="ml-2 text-[12px] font-bold text-success">Connected ✓</span>}
+                </span>
+                {c.contact ? (
+                  href ? (
+                    <a href={href} target={href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer" className="font-semibold text-brand">
+                      {c.contact}
+                    </a>
+                  ) : (
+                    <span className="font-semibold">{c.contact}</span>
+                  )
+                ) : (
+                  <span className="text-slate-500">Contact not shared</span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <button
+        type="button"
+        disabled={!!meConnected}
+        className="mt-4 h-10 cursor-pointer rounded-[10px] border border-slate-200 bg-white px-4 text-[14px] font-semibold disabled:cursor-default disabled:border-success-tint disabled:bg-success-tint disabled:text-success"
+        onClick={() => {
+          void store
+            .request?.('/teams/' + tid + '/connected', 'POST', {})
+            .then(() => {
+              nav('toast', 'Connection confirmed');
+              load();
+            })
+            .catch((e) => nav('toastError', e.message));
+        }}
+      >
+        {meConnected ? 'You confirmed you connected ✓' : 'We connected'}
+      </button>
+    </section>
+  );
 }
