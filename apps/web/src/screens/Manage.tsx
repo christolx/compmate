@@ -334,7 +334,7 @@ export function Manage({ tid='vertex', tab: initialTab = 'apps' }: {tid?:string;
                     Competition allows {t.c.min}–{t.c.max}
                   </span>
                 </div>
-                {err && (
+                {err && !dialog && (
                   <div role="alert" className="mt-2 text-[12px] font-semibold text-danger">
                     {err}
                   </div>
@@ -357,7 +357,7 @@ export function Manage({ tid='vertex', tab: initialTab = 'apps' }: {tid?:string;
         </div>
       </div>
       {dialog && (
-        <div onClick={() => setConfirm(null)} className="fixed inset-0 z-50 flex animate-[cm-fade_.15s] items-center justify-center bg-[rgba(15,23,42,.45)] p-4">
+        <div onClick={() => {setConfirm(null);setErr('')}} className="fixed inset-0 z-50 flex animate-[cm-fade_.15s] items-center justify-center bg-[rgba(15,23,42,.45)] p-4">
           <div
             role="alertdialog"
             aria-modal="true"
@@ -381,7 +381,7 @@ export function Manage({ tid='vertex', tab: initialTab = 'apps' }: {tid?:string;
               </div>
             )}
             <div className="mt-5 flex justify-end gap-2">
-              <button type="button" onClick={() => setConfirm(null)} className="h-[42px] cursor-pointer rounded-[10px] border-0 bg-slate-100 px-4 text-[14px] font-bold text-ink">
+              <button type="button" onClick={() => {setConfirm(null);setErr('')}} className="h-[42px] cursor-pointer rounded-[10px] border-0 bg-slate-100 px-4 text-[14px] font-bold text-ink">
                 Cancel
               </button>
               <button type="button" onClick={onConfirm} disabled={saving} autoFocus className="h-[42px] cursor-pointer rounded-[10px] border-0 px-[18px] text-[14px] font-bold text-white" style={{ background: dialog.btnBg }}>
