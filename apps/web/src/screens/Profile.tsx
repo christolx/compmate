@@ -7,9 +7,11 @@ import { AppLink } from '../app/AppLink';
 import { useNav } from '../app/nav';
 import { useIsMobile } from '../app/viewport';
 import { BottomNav } from '../components/BottomNav';
-import { CheckIcon, VerifiedIcon } from '../components/icons';
+import { CheckIcon } from '../components/icons';
 import { TopNav } from '../components/TopNav';
+import { profileGaps } from '../lib/completeness';
 import { cx } from '../lib/cx';
+import { plural } from '../lib/plural';
 import { useAppState } from '../store/store';
 
 const CONNECT_BUTTON = {
@@ -40,7 +42,9 @@ export function Profile({ pid }: { pid: string }) {
     return { id: t.id, name: tv.name, role: tv.leader === pid ? 'Leader' : p.roles[0], comp: tv.c.title };
   });
   const pastTeams = p.pastTeams || [];
-  const mutualFaces = ['kevin', 'rizky', 'bima'].slice(0, Math.min(3, p.mutual)).map(avatar);
+  const mutualFaces = p.mutualIds.slice(0, 3).map(avatar);
+  const firstMutual = p.mutualIds.map((id) => PERSONS[id]?.name).find(Boolean);
+  const gaps = me ? profileGaps(p) : [];
   const btn = conn && conn !== 'incoming' ? CONNECT_BUTTON[conn] : null;
   const sectionH2 = 'mt-0 mb-1 text-[20px] font-bold tracking-[-0.015em]';
   const railH2 = 'mt-0 text-[13px] font-bold text-slate-500';
@@ -76,11 +80,15 @@ export function Profile({ pid }: { pid: string }) {
             <div className="mt-1.5 text-[15px] text-slate-700">
               {p.program} · {p.facName}
             </div>
-            <div className="mt-0.5 flex items-center gap-1.5 text-[14px] text-slate-600">
-              <VerifiedIcon size={14} stroke="var(--color-brand)" />
-              BINUS University · verified student
-            </div>
+            {p.campus && (
+              <div className="mt-0.5 text-[14px] text-slate-600">{p.campus}</div>
+            )}
             <div className="mt-3.5 flex flex-wrap gap-4 text-[13px]">
+              {me && !p.links.length && (
+                <button type="button" onClick={() => navigate('/u/me/edit')} className="cursor-pointer border-0 bg-transparent p-0 text-[13px] font-semibold text-brand">
+                  + Add LinkedIn, portfolio or Instagram
+                </button>
+              )}
               {p.links.map((l) => {
                 const { href, example } = profileLinkDestination(l);
                 return (
@@ -107,7 +115,7 @@ export function Profile({ pid }: { pid: string }) {
                     </span>
                   ))}
                 </span>
-                {p.mutual + ' mutual connection' + (p.mutual > 1 ? 's' : '') + (p.mutual >= 2 ? ', including Kevin Wijaya' : '')}
+                {plural(p.mutual, 'mutual connection') + (p.mutual >= 2 && firstMutual ? ', including ' + firstMutual : '')}
               </div>
             )}
           </div>
@@ -152,7 +160,9 @@ export function Profile({ pid }: { pid: string }) {
           <div className="mt-6 flex flex-wrap items-center gap-4 rounded-[14px] bg-canvas px-4 py-3.5">
             <div className="min-w-[200px] flex-1">
               <div className="text-[14px] font-bold">Profile {Math.round(p.complete * 100)}% complete</div>
-              <div className="mt-0.5 text-[13px] text-slate-600">Add an Instagram or a second portfolio link. Complete profiles rank higher in team recommendations.</div>
+              <div className="mt-0.5 text-[13px] text-slate-600">
+                {gaps.length ? 'Add ' + gaps.slice(0, 3).join(', ') + '. Complete profiles rank higher in team recommendations.' : 'Your profile is complete. Leaders see everything they need.'}
+              </div>
             </div>
             <div className="h-1.5 w-40 rounded-[3px] bg-slate-200" role="progressbar" aria-valuenow={Math.round(p.complete * 100)} aria-valuemin={0} aria-valuemax={100} aria-label="Profile completeness">
               <div className="h-full rounded-[3px] bg-brand" style={{ width: Math.round(p.complete * 100) + '%' }} />
@@ -251,7 +261,7 @@ export function Profile({ pid }: { pid: string }) {
               </div>
             </section>
             <section className="border-t border-divider pt-5">
-              <div className="text-[13px] text-slate-500">{me ? p.connections + ' connections' : `${p.connections} connections · ${p.mutual || 'no'} mutual`}</div>
+              <div className="text-[13px] text-slate-500">{me ? plural(p.connections, 'connection') : `${plural(p.connections, 'connection')} · ${p.mutual || 'no'} mutual`}</div>
               {conn === 'connected' && (
                 <button type="button" onClick={() => nav('removeConn', pid)} className="mt-2 cursor-pointer border-0 bg-transparent p-0 text-[13px] font-semibold text-danger">
                   Remove connection

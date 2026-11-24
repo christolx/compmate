@@ -14,6 +14,7 @@ export interface PastTeam { name: string; comp: string; role: string; result: st
 export interface PersonSeed {
   color_index?: number;
   name: string;
+  campus?: string;
   program: string;
   fac: FacultyCode;
   roles: string[];
@@ -24,6 +25,8 @@ export interface PersonSeed {
   /** Profile completeness, 0–1. */
   complete: number;
   mutual?: number;
+  /** Ids of people connected to both the viewer and this person. */
+  mutualIds?: string[];
   connections?: number;
   about?: string;
   exp?: Experience[];
@@ -31,9 +34,10 @@ export interface PersonSeed {
   pastTeams?: PastTeam[];
 }
 
-export interface Person extends Omit<PersonSeed, 'mutual' | 'connections' | 'about' | 'exp' | 'links'> {
+export interface Person extends Omit<PersonSeed, 'mutual' | 'mutualIds' | 'connections' | 'about' | 'exp' | 'links'> {
   id: string;
   mutual: number;
+  mutualIds: string[];
   connections: number;
   about: string;
   exp: Experience[];

@@ -56,7 +56,8 @@ Object.entries(PEOPLE).forEach(([id, p], i) => {
     cats: [...new Set(p.skills.map((s) => SKILL_CATEGORY[s]))],
     rolesLine: p.roles.join(' · '),
     mutual: p.mutual || 0,
-    connections: p.connections || 20 + ((i * 7) % 60),
+    mutualIds: p.mutualIds || [],
+    connections: p.connections || 0,
     about: p.about || `Interested in ${p.interests.join(' and ').toLowerCase().replace('ui/ux', 'UI/UX')} competitions.`,
     exp: p.exp || [],
     links: p.links?.length ? p.links : EXAMPLE_PROFILE_LINKS,
@@ -178,9 +179,8 @@ export function comp(id: string, at = currentClock): CompetitionView {
   const upcoming = daysUntil(c.open, at) > 0;
   const closing = !upcoming && left >= 0 && left <= 7;
   const hue = HUES[(GROUPS.indexOf(c.group) + 6) % HUES.length];
-  const faceIds = [...new Set(TEAMS.filter((t) => t.comp === id).flatMap((t) => t.members).filter((x) => x !== 'me'))]
-    .concat(['raka','nadia','rizky','sarah'].filter(id=>!!PERSONS[id])).concat(Object.keys(PERSONS).filter(id=>id!=='me'))
-    .slice(0, 3);
+  // Only real recruiting members; never pad with unrelated profiles.
+  const faceIds = [...new Set(TEAMS.filter((t) => t.comp === id).flatMap((t) => t.members).filter((x) => x !== 'me' && !!PERSONS[x]))].slice(0, 3);
   const milestones = c.timeline || [{ label: 'Registration closes', date: c.deadline }, { label: 'Event', date: c.event }];
   const vm: CompetitionView = {
     ...c,
@@ -385,7 +385,7 @@ export function hydrateCatalog(comps: Competition[], teams: Team[], people: Reco
  COMPETITIONS.splice(0,COMPETITIONS.length,...comps);TEAMS.splice(0,TEAMS.length,...teams);
  for(const k of Object.keys(PEOPLE))delete PEOPLE[k];Object.assign(PEOPLE,people);
  for(const k of Object.keys(PERSONS))delete PERSONS[k];
- Object.entries(people).forEach(([id,p],i)=>{const hue=HUES[(p.color_index??i)%HUES.length];PERSONS[id]={...p,id,name:p.name,bg:id==='me'?'#2563EB':hue[0],fg:id==='me'?'#FFFFFF':hue[1],initials:p.name.split(' ').map(w=>w[0]).slice(0,2).join(''),first:p.name.split(' ')[0],facName:FACULTIES[p.fac],cats:[...new Set(p.skills.map(s=>SKILL_CATEGORY[s]).filter(Boolean))],rolesLine:p.roles.join(' · '),mutual:p.mutual??0,connections:p.connections??0,about:p.about||'',exp:p.exp||[],links:p.links?.length?p.links:EXAMPLE_PROFILE_LINKS};});
+ Object.entries(people).forEach(([id,p],i)=>{const hue=HUES[(p.color_index??i)%HUES.length];PERSONS[id]={...p,id,name:p.name,bg:id==='me'?'#2563EB':hue[0],fg:id==='me'?'#FFFFFF':hue[1],initials:p.name.split(' ').map(w=>w[0]).slice(0,2).join(''),first:p.name.split(' ')[0],facName:FACULTIES[p.fac],cats:[...new Set(p.skills.map(s=>SKILL_CATEGORY[s]).filter(Boolean))],rolesLine:p.roles.join(' · '),mutual:p.mutual??0,mutualIds:p.mutualIds??[],connections:p.connections??0,about:p.about||'',exp:p.exp||[],links:p.links??[]};});
  for(const k of Object.keys(COMPETITION_BY_ID))delete COMPETITION_BY_ID[k];Object.assign(COMPETITION_BY_ID,Object.fromEntries(comps.map(c=>[c.id,c])));
  for(const k of Object.keys(TEAM_BY_ID))delete TEAM_BY_ID[k];Object.assign(TEAM_BY_ID,Object.fromEntries(teams.map(t=>[t.id,t])));
  for(const k of Object.keys(TEAMS_BY_COMP))delete TEAMS_BY_COMP[k];for(const c of comps)TEAMS_BY_COMP[c.id]=teams.filter(t=>t.comp===c.id).map(t=>t.id);

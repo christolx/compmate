@@ -1,4 +1,5 @@
 import { relativeTime } from '../lib/relativeTime';
+import { profileCompleteness } from '../lib/completeness';
 import type { Store } from './store';
 import { defaultState, type AppState, type VertexState } from '../data/state';
 import { hydrateCatalog } from '../data/model';
@@ -27,7 +28,7 @@ export function createApiStore(): Store {
    try {
     const account=await request<Account>('/me').catch(e=>{if((e as Error).message.includes('Sign in required'))return null;throw e});
     const [catalog,competitionRows,teamRows,dashboard,prefs,invitations]=await Promise.all([
-     request<{people:(PersonSeed&{id:string;skills:unknown;availability:string})[]}>('/catalog'),
+     request<{people:(PersonSeed&{id:string;skills:unknown;availability:string;mutual_ids?:string[]})[]}>('/catalog'),
      request<(Record<string,unknown>&{id:string;presentation:Partial<Competition>})[]>('/competitions'),request<ApiTeam[]>('/teams'),
      account?request<Dashboard>('/dashboard'):Promise.resolve({teams:[],applications:[],inbox:[],notifications:[]} as Dashboard),
      account?request<{saved:string[];connections:AppState['conns']}>('/preferences'):Promise.resolve({saved:[],connections:{}}),
@@ -35,7 +36,7 @@ export function createApiStore(): Store {
     ]);
     const alias=(id:string)=>account&&id===account.id?'me':id;
     const people:Record<string,PersonSeed>={};
-    for(const p of [...catalog.people].sort((a,b)=>(a.color_index??9999)-(b.color_index??9999)||a.name.localeCompare(b.name))){people[alias(p.id)]={...p,name:p.name,program:p.program||'Student',fac:p.fac||'SOCS',roles:Array.isArray(p.roles)?p.roles:[],skills:split(p.skills),interests:Array.isArray(p.interests)?p.interests:[],avail:(p.availability||'Flexible') as PersonSeed['avail'],level:p.level||'Beginner',complete:p.complete??0.5,about:p.about||(p.color_index!==undefined?'Interested in '+p.interests.join(' and ').toLowerCase().replace('ui/ux','UI/UX')+' competitions.':'')};}
+    for(const p of [...catalog.people].sort((a,b)=>(a.color_index??9999)-(b.color_index??9999)||a.name.localeCompare(b.name))){people[alias(p.id)]={...p,name:p.name,program:p.program||'Student',fac:p.fac||'SOCS',roles:Array.isArray(p.roles)?p.roles:[],skills:split(p.skills),interests:Array.isArray(p.interests)?p.interests:[],avail:(p.availability||'Flexible') as PersonSeed['avail'],level:p.level||'Beginner',complete:0,mutual:p.mutual_ids?.length??0,mutualIds:(p.mutual_ids??[]).map(alias),connections:p.connections??0,about:p.about||''};people[alias(p.id)].complete=profileCompleteness(people[alias(p.id)]);}
     if(!people.me)people.me={name:'You',program:'Student',fac:'SOCS',roles:[],skills:[],interests:[],avail:'Flexible',level:'Beginner',complete:0};
     const teams=[...new Map([...teamRows,...dashboard.teams].map(t=>[t.id,t])).values()];
     const displayTeams:Team[]=teams.map(t=>({...t.presentation,id:t.id,name:t.name,comp:t.competition_id,leader:alias(t.leader_id),members:t.members.map(m=>alias(m.id)),target:t.capacity,about:t.about,avail:t.presentation.avail||'Flexible',level:t.presentation.level||'Beginner friendly',comms:t.presentation.comms||'Contact after acceptance',lang:t.presentation.lang||'English',recruiting:t.recruiting&&!t.moderated,canApply:t.eligible,roles:[...t.roles].sort((a,b)=>{const order=(r:typeof a)=>{const original=t.presentation.roles?.findIndex(x=>x.id===r.presentation.id)??-1;return original>=0?original:(r.presentation as {order?:number}).order??9999};return order(a)-order(b)}).map(r=>({...r.presentation,id:r.id,name:r.name,qty:r.capacity,filled:r.filled,skills:split(r.skills),note:r.presentation.note||''}))}));
