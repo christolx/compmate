@@ -71,6 +71,9 @@ export function ProfileEditor() {
   const navigate = useNavigate();
   const p = PERSONS.me;
   const a = st.account!;
+  const nav = useNav();
+  const ledTeams = Object.keys(st.managed ?? {});
+  const [deleteError, setDeleteError] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const submit = async (e: FormEvent<HTMLFormElement>) => {
@@ -184,7 +187,20 @@ export function ProfileEditor() {
         </a>
         <details className="mt-4 text-[13px]">
           <summary className="cursor-pointer font-bold text-danger">Delete account</summary>
-          <p>Delete teams you lead first. Removal is permanent.</p>
+          <p>Removal is permanent and signs you out.</p>
+          {ledTeams.length > 0 && (
+            <div className="mb-3 rounded-[10px] bg-amber-50 px-4 py-3 text-amber-900">
+              Delete or hand over the teams you lead first:{' '}
+              {ledTeams.map((tid, i) => (
+                <span key={tid}>
+                  {i > 0 && ', '}
+                  <AppLink to="manage" args={[tid]} className="font-bold text-amber-900">
+                    {TEAM_BY_ID[tid]?.name ?? 'Team'}
+                  </AppLink>
+                </span>
+              ))}
+            </div>
+          )}
           <form
             className="grid gap-3"
             onSubmit={(e) => {
@@ -192,11 +208,19 @@ export function ProfileEditor() {
               const f = new FormData(e.currentTarget);
               void store
                 .request?.('/account', 'DELETE', { password: val(f, 'password') })
-                .then(() => navigate('/'))
-                .catch((e) => setError(e.message));
+                .then(() => {
+                  navigate('/');
+                  nav('toast', 'Account deleted');
+                })
+                .catch((e) => setDeleteError(e.message));
             }}
           >
             <Input name="password" label="Confirm password" type="password" />
+            {deleteError && (
+              <p role="alert" className="m-0 text-[13px] font-semibold text-danger">
+                {deleteError}
+              </p>
+            )}
             <button className={button + ' bg-danger'}>Delete account permanently</button>
           </form>
         </details>
