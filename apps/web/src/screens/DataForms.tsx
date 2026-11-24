@@ -4,7 +4,9 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { useNavigate, useSearchParams, useParams } from 'react-router';
 import { COMPETITION_BY_ID, ALL_COMPETITIONS, PERSONS, TEAM_BY_ID } from '../data/model';
 import { isCompetitionRecruiting } from '../data/selectors';
-import { FACULTIES } from '../data/seed';
+import { FACULTIES, GROUPS } from '../data/seed';
+import { AppLink } from '../app/AppLink';
+import { useNav } from '../app/nav';
 import { useAppState, useStore } from '../store/store';
 import { TopNav } from '../components/TopNav';
 import { BottomNav } from '../components/BottomNav';
@@ -421,14 +423,26 @@ interface CuratedCompetition {
   max_members: number;
   campus: string;
   published: boolean;
+  presentation?: { cat?: string; group?: string; loc?: string; place?: string; fee?: number; open?: string; event?: string; poster?: string; skills?: string[] };
 }
 interface Report {
   id: string;
+  team_id: string;
   team_name: string;
   reason: string;
   resolved: boolean;
   moderated: boolean;
+  created_at: string;
 }
+const METRICS: [key: string, label: string, format: (v: number) => string][] = [
+  ['signups', 'Accounts', String],
+  ['teams', 'Teams', String],
+  ['applications', 'Applications', String],
+  ['accepted', 'Accepted', String],
+  ['acceptance_rate', 'Acceptance rate', (v) => Math.round(v * 100) + '%'],
+  ['median_response_hours', 'Median response time', (v) => (v < 1 ? Math.max(1, Math.round(v * 60)) + ' min' : v < 48 ? v.toFixed(1) + ' h' : (v / 24).toFixed(1) + ' days')],
+  ['connected_teams', 'Teams that connected', String],
+];
 const panel = 'mt-6 rounded-[16px] border border-card bg-white p-6';
 const localDate = (iso: string) => {
   const d = new Date(iso);
@@ -457,6 +471,8 @@ export function Privacy() {
 export function AdminCuration() {
   const store = useStore();
   const st = useAppState();
+  const nav = useNav();
+  const [formKey, setFormKey] = useState(0);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
@@ -488,16 +504,21 @@ export function AdminCuration() {
       active = false;
     };
   }, [st.account?.admin, store]);
-  const run = async (fn: () => Promise<unknown>, message: string) => {
+  // Form errors render next to the Save button; other actions report through toasts.
+  const run = async (fn: () => Promise<unknown>, message: string, form = false) => {
     setBusy(true);
     setError('');
     setNotice('');
     try {
       await fn();
       await load();
-      setNotice(message);
+      if (form) {
+        setNotice(message);
+        if (!editing) setFormKey((k) => k + 1);
+      } else nav('toast', message);
     } catch (e) {
-      setError((e as Error).message);
+      if (form) setError((e as Error).message);
+      else nav('toastError', (e as Error).message);
     } finally {
       setBusy(false);
     }
@@ -505,18 +526,8 @@ export function AdminCuration() {
   if (!st.account?.admin) return <Page title="Permission denied">Admin access required.</Page>;
   return (
     <Page title="Curate competition">
-      {error && (
-        <p role="alert" className="text-danger text-[14px]">
-          {error}
-        </p>
-      )}
-      {notice && (
-        <p role="status" className="text-success text-[14px]">
-          {notice}
-        </p>
-      )}
       <form
-        key={editing?.id || 'new'}
+        key={editing?.id || 'new-' + formKey}
         className="grid gap-5 rounded-[16px] border border-card bg-white p-6"
         onSubmit={(e) => {
           e.preventDefault();
@@ -533,8 +544,23 @@ export function AdminCuration() {
                 max_members: Number(f.get('max')),
                 campus: val(f, 'campus'),
                 published: f.has('published'),
+                presentation: {
+                  group: val(f, 'group'),
+                  cat: val(f, 'cat') || val(f, 'group'),
+                  loc: val(f, 'loc'),
+                  place: val(f, 'place') || (val(f, 'loc') === 'Online' ? 'Online' : ''),
+                  fee: Number(f.get('fee') || 0),
+                  open: val(f, 'open'),
+                  event: val(f, 'event'),
+                  poster: val(f, 'poster'),
+                  skills: val(f, 'skills')
+                    .split(',')
+                    .map((x) => x.trim())
+                    .filter(Boolean),
+                },
               }),
-            'Competition saved',
+            editing ? 'Competition updated' : 'Competition created',
+            true,
           );
         }}
       >
@@ -547,12 +573,48 @@ export function AdminCuration() {
         <Input label="Minimum members" name="min" type="number" initial={editing?.min_members || 2} min={2} max={20} />
         <Input label="Maximum members" name="max" type="number" initial={editing?.max_members || 5} min={2} max={20} />
         <Input label="Campus restriction (blank = all)" name="campus" initial={editing?.campus} required={false} />
+        <fieldset className="grid gap-4 rounded-[12px] border border-field p-4">
+          <legend className="text-[13px] font-bold">Listing details</legend>
+          <label className="text-[13px] font-bold">
+            Category group
+            <select name="group" defaultValue={editing?.presentation?.group || 'Technology'} className={field}>
+              {GROUPS.map((g) => (
+                <option key={g}>{g}</option>
+              ))}
+            </select>
+          </label>
+          <Input label="Category label (e.g. Hackathon, Business Case)" name="cat" initial={editing?.presentation?.cat} required={false} max={60} />
+          <label className="text-[13px] font-bold">
+            Format
+            <select name="loc" defaultValue={editing?.presentation?.loc || 'Online'} className={field}>
+              {['Online', 'Offline', 'Hybrid'].map((x) => (
+                <option key={x}>{x}</option>
+              ))}
+            </select>
+          </label>
+          <Input label="Venue or city (blank for online)" name="place" initial={editing?.presentation?.place} required={false} max={120} />
+          <Input label="Registration fee per team (Rp, 0 = free)" name="fee" type="number" initial={editing?.presentation?.fee ?? 0} min={0} max={100000000} />
+          <Input label="Registration opens" name="open" type="date" initial={editing?.presentation?.open} required={false} />
+          <Input label="Event date" name="event" type="date" initial={editing?.presentation?.event} required={false} />
+          <Input label="Poster image URL (https)" name="poster" type="url" initial={editing?.presentation?.poster} required={false} max={1000} />
+          <Input label="Key skills (comma separated)" name="skills" initial={editing?.presentation?.skills?.join(', ')} required={false} max={500} />
+        </fieldset>
         <label className="flex gap-3 text-[13px]">
           <input type="checkbox" name="published" defaultChecked={editing?.published ?? true} />
           Published
         </label>
+        {error && (
+          <p role="alert" className="m-0 rounded-[10px] bg-red-50 px-4 py-3 text-[14px] font-semibold text-danger">
+            {error}
+          </p>
+        )}
+        {notice && (
+          <p role="status" className="m-0 text-[14px] font-semibold text-success">
+            {notice}
+          </p>
+        )}
         <button className={button} disabled={busy}>
-          Save competition
+          {editing ? 'Save changes' : 'Create competition'}
         </button>
         {editing && (
           <button type="button" className={button + ' bg-ink'} onClick={() => setEditing(undefined)}>
@@ -571,6 +633,8 @@ export function AdminCuration() {
               className="cursor-pointer border-0 bg-transparent font-bold text-brand"
               onClick={() => {
                 setEditing(c);
+                setError('');
+                setNotice('');
                 window.scrollTo({ top: 0 });
               }}
             >
@@ -584,26 +648,30 @@ export function AdminCuration() {
         {!reports.length && <p className="text-[14px] text-slate-500">No reports.</p>}
         {reports.map((r) => (
           <div key={r.id} className="border-t border-line py-4 text-[14px]">
-            <h3>{r.team_name}</h3>
-            <p>{r.reason}</p>
-            <p>
-              {r.resolved ? 'Resolved' : 'Open'} · {r.moderated ? 'Hidden' : 'Visible'}
+            <h3 className="m-0 text-[15px]">
+              <AppLink to="team" args={[r.team_id]} className="text-ink">
+                {r.team_name}
+              </AppLink>
+            </h3>
+            <p className="my-1.5 text-slate-500">
+              Reported {new Date(r.created_at).toLocaleString()} · {r.resolved ? 'Resolved' : 'Open'} · Team {r.moderated ? 'hidden' : 'visible'}
             </p>
+            <p className="my-2 whitespace-pre-line">{r.reason}</p>
             <div className="flex flex-wrap gap-3">
-              <button
-                className={button}
-                disabled={busy}
-                onClick={() => void run(() => store.request!('/admin/reports/' + r.id + '/resolve', 'POST', { hide_team: true }), 'Team hidden; report resolved')}
-              >
-                Hide team
-              </button>
-              <button
-                className={button + ' bg-ink'}
-                disabled={busy}
-                onClick={() => void run(() => store.request!('/admin/reports/' + r.id + '/resolve', 'POST', { hide_team: false }), 'Team visible; report resolved')}
-              >
-                Dismiss / restore team
-              </button>
+              {(!r.resolved || !r.moderated) && (
+                <button className={button} disabled={busy} onClick={() => void run(() => store.request!('/admin/reports/' + r.id + '/resolve', 'POST', { hide_team: true }), 'Team hidden; report resolved')}>
+                  Hide team
+                </button>
+              )}
+              {(!r.resolved || r.moderated) && (
+                <button
+                  className={button + ' bg-ink'}
+                  disabled={busy}
+                  onClick={() => void run(() => store.request!('/admin/reports/' + r.id + '/resolve', 'POST', { hide_team: false }), r.moderated ? 'Team restored' : 'Report dismissed')}
+                >
+                  {r.moderated ? 'Restore team' : 'Dismiss report'}
+                </button>
+              )}
             </div>
           </div>
         ))}
@@ -611,10 +679,10 @@ export function AdminCuration() {
       <section className={panel}>
         <h2 className="mt-0 text-[18px] font-extrabold">Formation metrics</h2>
         <dl className="grid grid-cols-2 gap-3 text-[14px]">
-          {['signups', 'teams', 'applications', 'accepted', 'acceptance_rate', 'median_response_hours', 'connected_teams'].map((k) => (
+          {METRICS.map(([k, label, format]) => (
             <div key={k}>
-              <dt className="text-slate-500">{k.replaceAll('_', ' ')}</dt>
-              <dd className="m-0 font-bold">{metrics[k] == null ? '—' : String(metrics[k])}</dd>
+              <dt className="text-slate-500">{label}</dt>
+              <dd className="m-0 font-bold">{metrics[k] == null ? '—' : format(Number(metrics[k]))}</dd>
             </div>
           ))}
         </dl>

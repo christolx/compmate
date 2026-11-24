@@ -236,7 +236,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
                   ))}
                   <div className="mt-4 text-[13px] font-bold text-slate-500">Likely relevant</div>
                   <div className="mt-1.5 text-[14px] leading-[1.6] text-slate-700">{facLine}</div>
-                  <div className="mt-1 text-[13px] text-slate-500">Any faculty can join. Skills matter more: {c.skills.join(', ')}.</div>
+                  <div className="mt-1 text-[13px] text-slate-500">Any faculty can join.{c.skills.length > 0 && ' Skills matter more: ' + c.skills.join(', ') + '.'}</div>
                 </div>
               </section>
             </main>
