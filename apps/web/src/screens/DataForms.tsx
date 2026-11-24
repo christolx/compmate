@@ -92,7 +92,7 @@ export function ProfileEditor() {
         if (!raw) continue;
         // Accept Instagram handles like @name as well as full links.
         const value = label === 'Instagram' && /^@?[\w.]{1,30}$/.test(raw) && !raw.includes('.') ? `https://www.instagram.com/${raw.replace(/^@/, '')}/` : externalUrl(raw);
-        if (!value) throw new Error(`${label} needs a full web address, e.g. ${label === 'Instagram' ? '@yourname or instagram.com/yourname' : 'linkedin.com/in/yourname'}`);
+        if (!value) throw new Error(`${label} needs a full web address, e.g. ${{ Instagram: '@yourname or instagram.com/yourname', LinkedIn: 'linkedin.com/in/yourname', Portfolio: 'yourname.dev' }[label]}`);
         links.push({ label, value });
       }
       await store.request?.('/profile', 'PUT', {
