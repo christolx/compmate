@@ -123,7 +123,7 @@ export interface Notification {
   id: string;
   text: string;
   time: string;
-  go: { to: 'manage' | 'profile' | 'comp' | 'team'; id: string };
+  go: { to: 'manage' | 'profile' | 'comp' | 'team'; id: string } | { to: 'forYou' };
 }
 
 export interface Avatar { id: string; name: string; initials: string; bg: string; fg: string }

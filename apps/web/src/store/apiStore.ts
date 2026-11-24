@@ -10,7 +10,7 @@ import { COMPETITION_BY_ID } from '../data/model';
 export interface Account { id: string; name: string; email: string; campus: string; skills: string; availability: string; about: string; contact: string; share_contact: boolean; admin: boolean; presentation?: Partial<PersonSeed> }
 interface ApiTeam { id: string; competition_id: string; leader_id: string; name: string; about: string; capacity: number; recruiting: boolean; moderated: boolean; eligible: boolean; presentation: Partial<Team>; roles: { id: string; name: string; skills: string; capacity: number; filled: number; presentation: Partial<Team['roles'][number]> }[]; members: {id: string}[] }
 interface ApiApplication { id: string; team_id: string; user_id: string; role_id: string; status: 'pending'|'accepted'|'declined'|'withdrawn'; message: string; created_at: string }
-interface ApiNotification {id:string;team_id:string;text:string;created_at:string;read_at:string|null}
+interface ApiNotification {id:string;team_id:string|null;actor_id:string|null;kind:'team'|'application'|'decision'|'invitation'|'connection';text:string;created_at:string;read_at:string|null}
 interface Dashboard { teams: ApiTeam[]; applications: ApiApplication[]; inbox: ApiApplication[]; notifications: ApiNotification[] }
 const split = (s: unknown) => typeof s === 'string' ? s.split(',').map(x => x.trim()).filter(Boolean) : Array.isArray(s) ? s.filter((x):x is string=>typeof x==='string') : [];
 export async function request<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
@@ -18,6 +18,12 @@ export async function request<T>(path: string, method = 'GET', body?: unknown): 
  try { response=await fetch('/api/v1'+path,{method,credentials:'same-origin',headers:method==='GET'?{}:{'Content-Type':'application/json'},...(body===undefined?{}:{body:JSON.stringify(body)}),signal:AbortSignal.timeout(10000)}); } catch { throw new Error('Network unavailable. Check connection and retry.'); }
  let result;try{result=await response.json()}catch{throw new Error('API unavailable. Retry shortly.')}
  if(!response.ok)throw new Error(result.error??'Request failed');return result;
+}
+/** Where a notification leads: leaders review applicants on Manage, connections open the person. */
+function notificationTarget(n: ApiNotification, alias: (id: string) => string): Notification['go'] {
+ if (n.kind === 'connection' && n.actor_id) return { to: 'profile', id: alias(n.actor_id) };
+ if (!n.team_id) return { to: 'forYou' };
+ return n.kind === 'application' ? { to: 'manage', id: n.team_id } : { to: 'team', id: n.team_id };
 }
 export function createApiStore(): Store {
  const initial=defaultState();
@@ -42,7 +48,7 @@ export function createApiStore(): Store {
     const teams=[...new Map([...teamRows,...dashboard.teams].map(t=>[t.id,t])).values()];
     const displayTeams:Team[]=teams.map(t=>({...t.presentation,id:t.id,name:t.name,comp:t.competition_id,leader:alias(t.leader_id),members:t.members.map(m=>alias(m.id)),target:t.capacity,about:t.about,avail:t.presentation.avail||'Flexible',level:t.presentation.level||'Beginner friendly',comms:t.presentation.comms||'Contact after acceptance',lang:t.presentation.lang||'English',recruiting:t.recruiting&&!t.moderated,canApply:t.eligible,roles:[...t.roles].sort((a,b)=>{const order=(r:typeof a)=>{const original=t.presentation.roles?.findIndex(x=>x.id===r.presentation.id)??-1;return original>=0?original:(r.presentation as {order?:number}).order??9999};return order(a)-order(b)}).map(r=>({...r.presentation,id:r.id,name:r.name,qty:r.capacity,filled:r.filled,skills:split(r.skills),note:r.presentation.note||''}))}));
     const competitions:Competition[]=competitionRows.map(c=>({...c.presentation,id:c.id,title:String(c.title),org:String(c.organizer),overview:String(c.description),deadline:localDay(String(c.deadline)),open:c.presentation.open||localDay(new Date()),event:c.presentation.event||localDay(String(c.deadline)),min:Number(c.min_members),max:Number(c.max_members),url:String(c.official_url||'')||undefined,campus:String(c.campus||'').trim()||undefined,cat:c.presentation.cat||'Competition',group:c.presentation.group||'Technology',interest:c.presentation.interest||c.presentation.cat||'Hackathon',loc:c.presentation.loc||'Online',place:c.presentation.place||'Online',fee:c.presentation.fee||0,facs:c.presentation.facs||['SOCS','SOIS','BBS','SOD','SOE','SOH'],skills:c.presentation.skills||[],recommendationWeight:c.presentation.recommendationWeight??c.presentation.teamsCount,teamsCount:displayTeams.filter(t=>t.comp===c.id&&t.recruiting&&t.members.length<t.target).length,openRoles:displayTeams.filter(t=>t.comp===c.id).flatMap(t=>t.roles).reduce((sum,r)=>sum+Math.max(0,r.qty-(r.filled||0)),0),interested:c.presentation.interested||0}));
-    const notifications:Notification[]=dashboard.notifications.map(n=>({id:n.id,text:n.text,time:relativeTime(n.created_at),go:{to:'team',id:n.team_id}}));
+    const notifications:Notification[]=dashboard.notifications.map(n=>({id:n.id,text:n.text,time:relativeTime(n.created_at),go:notificationTarget(n,alias)}));
     hydrateCatalog(competitions,displayTeams,people,notifications);
     const managed:Record<string,VertexState>={};
     for(const t of teams.filter(t=>t.leader_id===account?.id))managed[t.id]={target:t.capacity,closed:!t.recruiting,added:[],filled:[],apps:dashboard.inbox.filter(a=>a.team_id===t.id).map(a=>({id:a.id,pid:alias(a.user_id),role:a.role_id,status:a.status,when:relativeTime(a.created_at),msg:a.message}))};

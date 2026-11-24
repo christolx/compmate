@@ -226,6 +226,7 @@ export function NotificationsPanel({ onClose, position, onRead, onReadAll }: Ove
             Mark all read
           </button>
         </div>
+        {!NOTIFICATIONS.length && <p className="m-0 px-[18px] pt-2 pb-5 text-[14px] text-slate-500">You're all caught up. Applications, invitations and connection requests show up here.</p>}
         {NOTIFICATIONS.map((n) => {
           const unread = !st.read.includes(n.id);
           return (
@@ -234,7 +235,7 @@ export function NotificationsPanel({ onClose, position, onRead, onReadAll }: Ove
               type="button"
               onClick={() => {
                 onRead(n.id);
-                if (n.go.to === 'manage') nav('manage');
+                if (n.go.to === 'forYou') nav('forYou');
                 else nav(n.go.to, n.go.id);
               }}
               className={cx('flex w-full cursor-pointer gap-3 border-0 px-[18px] py-3 text-left hover:bg-canvas', unread ? 'bg-[#F8FAFF]' : 'bg-white')}
