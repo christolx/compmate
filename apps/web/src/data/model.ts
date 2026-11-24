@@ -197,7 +197,7 @@ export function comp(id: string, at = currentClock): CompetitionView {
     deadlineShort: formatShortDate(c.deadline),
     deadlineFull: formatDate(c.deadline),
     eventLabel: formatDate(c.event),
-    teamShort: c.part === 'either' ? 'Solo–' + c.max : c.min === c.max ? String(c.min) : c.min + '–' + c.max,
+    teamShort: c.part === 'either' ? '1–' + c.max : c.min === c.max ? String(c.min) : c.min + '–' + c.max,
     teamLong: c.part === 'either' ? 'Solo or teams up to ' + c.max : c.min === c.max ? 'Teams of ' + c.min : c.min + '–' + c.max + ' people',
     feeLabel: c.fee ? 'Rp' + c.fee.toLocaleString('id-ID') + ' / team' : 'Free',
     feeShort: c.fee ? 'Rp' + c.fee / 1000 + 'k' : 'Free',
