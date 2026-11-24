@@ -53,9 +53,14 @@ export function TopNav({ authed, active, backTitle }: TopNavProps) {
           <AccountMenu />
           </>
         ) : (
-          <button type="button" onClick={() => nav('login')} className="h-9 cursor-pointer rounded-[9px] border-0 bg-ink px-3.5 text-[13px] font-semibold text-white">
-            Log in
-          </button>
+          <span className="flex gap-1.5">
+            <button type="button" onClick={() => nav('login')} className="h-9 cursor-pointer rounded-[9px] border-0 bg-transparent px-2.5 text-[13px] font-semibold text-ink">
+              Log in
+            </button>
+            <button type="button" onClick={() => nav('login', true)} className="h-9 cursor-pointer rounded-[9px] border-0 bg-ink px-3.5 text-[13px] font-semibold text-white">
+              Sign up
+            </button>
+          </span>
         )}
       </header>
     );
