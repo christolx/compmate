@@ -259,8 +259,8 @@ func (s *Server) createTeam(w http.ResponseWriter, r *http.Request, a actor) (an
 	if err = tx.QueryRow(ctx, `SELECT campus FROM profiles WHERE user_id=$1`, a.ID).Scan(&myCampus); err != nil {
 		return nil, err
 	}
-	if campus != "" && campus != myCampus {
-		return nil, forbidden
+	if !sameCampus(campus, myCampus) {
+		return nil, failure{403, "Only " + strings.TrimSpace(campus) + " students can join this competition. Update your campus in Edit profile if that's you."}
 	}
 	var member bool
 	if err = tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM memberships m JOIN teams t ON t.id=m.team_id WHERE t.competition_id=$1 AND m.user_id=$2)`, v.Competition, a.ID).Scan(&member); err != nil {
@@ -315,6 +315,11 @@ func lockTeam(ctx context.Context, tx pgx.Tx, tid string) (leader string, capaci
 	err = tx.QueryRow(ctx, `SELECT leader_id,capacity FROM teams WHERE id=$1 FOR UPDATE`, tid).Scan(&leader, &capacity)
 	return
 }
+func sameCampus(required, actual string) bool {
+	required = strings.TrimSpace(required)
+	return required == "" || strings.EqualFold(required, strings.TrimSpace(actual))
+}
+
 func eligible(ctx context.Context, tx pgx.Tx, tid, user, role string) error {
 	var open bool
 	err := tx.QueryRow(ctx, `SELECT recruitment_eligible($1,$2,$3)`, tid, user, role).Scan(&open)

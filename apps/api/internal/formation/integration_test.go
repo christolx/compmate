@@ -609,3 +609,17 @@ func newcomerReporter(h *harness) *http.Client {
 	client, _ := h.signup("reporter2")
 	return client
 }
+
+func TestCampusRestrictionIgnoresCaseAndSpacing(t *testing.T) {
+	h := setup(t)
+	h.req(h.admin, "PUT", "/competitions/"+h.competition, h.comp(time.Now().Add(time.Hour), "BINUS"), 200)
+	leader, _ := h.signup("leader")
+	h.profile(leader, "Leader", " binus ", "", false)
+	tid := h.team(leader, "Campus team", 2, []roleInput{{Name: "Developer", Capacity: 1}})
+	insider, _ := h.signup("insider")
+	h.profile(insider, "Insider", "Binus", "", false)
+	h.apply(insider, tid, h.role(leader, tid, 0), false)
+	outsider, _ := h.signup("outsider")
+	h.profile(outsider, "Outsider", "Other U", "", false)
+	h.req(outsider, "POST", "/teams", teamInput{Competition: h.competition, Name: "Outside", Capacity: 2, Roles: []roleInput{{Name: "Dev", Capacity: 1}}}, 403)
+}
