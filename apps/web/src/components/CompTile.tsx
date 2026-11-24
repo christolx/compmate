@@ -89,9 +89,9 @@ export function CompTile({ cid, variant = 'a', wide, reason, authed }: CompTileP
           <Fact label="Format" value={c.loc} />
         </div>
         <div className="mt-4 flex items-center gap-2 bg-[#F3F6FF] px-4 py-3">
-          <span className="flex pl-1.5">
+          <span className="flex pl-1">
             {c.faces.map((f) => (
-              <span key={f.id} className="-ml-1.5 grid h-6 w-6 place-items-center rounded-full text-[9px] font-bold shadow-[0_0_0_2px_#F3F6FF]" style={{ background: f.bg, color: f.fg }}>
+              <span key={f.id} className="-ml-1 grid h-[26px] w-[26px] place-items-center rounded-full text-[10px] font-bold tracking-[-0.02em] shadow-[0_0_0_2px_#F3F6FF]" style={{ background: f.bg, color: f.fg }}>
                 {f.initials}
               </span>
             ))}
@@ -170,9 +170,9 @@ export function CompTile({ cid, variant = 'a', wide, reason, authed }: CompTileP
         <div className="mt-3 flex min-h-6 items-center gap-2">
           {c.hasTeams ? (
             <>
-              <span className="flex pl-0.5">
+              <span className="flex pl-1">
                 {c.faces.map((f) => (
-                  <span key={f.id} className="-ml-1.5 grid h-6 w-6 place-items-center rounded-full text-[9px] font-bold shadow-[0_0_0_2px_#FFFFFF]" style={{ background: f.bg, color: f.fg }}>
+                  <span key={f.id} className="-ml-1 grid h-[26px] w-[26px] place-items-center rounded-full text-[10px] font-bold tracking-[-0.02em] shadow-[0_0_0_2px_#FFFFFF]" style={{ background: f.bg, color: f.fg }}>
                     {f.initials}
                   </span>
                 ))}

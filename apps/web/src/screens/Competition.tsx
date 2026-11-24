@@ -105,11 +105,11 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
       </div>
     ));
   const faces = (size: 'md' | 'sm') => (
-    <span className="flex pl-1.5">
+    <span className="flex pl-1">
       {c.faces.map((f) => (
         <span
           key={f.id}
-          className={cx('-ml-1.5 grid place-items-center rounded-full font-bold shadow-[0_0_0_2px_#F5F8FF]', size === 'md' ? 'h-7 w-7 text-[10px]' : 'h-[26px] w-[26px] text-[9px]')}
+          className={cx('-ml-1 grid place-items-center rounded-full font-bold shadow-[0_0_0_2px_#F5F8FF]', size === 'md' ? 'h-7 w-7 text-[10px]' : 'h-[26px] w-[26px] text-[10px]')}
           style={{ background: f.bg, color: f.fg }}
         >
           {f.initials}
