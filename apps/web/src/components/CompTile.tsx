@@ -154,7 +154,7 @@ export function CompTile({ cid, variant = 'a', wide, reason, authed }: CompTileP
         <div className="text-[13px] text-slate-500">{c.org}</div>
         <div className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-[13px] text-slate-700">
           <span className="font-bold" style={{ color: c.dlFg }}>
-            Closes {c.deadlineShort}
+            {c.upcoming ? c.statusLabel : c.left < 0 ? 'Closed ' + c.deadlineShort : 'Closes ' + c.deadlineShort}
           </span>
           <span className="text-slate-300">·</span>
           <span>Team {c.teamShort}</span>

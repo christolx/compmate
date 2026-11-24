@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ALL_COMPETITIONS, type CompetitionView } from '../data/model';
-import { testDeadlineFilter } from '../data/selectors';
+import { isCompetitionRecruiting, testDeadlineFilter } from '../data/selectors';
 import { GROUPS, POPULAR_SEARCHES } from '../data/seed';
 import { useNav } from '../app/nav';
 import { useIsMobile } from '../app/viewport';
@@ -138,7 +138,7 @@ export function Explore({ mode = 'all', q: initialQ = '', cat: initialCat = 'All
       : 'Competitions you save show up here.'
     : [
         plural(all.length, 'competition'),
-        all.filter((c) => c.status === 'open' || c.status === 'closing').length + ' open for registration',
+        all.filter((c) => isCompetitionRecruiting(c.id)).length + ' open for registration',
         plural(all.reduce((a, c) => a + c.teamsCount, 0), 'team') + ' recruiting',
       ].join(' · ');
   const cols = m ? 'grid-cols-[repeat(auto-fill,minmax(300px,1fr))]' : 'grid-cols-[repeat(auto-fill,minmax(268px,1fr))]';

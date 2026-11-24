@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ALL_COMPETITIONS, comp, team } from '../data/model';
 import { TEAMS } from '../data/seed';
-import { isRecruiting } from '../data/selectors';
+import { isCompetitionRecruiting, isRecruiting } from '../data/selectors';
 import { GROUPS, POPULAR_SEARCHES } from '../data/seed';
 import { AppLink } from '../app/AppLink';
 import { useNav } from '../app/nav';
@@ -33,7 +33,7 @@ const STEPS = [
 /** Logged-out landing: real competitions and recruiting teams in the first viewport. */
 export function Discover({ authed: authedProp }: { authed?: boolean }) {
   const st = useAppState();
-  const TEAMS_RECRUITING = ALL_COMPETITIONS.filter(c=>c.left>=0).reduce((n, c) => n + c.teamsCount, 0);
+  const TEAMS_RECRUITING = ALL_COMPETITIONS.filter((c) => isCompetitionRecruiting(c.id)).reduce((n, c) => n + c.teamsCount, 0);
   const CLOSING_SOON = ALL_COMPETITIONS.filter((c) => !c.upcoming && c.left >= 0 && c.left <= 14)
     .sort((a, b) => a.left - b.left)
     .slice(0, 4);
@@ -172,7 +172,7 @@ export function Discover({ authed: authedProp }: { authed?: boolean }) {
           <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2">
             {GROUPS.map((g, i) => {
               const [bg, fg] = CATEGORY_HUES[i];
-              const n = ALL_COMPETITIONS.filter((c) => c.group === g && c.left>=0).length;
+              const n = ALL_COMPETITIONS.filter((c) => c.group === g && isCompetitionRecruiting(c.id)).length;
               return (
                 <button
                   key={g}

@@ -2,7 +2,7 @@ import { exampleRegistrationUrl, isExampleUrl } from '../lib/exampleLinks';
 import { externalUrl } from '../lib/externalUrl';
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { TEAM_BY_ID, comp, teamsFor } from '../data/model';
-import { isRecruiting } from '../data/selectors';
+import { isCompetitionRecruiting, isRecruiting } from '../data/selectors';
 import { teamsForMe } from '../data/matching';
 import { AppLink } from '../app/AppLink';
 import { useNav } from '../app/nav';
@@ -55,7 +55,9 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
   }, [posterOpen]);
 
   const c = comp(cid);
-  const canCreate = c.left >= 0;
+  const canCreate = isCompetitionRecruiting(c.id);
+  const closedTitle = c.upcoming ? 'Registration not open yet' : 'Registration closed';
+  const closedText = c.upcoming ? `Registration ${c.statusLabel.toLowerCase()}. Teams can form once it opens.` : "The deadline has passed, so new teams can't be created for this competition.";
   const compTeams = noTeams ? [] : teamsFor(c.id, st);
   const inComp = compTeams.some((t) => t.isMember);
   const all = compTeams.filter((t) => isRecruiting(t));
@@ -505,7 +507,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
                   <button type="button" onClick={() => nav('create', c.id)} className="h-[46px] cursor-pointer rounded-[12px] border-0 bg-ink px-5 text-[14px] font-bold text-white">
                     Create a team
                   </button>
-                </div> : <div className="mt-9 border-t border-slate-200 pt-7 text-[14px] text-slate-600">Registration closed. New teams can't be created for this competition.</div>}
+                </div> : <div className="mt-9 border-t border-slate-200 pt-7 text-[14px] text-slate-600">{closedText}</div>}
               </>
             ) : (
               <div className="mt-7 rounded-[18px] border border-dashed border-slate-300 bg-white px-5 py-12 text-center">
@@ -514,9 +516,9 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
                   <span className="-ml-2 box-border h-11 w-11 rounded-full border-[1.5px] border-dashed border-seat bg-white shadow-[0_0_0_3px_#FFFFFF]" />
                   <span className="-ml-2 box-border h-11 w-11 rounded-full border-[1.5px] border-dashed border-seat bg-white shadow-[0_0_0_3px_#FFFFFF]" />
                 </div>
-                <div className="mt-4 text-[18px] font-extrabold">{canCreate ? 'No team yet' : 'Registration closed'}</div>
+                <div className="mt-4 text-[18px] font-extrabold">{canCreate ? 'No team yet' : closedTitle}</div>
                 <p className="mx-auto mt-1.5 mb-0 max-w-[380px] text-[14px] leading-[1.55] text-slate-500">
-                  {canCreate ? 'No teams are recruiting for this competition yet. Start one and students browsing this page will see your open roles first.' : 'The deadline has passed, so new teams can\'t be created for this competition.'}
+                  {canCreate ? 'No teams are recruiting for this competition yet. Start one and students browsing this page will see your open roles first.' : closedText}
                 </p>
                 {canCreate && <button type="button" onClick={() => nav('create', c.id)} className="mt-[18px] h-[46px] cursor-pointer rounded-[12px] border-0 bg-brand px-5 text-[14px] font-bold text-white">
                   Create the first team
@@ -546,7 +548,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
             onClick={() => (tab === 'teams' ? nav('create', c.id) : setTab('teams'))}
             className="h-[50px] flex-[1.3] cursor-pointer rounded-[12px] border-0 bg-brand text-[15px] font-bold text-white disabled:cursor-default disabled:bg-slate-300 disabled:text-slate-600"
           >
-            {tab === 'teams' ? (canCreate ? 'Create a team' : 'Registration closed') : 'Find a team'}
+            {tab === 'teams' ? (canCreate ? 'Create a team' : closedTitle) : 'Find a team'}
           </button>
         </div>
       )}
