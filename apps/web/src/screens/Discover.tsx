@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { ALL_COMPETITIONS, comp, team } from '../data/model';
-import { TEAMS } from '../data/seed';
+import { GROUPS, POPULAR_SEARCHES, TEAMS } from '../data/seed';
 import { isCompetitionRecruiting, isRecruiting } from '../data/selectors';
-import { GROUPS, POPULAR_SEARCHES } from '../data/seed';
 import { AppLink } from '../app/AppLink';
 import { useNav } from '../app/nav';
 import { useIsMobile } from '../app/viewport';
@@ -33,11 +32,10 @@ const STEPS = [
 /** Logged-out landing: real competitions and recruiting teams in the first viewport. */
 export function Discover({ authed: authedProp }: { authed?: boolean }) {
   const st = useAppState();
-  const TEAMS_RECRUITING = ALL_COMPETITIONS.filter((c) => isCompetitionRecruiting(c.id)).reduce((n, c) => n + c.teamsCount, 0);
-  const CLOSING_SOON = ALL_COMPETITIONS.filter((c) => !c.upcoming && c.left >= 0 && c.left <= 14)
+  const CLOSING_SOON = ALL_COMPETITIONS.filter((c) => isCompetitionRecruiting(c.id) && c.left <= 14)
     .sort((a, b) => a.left - b.left)
     .slice(0, 4);
-  // Live teams (seed ids may not exist): recruiting ones you're not in, soonest deadline first.
+  // Hydrated live teams you could join (not yours), soonest deadline first. One list feeds every count.
   const RECRUITING = TEAMS.filter((t) => !t.members.includes('me') && isRecruiting(t, st))
     .sort((a, b) => comp(a.comp).left - comp(b.comp).left)
     .map((t) => t.id);
@@ -106,7 +104,7 @@ export function Discover({ authed: authedProp }: { authed?: boolean }) {
             <aside className="rounded-[20px] border border-card bg-white p-2 shadow-[0_30px_60px_-30px_rgba(15,23,42,.22)]">
               <div className="flex items-center justify-between px-3.5 pt-3 pb-1.5">
                 <span className="text-[13px] font-bold">Teams recruiting right now</span>
-                <span className="text-[12px] text-slate-500">{Math.min(3, RECRUITING.length)} of {TEAMS_RECRUITING}</span>
+                <span className="text-[12px] text-slate-500">{Math.min(3, RECRUITING.length)} of {RECRUITING.length}</span>
               </div>
               {RECRUITING.slice(0, 3).map((id) => {
                 const t = team(id, st);
