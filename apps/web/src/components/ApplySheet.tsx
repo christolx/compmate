@@ -139,6 +139,7 @@ export function ApplySheet({ tid, role: initialRole, block, sent: initialSent = 
                 <textarea
                   id={msgId}
                   value={msg}
+                  maxLength={300}
                   onChange={(e) => setMsg(e.target.value.slice(0, 300))}
                   rows={3}
                   placeholder="Hi! I'd like to join because…"
@@ -184,7 +185,7 @@ export function ApplySheet({ tid, role: initialRole, block, sent: initialSent = 
               {blocked ? 'Close' : 'Cancel'}
             </button>
             {!blocked && (
-              <button type="button" onClick={send} disabled={sending || msg.trim().length<10} className="flex h-[50px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-[12px] border-0 bg-brand text-[15px] font-bold text-white hover:bg-brand-hover">
+              <button type="button" onClick={send} disabled={sending || msg.trim().length<10} title={msg.trim().length < 10 ? 'Write at least 10 characters' : undefined} className="flex h-[50px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-[12px] border-0 bg-brand text-[15px] font-bold text-white hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500">
                 {sending && <span className="box-border h-4 w-4 animate-[cm-spin_.7s_linear_infinite] rounded-full border-2 border-white/40 border-t-white" />}
                 {sending ? 'Sending…' : 'Send application'}
               </button>
