@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { profileLinkDestination } from '../lib/exampleLinks';
 import { useNavigate } from 'react-router';
 import { PERSONS, SKILL_CATEGORY, avatar, team } from '../data/model';
 import { match } from '../data/matching';
+import { isRecruiting } from '../data/selectors';
 import { TEAMS } from '../data/seed';
 import { AppLink } from '../app/AppLink';
 import { useNav } from '../app/nav';
@@ -28,11 +30,20 @@ export function Profile({ pid }: { pid: string }) {
   const nav = useNav();
   const p = PERSONS[pid];
   const me = pid === 'me';
-  const invited=!!st.invites[pid];
+  const invited = st.invites[pid];
   const conn = me ? null : st.conns[pid] || 'none';
-  const ownedId=Object.keys(st.managed||{})[0]||(st.loaded===undefined?'vertex':undefined);
-  const vx = ownedId?team(ownedId,st):null;
-  const fit = !me && vx && !vx.members.includes(pid) && vx.roleList.length ? vx.roleList.map((r) => match(pid, ownedId!, r.id, st)).sort((a, b) => b.score - a.score)[0] : null;
+  // Teams you lead that this student could still join: recruiting, not already in, no final application.
+  const inviteTeams = me
+    ? []
+    : Object.keys(st.managed || {}).filter((tid) => {
+        const tv = team(tid, st);
+        const final = (st.managed?.[tid]?.apps ?? []).some((x) => x.pid === pid && (x.status === 'declined' || x.status === 'withdrawn'));
+        return !tv.members.includes(pid) && !final && isRecruiting(tv) && tv.roleList.some((r) => r.qty > (r.filled || 0));
+      });
+  const [pickedTeam, setPickedTeam] = useState('');
+  const ownedId = invited?.tid ?? (inviteTeams.includes(pickedTeam) ? pickedTeam : inviteTeams[0]);
+  const vx = ownedId ? team(ownedId, st) : null;
+  const fit = vx ? vx.roleList.filter((r) => r.qty > (r.filled || 0)).map((r) => match(pid, ownedId!, r.id, st)).sort((a, b) => b.score - a.score)[0] ?? null : null;
 
 
   const groups: Record<string, string[]> = {};
@@ -150,7 +161,25 @@ export function Profile({ pid }: { pid: string }) {
                   )
                 )}
 
-                {fit?.kind && <button type="button" onClick={()=>nav('invite',{pid,tid:ownedId!,rid:fit.role.id})} disabled={invited} className={cx('h-11 cursor-pointer rounded-[12px] border-0 px-[18px] text-[14px] font-bold',invited?'bg-success-tint text-success':'bg-brand text-white')}>{invited?'Invited to '+vx?.name+' ✓':'Invite to '+vx?.name}</button>}
+                {!invited && inviteTeams.length > 1 && (
+                  <select aria-label="Team to invite to" value={ownedId} onChange={(e) => setPickedTeam(e.target.value)} className="h-11 rounded-[12px] border border-slate-200 bg-white px-3 text-[14px] font-semibold text-ink">
+                    {inviteTeams.map((tid) => (
+                      <option key={tid} value={tid}>
+                        {team(tid, st).name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {fit && vx && (
+                  <button
+                    type="button"
+                    onClick={() => nav('invite', { pid, tid: ownedId!, rid: fit.role.id })}
+                    disabled={!!invited}
+                    className={cx('h-11 cursor-pointer rounded-[12px] border-0 px-[18px] text-[14px] font-bold', invited ? 'bg-success-tint text-success' : 'bg-brand text-white')}
+                  >
+                    {invited ? 'Invited to ' + vx.name + ' ✓' : `Invite to ${vx.name} as ${fit.role.name}`}
+                  </button>
+                )}
               </>
             )}
           </div>
@@ -169,7 +198,7 @@ export function Profile({ pid }: { pid: string }) {
             </div>
           </div>
         )}
-        {fit?.kind && (
+        {fit && (
           <div className={cx('mt-6 grid gap-x-7 gap-y-3.5 rounded-[16px] border border-match-line bg-match', m ? 'grid-cols-[minmax(0,1fr)] p-4' : 'grid-cols-[210px_minmax(0,1fr)] px-6 py-5')}>
             <div>
               <span className="inline-flex h-[26px] items-center rounded-full px-2.5 text-[12px] font-extrabold" style={{ background: fit.bg, color: fit.fg }}>

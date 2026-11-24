@@ -21,7 +21,7 @@ type Overlay =
   | { kind: 'apply'; team: string; role: string };
 
 const PHONE_PREVIEW_KEY = 'compmate-v2-phone-preview';
-const GATED = ['/for-you', '/people', '/u/', '/teams/vertex/manage', '/saved'];
+const GATED = /^\/(for-you|people|u\/|saved|admin|teams\/(new|[^/]+\/(manage|edit)))/;
 
 
 /**
@@ -229,7 +229,7 @@ export function AppShell() {
     const authed = !store.get().authed;
     setOverlay(null);
     store.set({ authed });
-    if (!authed && GATED.some((p) => location.pathname.startsWith(p))) navigate(paths.home());
+    if (!authed && GATED.test(location.pathname)) navigate(paths.home());
   };
   const reset = () => {
     store.reset();

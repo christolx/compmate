@@ -68,7 +68,8 @@ export const paths = {
   team: (id: string) => '/teams/' + id,
   people: (opts?: { rank?: PeopleRank }) => '/people' + (opts?.rank && opts.rank !== 'you' ? '?rank='+encodeURIComponent(opts.rank) : ''),
   profile: (id: string) => '/u/' + id,
-  manage: (tid?: string) => '/teams/'+(tid||'vertex')+'/manage',
+  // Without a team id, My Teams lands on the dashboard's team list.
+  manage: (tid?: string) => (tid ? '/teams/' + tid + '/manage' : '/for-you'),
   saved: () => '/saved',
   how: () => '/#how',
   board: () => '/board',
