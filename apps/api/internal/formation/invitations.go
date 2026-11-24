@@ -43,7 +43,16 @@ func (s *Server) invite(w http.ResponseWriter, r *http.Request, a actor) (any, e
 		return nil, conflict("This student's previous application to your team is final")
 	}
 	iid := id()
-	if _, err = tx.Exec(ctx, `INSERT INTO team_invitations(id,team_id,user_id,role_id) VALUES($1,$2,$3,$4)`, iid, tid, v.User, v.Role); err != nil {
+	// A declined invite can be renewed; a pending or accepted one stays as is (409).
+	tag, err := tx.Exec(ctx, `INSERT INTO team_invitations(id,team_id,user_id,role_id) VALUES($1,$2,$3,$4)
+ ON CONFLICT(team_id,user_id) DO UPDATE SET status='pending',role_id=$4,created_at=now() WHERE team_invitations.status='declined'`, iid, tid, v.User, v.Role)
+	if err != nil {
+		return nil, err
+	}
+	if tag.RowsAffected() == 0 {
+		return nil, conflict("This student already has an invitation to your team")
+	}
+	if err = tx.QueryRow(ctx, `SELECT id FROM team_invitations WHERE team_id=$1 AND user_id=$2`, tid, v.User).Scan(&iid); err != nil {
 		return nil, err
 	}
 	if err = notify(ctx, tx, note{User: v.User, Team: tid, Actor: a.ID, Role: v.Role, Kind: "invitation", Text: "{actor} invited you to join {team} as {role}"}); err != nil {

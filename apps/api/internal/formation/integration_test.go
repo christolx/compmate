@@ -551,6 +551,13 @@ func TestInvitationsAndSameCompetitionAcceptance(t *testing.T) {
 	}
 	second := h.team(other, "Another team", 2, []roleInput{{Name: "Designer", Capacity: 1}})
 	h.req(applicant, "POST", "/teams/"+second+"/applications", map[string]any{"role_id": h.role(other, second, 0), "message": "Already in another team here"}, 409)
+	invitee, iid := h.signup("invitee")
+	first := h.req(leader, "POST", "/teams/"+tid+"/invitations", map[string]string{"user_id": iid, "role_id": rid}, 200)["id"].(string)
+	h.req(leader, "POST", "/teams/"+tid+"/invitations", map[string]string{"user_id": iid, "role_id": rid}, 409)
+	h.req(invitee, "POST", "/invitations/"+first+"/decline", map[string]any{}, 200)
+	if again := h.req(leader, "POST", "/teams/"+tid+"/invitations", map[string]string{"user_id": iid, "role_id": rid}, 200)["id"]; again != first || h.count(`SELECT count(*) FROM team_invitations WHERE id=$1 AND status='pending'`, first) != 1 {
+		t.Fatal("declined invitation should be renewed as pending")
+	}
 	declined, did := h.signup("declined")
 	aid := h.apply(declined, tid, rid, false)
 	h.decide(leader, aid, "decline", 200)
