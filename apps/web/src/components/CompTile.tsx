@@ -180,7 +180,7 @@ export function CompTile({ cid, variant = 'a', wide, reason, authed }: CompTileP
               <span className="text-[13px] font-bold text-ink">{c.recruitLabel}</span>
             </>
           ) : (
-            <span className="text-[13px] text-slate-500">No teams yet · start the first one</span>
+            <span className="text-[13px] text-slate-500">{c.upcoming ? 'Teams form once registration opens' : c.left < 0 ? 'Registration closed' : 'No teams yet · start the first one'}</span>
           )}
         </div>
       </div>
