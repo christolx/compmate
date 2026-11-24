@@ -48,7 +48,7 @@
 | 8 | Leader | Open `/for-you` → **Review**, or `/teams/:id/manage` |
 | 9 | Leader | **Accept** → confirm acceptance |
 | 10 | Applicant | Refresh dashboard → **Accepted**; team appears under own teams |
-| 11 | Both | Open team → **Show / refresh contacts** |
+| 11 | Both | Open team → **Member contacts** load automatically (email/phone/URL as links) |
 | 12 | Both | Click **We connected** |
 
 **End state:** Shared roster, accepted application, consented contacts, recorded connection outcome.
@@ -64,7 +64,7 @@
 
 1. Leader creates recruiting team with open role.
 2. Leader opens `/people` → finds compatible student → opens profile.
-3. Click **Invite to [team]**.
+3. Pick a team if you lead several → click **Invite to [team] as [role]**. Students whose application to that team was declined/withdrawn can't be invited.
 4. Invitee opens `/for-you` → **View invitation**.
 5. Open team → **Accept invitation**; optionally consent to contact sharing.
 6. Team roster updates.
@@ -108,7 +108,7 @@
 1. Complete team formation with shared contacts.
 2. Member opens `/u/me/edit`.
 3. Uncheck **Enable contact sharing…** → **Save profile**.
-4. Teammate opens team → **Show / refresh contacts**.
+4. Teammate opens team → **Member contacts** (or **Refresh**).
 
 **End state:** Revoked contact displays **Contact not shared**.
 
@@ -124,8 +124,8 @@
 
 **Prerequisite:** Existing account promoted through operator CLI; signup alone grants no admin access.
 
-- **Curation:** `/admin` → enter competition details, official URL, future deadline, team limits → **Save competition** → competition appears in discovery.
-- **Moderation:** Student opens team → **Report this team** → submit reason → admin opens `/admin` → **Hide team** → optionally **Dismiss / restore team**.
+- **Curation:** `/admin` → enter competition details, official URL, deadline (future, within two years), team limits and listing details (category, format, fee, dates, poster, skills) → **Create competition** → competition appears in discovery. Errors show next to the button.
+- **Moderation:** Non-member opens team → **Report this team** → submit reason → admin opens `/admin` → **Hide team** (resolves every open report on that team) → optionally **Restore team**, or **Dismiss report** without hiding.
 - **Metrics:** Admin opens `/admin` → reviews pilot metrics.
 
 ## 11. Account export + cleanup
