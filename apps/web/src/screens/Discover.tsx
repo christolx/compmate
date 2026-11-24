@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { ALL_COMPETITIONS, team } from '../data/model';
+import { ALL_COMPETITIONS, comp, team } from '../data/model';
+import { TEAMS } from '../data/seed';
+import { isRecruiting } from '../data/selectors';
 import { GROUPS, POPULAR_SEARCHES } from '../data/seed';
 import { AppLink } from '../app/AppLink';
 import { useNav } from '../app/nav';
@@ -35,6 +37,10 @@ export function Discover({ authed: authedProp }: { authed?: boolean }) {
   const CLOSING_SOON = ALL_COMPETITIONS.filter((c) => !c.upcoming && c.left >= 0 && c.left <= 14)
     .sort((a, b) => a.left - b.left)
     .slice(0, 4);
+  // Live teams (seed ids may not exist): recruiting ones you're not in, soonest deadline first.
+  const RECRUITING = TEAMS.filter((t) => !t.members.includes('me') && isRecruiting(t, st))
+    .sort((a, b) => comp(a.comp).left - comp(b.comp).left)
+    .map((t) => t.id);
 
   const authed = authedProp ?? st.authed;
   const m = useIsMobile();
@@ -96,13 +102,13 @@ export function Discover({ authed: authedProp }: { authed?: boolean }) {
               ))}
             </div>
           </div>
-          {!m && (
+          {!m && RECRUITING.length > 0 && (
             <aside className="rounded-[20px] border border-card bg-white p-2 shadow-[0_30px_60px_-30px_rgba(15,23,42,.22)]">
               <div className="flex items-center justify-between px-3.5 pt-3 pb-1.5">
                 <span className="text-[13px] font-bold">Teams recruiting right now</span>
-                <span className="text-[12px] text-slate-500">3 of {TEAMS_RECRUITING}</span>
+                <span className="text-[12px] text-slate-500">{Math.min(3, RECRUITING.length)} of {TEAMS_RECRUITING}</span>
               </div>
-              {['apex', 'orion', 'northstar'].map((id) => {
+              {RECRUITING.slice(0, 3).map((id) => {
                 const t = team(id, st);
                 return (
                   <AppLink key={id} to="team" args={[id]} className="box-border flex w-full cursor-pointer items-center gap-3.5 rounded-[12px] px-3.5 py-3 text-left transition-[background-color] duration-150 hover:bg-canvas">
@@ -188,7 +194,7 @@ export function Discover({ authed: authedProp }: { authed?: boolean }) {
         </div>
       </section>
 
-      <section className={cx('border-t border-line bg-teams', m ? 'mt-10' : 'mt-14')}>
+      {RECRUITING.length > 0 && <section className={cx('border-t border-line bg-teams', m ? 'mt-10' : 'mt-14')}>
         <div className={cx('mx-auto box-border max-w-[1280px]', m ? 'px-5 pt-8 pb-9' : 'px-8 pt-14 pb-16')}>
           <div className="mb-5 flex items-end justify-between gap-4">
             <div>
@@ -196,15 +202,15 @@ export function Discover({ authed: authedProp }: { authed?: boolean }) {
               <p className="mt-1 mb-0 text-[14px] text-slate-500">See who's already in, what's missing, and apply for one role.</p>
             </div>
           </div>
-          <div className={cx(row, 'grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5')}>
-            {['apex', 'lumen', 'northstar'].map((id) => (
+          <div className={cx(row, 'grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-5')}>
+            {RECRUITING.slice(0, 3).map((id) => (
               <div key={id} className={cx('flex-none snap-start', m ? 'w-[300px]' : 'w-auto')}>
                 <TeamTile tid={id} showComp authed={authed} />
               </div>
             ))}
           </div>
         </div>
-      </section>
+      </section>}
 
       <section id="how" className={cx('mx-auto box-border max-w-[1280px]', m ? 'px-5 pt-9 pb-10' : 'px-8 py-14')}>
         <div className={cx('grid items-start gap-6', m ? 'grid-cols-[minmax(0,1fr)]' : 'grid-cols-[1.1fr_1fr_1fr_1fr]')}>
