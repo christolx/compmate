@@ -645,3 +645,21 @@ func TestEligibilityRefusalsExplainWhy(t *testing.T) {
 		t.Fatalf("stale accept message: %v", body)
 	}
 }
+
+func TestSignupErrorsNameTheProblem(t *testing.T) {
+	h := setup(t)
+	h.signup("taken")
+	for body, want := range map[string]string{
+		`{"email":"taken@example.edu","password":"test-password-123","name":"Again"}`: "already exists",
+		`{"email":"new@example.edu","password":"short","name":"New"}`:                 "Password needs",
+		`{"email":"not-an-email","password":"test-password-123","name":"New"}`:        "valid email",
+		`{"email":"new@example.edu","password":"test-password-123","name":"N"}`:       "Name needs",
+	} {
+		var v map[string]string
+		_ = json.Unmarshal([]byte(body), &v)
+		_, res, _ := h.request(http.DefaultClient, "POST", "/signup", v)
+		if msg, _ := res["error"].(string); !strings.Contains(msg, want) {
+			t.Fatalf("%s: got %q", want, msg)
+		}
+	}
+}

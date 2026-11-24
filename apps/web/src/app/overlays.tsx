@@ -172,9 +172,8 @@ export function LoginOverlay({ reason, signup=false, onClose, onLogin }: Overlay
         <h2 id="login-title" className="mt-4 mb-0 text-[22px] font-extrabold tracking-[-0.02em] text-ink">
           {isSignup?'Create your account':reason ? 'Log in to ' + reason : 'Log in to CompMate'}
         </h2>
-        <p className="mt-1.5 mb-0 text-[14px] leading-[1.5] text-slate-500">Browse competitions without an account. Log in when you're ready to build a team.</p>
-        {isSignup && <><label htmlFor="lg-name" className="mt-5 block text-[13px] font-bold text-ink">Name</label><input id="lg-name" autoFocus value={name} onChange={e=>setName(e.target.value)} required minLength={2} maxLength={80} className={field}/></>}
-        {error && <p role="alert" className="text-[13px] text-danger">{error}</p>}
+        <p className="mt-1.5 mb-0 text-[14px] leading-[1.5] text-slate-500">{isSignup ? 'Join to save competitions, apply to teams and build your own.' : "Browse competitions without an account. Log in when you're ready to build a team."}</p>
+        {isSignup && <><label htmlFor="lg-name" className="mt-5 block text-[13px] font-bold text-ink">Name</label><input id="lg-name" autoFocus value={name} onChange={e=>setName(e.target.value)} required minLength={2} maxLength={80} autoComplete="name" className={field}/></>}
         <label htmlFor="lg-email" className="mt-5 block text-[13px] font-bold text-ink">
           Email
         </label>
@@ -182,7 +181,9 @@ export function LoginOverlay({ reason, signup=false, onClose, onLogin }: Overlay
         <label htmlFor="lg-pw" className="mt-3.5 block text-[13px] font-bold text-ink">
           Password
         </label>
-        <input id="lg-pw" type="password" value={password} onChange={e=>setPassword(e.target.value)} required minLength={10} maxLength={72} autoComplete={isSignup?"new-password":"current-password"} className={field} />
+        <input id="lg-pw" type="password" value={password} onChange={e=>setPassword(e.target.value)} required minLength={10} maxLength={72} aria-describedby={isSignup?'lg-pw-hint':undefined} autoComplete={isSignup?"new-password":"current-password"} className={field} />
+        {isSignup && <p id="lg-pw-hint" className="mt-1.5 mb-0 text-[12px] text-slate-500">At least 10 characters.</p>}
+        {error && <p role="alert" className="mt-3 mb-0 rounded-[10px] bg-red-50 px-3 py-2 text-[13px] font-semibold text-danger">{error}{isSignup && error.includes('already exists') && <> <button type="button" onClick={()=>{setSignup(false);setError('')}} className="cursor-pointer border-0 bg-transparent p-0 font-bold text-brand underline">Log in</button></>}</p>}
         <button type="submit" disabled={busy} className="mt-5 h-[50px] w-full cursor-pointer rounded-[12px] border-0 bg-brand text-[15px] font-bold text-white">
           {busy?'Saving…':isSignup?'Create account':'Continue'}
         </button>

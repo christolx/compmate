@@ -251,8 +251,13 @@ func (s *Server) signup(w http.ResponseWriter, r *http.Request, a actor) (any, e
 	v.Email = strings.ToLower(strings.TrimSpace(v.Email))
 	v.Name = strings.TrimSpace(v.Name)
 	parsed, err := mail.ParseAddress(v.Email)
-	if err != nil || parsed.Address != v.Email || len(v.Email) > 254 || len(v.Name) < 2 || len(v.Name) > 80 || len(v.Password) < 10 || len(v.Password) > 72 {
-		return nil, bad("Use valid email, name (2–80 chars), password (10–72 bytes)")
+	switch {
+	case len(v.Name) < 2 || len(v.Name) > 80:
+		return nil, bad("Name needs 2–80 characters")
+	case err != nil || parsed.Address != v.Email || len(v.Email) > 254:
+		return nil, bad("Enter a valid email address")
+	case len(v.Password) < 10 || len(v.Password) > 72:
+		return nil, bad("Password needs 10–72 characters")
 	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(v.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -265,6 +270,10 @@ func (s *Server) signup(w http.ResponseWriter, r *http.Request, a actor) (any, e
 	}
 	defer tx.Rollback(r.Context())
 	if _, err = tx.Exec(r.Context(), `INSERT INTO users(id,email,password_hash,admin) VALUES($1,$2,$3,$4)`, user, v.Email, string(hash), false); err != nil {
+		var p *pgconn.PgError
+		if errors.As(err, &p) && p.Code == "23505" {
+			return nil, conflict("An account with this email already exists. Log in instead.")
+		}
 		return nil, err
 	}
 	if _, err = tx.Exec(r.Context(), `INSERT INTO profiles(user_id,name) VALUES($1,$2)`, user, v.Name); err != nil {
