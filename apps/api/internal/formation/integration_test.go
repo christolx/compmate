@@ -623,3 +623,25 @@ func TestCampusRestrictionIgnoresCaseAndSpacing(t *testing.T) {
 	h.profile(outsider, "Outsider", "Other U", "", false)
 	h.req(outsider, "POST", "/teams", teamInput{Competition: h.competition, Name: "Outside", Capacity: 2, Roles: []roleInput{{Name: "Dev", Capacity: 1}}}, 403)
 }
+
+func TestEligibilityRefusalsExplainWhy(t *testing.T) {
+	h := setup(t)
+	h.req(h.admin, "PUT", "/competitions/"+h.competition, h.comp(time.Now().Add(time.Hour), "BINUS"), 200)
+	leader, _ := h.signup("leader")
+	h.profile(leader, "Leader", " binus ", "", false)
+	tid := h.team(leader, "Campus team", 2, []roleInput{{Name: "Developer", Capacity: 1}})
+	outsider, _ := h.signup("outsider")
+	h.profile(outsider, "Outsider", "Other U", "", false)
+	_, body, _ := h.request(outsider, "POST", "/teams/"+tid+"/applications", map[string]any{"role_id": h.role(leader, tid, 0), "message": "Let me join please"})
+	if !strings.Contains(body["error"].(string), "Only BINUS students") {
+		t.Fatalf("campus reason missing: %v", body)
+	}
+	insider, _ := h.signup("insider")
+	h.profile(insider, "Insider", "Binus", "", false)
+	aid := h.apply(insider, tid, h.role(leader, tid, 0), false)
+	h.decide(insider, aid, "withdraw", 200)
+	_, body, _ = h.request(leader, "POST", "/applications/"+aid+"/accept", map[string]any{})
+	if body["error"] != "The applicant already withdrew this application" {
+		t.Fatalf("stale accept message: %v", body)
+	}
+}

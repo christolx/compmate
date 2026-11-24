@@ -95,7 +95,11 @@ func (s *Server) decision(w http.ResponseWriter, r *http.Request, a actor) (any,
 		return nil, nil
 	}
 	if status != "pending" {
-		return nil, conflict("Only pending applications may change; accepted members cannot withdraw")
+		return nil, conflict(map[string]string{
+			"accepted":  "This application was already accepted",
+			"declined":  "This application was already declined",
+			"withdrawn": "The applicant already withdrew this application",
+		}[status])
 	}
 	if action == "accept" {
 		if err = eligible(ctx, tx, tid, user, role); err != nil {

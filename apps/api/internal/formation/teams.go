@@ -320,16 +320,28 @@ func sameCampus(required, actual string) bool {
 	return required == "" || strings.EqualFold(required, strings.TrimSpace(actual))
 }
 
+// eligible enforces recruitment_eligible and, when it fails, names the first
+// broken rule so students and leaders see why instead of a generic refusal.
 func eligible(ctx context.Context, tx pgx.Tx, tid, user, role string) error {
 	var open bool
 	err := tx.QueryRow(ctx, `SELECT recruitment_eligible($1,$2,$3)`, tid, user, role).Scan(&open)
+	if err != nil || open {
+		return err
+	}
+	var reason string
+	err = tx.QueryRow(ctx, `SELECT CASE
+ WHEN t.moderated OR NOT c.published THEN 'This team is not available'
+ WHEN c.deadline <= statement_timestamp() THEN 'Registration for this competition has closed'
+ WHEN NOT t.recruiting THEN 'This team has closed recruitment'
+ WHEN (SELECT count(*) FROM memberships WHERE team_id=t.id)>=t.capacity THEN 'This team is full'
+ WHEN NOT same_campus(c.campus,(SELECT campus FROM profiles WHERE user_id=$2)) THEN 'Only '||btrim(c.campus)||' students can join this competition'
+ WHEN EXISTS(SELECT 1 FROM memberships m JOIN teams j ON j.id=m.team_id WHERE j.competition_id=t.competition_id AND m.user_id=$2) THEN 'Already in a team for this competition'
+ ELSE 'That role is no longer open' END
+ FROM teams t JOIN competitions c ON c.id=t.competition_id WHERE t.id=$1`, tid, user).Scan(&reason)
 	if err != nil {
 		return err
 	}
-	if !open {
-		return conflict("Team closed, full, expired, role filled or applicant ineligible")
-	}
-	return nil
+	return conflict(reason)
 }
 func (s *Server) recruit(w http.ResponseWriter, r *http.Request, a actor) (any, error) {
 	var v struct {
