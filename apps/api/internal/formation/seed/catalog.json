@@ -57,7 +57,21 @@
           "example": true
         }
       ],
-      "color_index": 0
+      "color_index": 0,
+      "pastTeams": [
+        {
+          "name": "Lantern",
+          "comp": "National Marketing Case Competition 2026",
+          "role": "Presenter",
+          "result": "Semifinalist"
+        },
+        {
+          "name": "Sprout",
+          "comp": "Startup Pitch Competition 2025",
+          "role": "Business Strategist",
+          "result": "Participant"
+        }
+      ]
     },
     "raka": {
       "name": "Raka Pratama",
@@ -157,7 +171,7 @@
       "mutual": 6,
       "color_index": 2,
       "connections": 34,
-      "about": "Interested in hackathon and programming competitions.",
+      "about": "Full-stack developer who likes getting a demo working on day one. Three hackathons in, I usually own the backend and the deploy.",
       "links": [
         {
           "label": "LinkedIn",
@@ -173,6 +187,34 @@
           "label": "Instagram",
           "value": "https://www.instagram.com/",
           "example": true
+        }
+      ],
+      "exp": [
+        {
+          "title": "TechnoScape Hackathon 8.0",
+          "result": "Finalist",
+          "year": "2025",
+          "org": "BNCC"
+        },
+        {
+          "title": "Campus Code Sprint",
+          "result": "1st place",
+          "year": "2025",
+          "org": "BINUS Computer Club"
+        },
+        {
+          "title": "National Student Software Contest",
+          "result": "Participant",
+          "year": "2024",
+          "org": "Indonesian ICT Student Forum"
+        }
+      ],
+      "pastTeams": [
+        {
+          "name": "Byte Club",
+          "comp": "TechnoScape Hackathon 8.0",
+          "role": "Backend Developer",
+          "result": "Finalist"
         }
       ]
     },
@@ -197,7 +239,7 @@
       "mutual": 4,
       "color_index": 3,
       "connections": 41,
-      "about": "Interested in hackathon competitions.",
+      "about": "Frontend developer learning ML on the side. I like turning a model into something people can actually click through.",
       "links": [
         {
           "label": "LinkedIn",
@@ -213,6 +255,28 @@
           "label": "Instagram",
           "value": "https://www.instagram.com/",
           "example": true
+        }
+      ],
+      "exp": [
+        {
+          "title": "Frontend Mini Hackathon",
+          "result": "3rd place",
+          "year": "2025",
+          "org": "BNCC"
+        },
+        {
+          "title": "TechnoScape Hackathon 8.0",
+          "result": "Participant",
+          "year": "2025",
+          "org": "BNCC"
+        }
+      ],
+      "pastTeams": [
+        {
+          "name": "Byte Club",
+          "comp": "TechnoScape Hackathon 8.0",
+          "role": "Frontend Developer",
+          "result": "Finalist"
         }
       ]
     },
@@ -245,6 +309,18 @@
           "result": "2nd place",
           "year": "2025",
           "org": "Nusantara Design Collective"
+        },
+        {
+          "title": "Design Sprint Jam",
+          "result": "1st place",
+          "year": "2025",
+          "org": "Hi-Fi Design Club"
+        },
+        {
+          "title": "UX Case Study Challenge",
+          "result": "Finalist",
+          "year": "2024",
+          "org": "UXID Community"
         }
       ],
       "color_index": 4,
@@ -264,6 +340,14 @@
           "label": "Instagram",
           "value": "https://www.instagram.com/",
           "example": true
+        }
+      ],
+      "pastTeams": [
+        {
+          "name": "Kanvas",
+          "comp": "Nusantara UI/UX Competition 2025",
+          "role": "Lead Designer",
+          "result": "2nd place"
         }
       ]
     },
@@ -289,7 +373,7 @@
       "mutual": 1,
       "color_index": 5,
       "connections": 55,
-      "about": "Interested in UI/UX and marketing competitions.",
+      "about": "First-year designer focused on branding and visual identity. Looking for a first competition with a team that will teach me the ropes.",
       "links": [
         {
           "label": "LinkedIn",
@@ -305,6 +389,14 @@
           "label": "Instagram",
           "value": "https://www.instagram.com/",
           "example": true
+        }
+      ],
+      "exp": [
+        {
+          "title": "Campus Poster Design Contest",
+          "result": "Participant",
+          "year": "2026",
+          "org": "BINUS Student Association"
         }
       ]
     },
@@ -330,7 +422,7 @@
       "mutual": 1,
       "color_index": 6,
       "connections": 62,
-      "about": "Interested in hackathon and UI/UX competitions.",
+      "about": "Information Systems student who bridges design and data. I run quick usability tests and back design choices with numbers.",
       "links": [
         {
           "label": "LinkedIn",
@@ -346,6 +438,28 @@
           "label": "Instagram",
           "value": "https://www.instagram.com/",
           "example": true
+        }
+      ],
+      "exp": [
+        {
+          "title": "UX Case Study Challenge",
+          "result": "Semifinalist",
+          "year": "2026",
+          "org": "UXID Community"
+        },
+        {
+          "title": "Information Systems Expo",
+          "result": "Best booth",
+          "year": "2025",
+          "org": "SOIS Student Council"
+        }
+      ],
+      "pastTeams": [
+        {
+          "name": "Flowstate",
+          "comp": "UX Case Study Challenge 2026",
+          "role": "UI/UX Designer",
+          "result": "Semifinalist"
         }
       ]
     },
@@ -372,7 +486,7 @@
       "mutual": 1,
       "color_index": 7,
       "connections": 69,
-      "about": "Interested in debate and business case competitions.",
+      "about": "Debater with four years on the BP circuit. I enjoy rebuttal and Q&A, and I want to bring that to case competitions too.",
       "links": [
         {
           "label": "LinkedIn",
@@ -388,6 +502,34 @@
           "label": "Instagram",
           "value": "https://www.instagram.com/",
           "example": true
+        }
+      ],
+      "exp": [
+        {
+          "title": "Indonesian Varsity English Debate",
+          "result": "Quarterfinalist",
+          "year": "2025",
+          "org": "Debate Society Indonesia"
+        },
+        {
+          "title": "Java Debate Open",
+          "result": "Best speaker (3rd)",
+          "year": "2025",
+          "org": "Java Debate Council"
+        },
+        {
+          "title": "National Varsity Debating Open",
+          "result": "Octofinalist",
+          "year": "2024",
+          "org": "Indonesian Debating Council"
+        }
+      ],
+      "pastTeams": [
+        {
+          "name": "Ad Hoc",
+          "comp": "Indonesian Varsity English Debate 2025",
+          "role": "Second speaker",
+          "result": "Quarterfinalist"
         }
       ]
     },
@@ -414,7 +556,7 @@
       "mutual": 0,
       "color_index": 8,
       "connections": 76,
-      "about": "Interested in marketing and hackathon competitions.",
+      "about": "Marketing student who MCs campus events. Comfortable on stage and happy to rehearse a pitch until it is tight.",
       "links": [
         {
           "label": "LinkedIn",
@@ -430,6 +572,14 @@
           "label": "Instagram",
           "value": "https://www.instagram.com/",
           "example": true
+        }
+      ],
+      "exp": [
+        {
+          "title": "Faculty Startup Day",
+          "result": "Participant",
+          "year": "2026",
+          "org": "BINUS Business School"
         }
       ]
     },
@@ -453,7 +603,7 @@
       "mutual": 0,
       "color_index": 9,
       "connections": 23,
-      "about": "Interested in marketing competitions.",
+      "about": "Communication student who writes copy and scripts. New to competitions and keen to join a marketing team.",
       "links": [
         {
           "label": "LinkedIn",
@@ -469,6 +619,14 @@
           "label": "Instagram",
           "value": "https://www.instagram.com/",
           "example": true
+        }
+      ],
+      "exp": [
+        {
+          "title": "Campus Copywriting Contest",
+          "result": "Honourable mention",
+          "year": "2026",
+          "org": "Komunika Club"
         }
       ]
     },
@@ -496,7 +654,7 @@
       "mutual": 1,
       "color_index": 10,
       "connections": 30,
-      "about": "Interested in business case and investment competitions.",
+      "about": "Accountant in training who builds models in Excel. I take the financials and make sure the numbers add up.",
       "links": [
         {
           "label": "LinkedIn",
@@ -512,6 +670,28 @@
           "label": "Instagram",
           "value": "https://www.instagram.com/",
           "example": true
+        }
+      ],
+      "exp": [
+        {
+          "title": "Accounting Olympiad",
+          "result": "Semifinalist",
+          "year": "2025",
+          "org": "Accounting Student Association"
+        },
+        {
+          "title": "Young Investor Valuation Challenge",
+          "result": "Participant",
+          "year": "2025",
+          "org": "Investor Club Indonesia"
+        }
+      ],
+      "pastTeams": [
+        {
+          "name": "Ledgerline",
+          "comp": "Young Investor Valuation Challenge 2025",
+          "role": "Financial Analyst",
+          "result": "Participant"
         }
       ]
     },
@@ -539,7 +719,7 @@
       "mutual": 2,
       "color_index": 11,
       "connections": 37,
-      "about": "Interested in business case and data science competitions.",
+      "about": "Data analyst who likes SQL more than slides. I turn messy datasets into charts that make the case for you.",
       "links": [
         {
           "label": "LinkedIn",
@@ -555,6 +735,28 @@
           "label": "Instagram",
           "value": "https://www.instagram.com/",
           "example": true
+        }
+      ],
+      "exp": [
+        {
+          "title": "Data Science Competition",
+          "result": "Top 20",
+          "year": "2025",
+          "org": "Statistics Explore"
+        },
+        {
+          "title": "Campus Datathon",
+          "result": "2nd place",
+          "year": "2025",
+          "org": "SOIS Student Council"
+        }
+      ],
+      "pastTeams": [
+        {
+          "name": "Datum",
+          "comp": "Campus Datathon 2025",
+          "role": "Data Analyst",
+          "result": "2nd place"
         }
       ]
     },
@@ -579,7 +781,7 @@
       "complete": 0.8,
       "color_index": 12,
       "connections": 44,
-      "about": "Interested in business case and investment competitions.",
+      "about": "Finance student who has competed in valuation and case competitions since first year. I look for teams that want to win, not just participate.",
       "links": [
         {
           "label": "LinkedIn",
@@ -595,6 +797,40 @@
           "label": "Instagram",
           "value": "https://www.instagram.com/",
           "example": true
+        }
+      ],
+      "exp": [
+        {
+          "title": "Young Investor Valuation Challenge",
+          "result": "Finalist",
+          "year": "2025",
+          "org": "Investor Club Indonesia"
+        },
+        {
+          "title": "Equity Research Challenge",
+          "result": "National finalist",
+          "year": "2025",
+          "org": "Indonesia Finance Students Forum"
+        },
+        {
+          "title": "National Business Case Competition",
+          "result": "Semifinalist",
+          "year": "2024",
+          "org": "Talent Growth"
+        }
+      ],
+      "pastTeams": [
+        {
+          "name": "Bluechip",
+          "comp": "Young Investor Valuation Challenge 2025",
+          "role": "Lead Analyst",
+          "result": "Finalist"
+        },
+        {
+          "name": "Helix",
+          "comp": "National Business Case Competition 2024",
+          "role": "Financial Analyst",
+          "result": "Semifinalist"
         }
       ]
     },
@@ -620,7 +856,7 @@
       "mutual": 5,
       "color_index": 13,
       "connections": 51,
-      "about": "Interested in business case and entrepreneurship competitions.",
+      "about": "Management student interested in strategy and early-stage startups. I usually frame the problem and own the recommendation.",
       "links": [
         {
           "label": "LinkedIn",
@@ -636,6 +872,28 @@
           "label": "Instagram",
           "value": "https://www.instagram.com/",
           "example": true
+        }
+      ],
+      "exp": [
+        {
+          "title": "National Business Case Competition",
+          "result": "Participant",
+          "year": "2025",
+          "org": "Talent Growth"
+        },
+        {
+          "title": "Student Startup Weekend",
+          "result": "Runner-up",
+          "year": "2025",
+          "org": "Venture Society"
+        }
+      ],
+      "pastTeams": [
+        {
+          "name": "Kopi Kita",
+          "comp": "Student Startup Weekend 2025",
+          "role": "Business Strategist",
+          "result": "Runner-up"
         }
       ]
     },
@@ -660,7 +918,7 @@
       "complete": 0.75,
       "color_index": 14,
       "connections": 58,
-      "about": "Interested in research and marketing competitions.",
+      "about": "Psychology student who loves interviews and surveys. I bring the user voice and the research method.",
       "links": [
         {
           "label": "LinkedIn",
@@ -676,6 +934,14 @@
           "label": "Instagram",
           "value": "https://www.instagram.com/",
           "example": true
+        }
+      ],
+      "exp": [
+        {
+          "title": "Psychology Research Poster Day",
+          "result": "Participant",
+          "year": "2026",
+          "org": "Faculty of Humanities"
         }
       ]
     },
@@ -702,7 +968,7 @@
       "mutual": 2,
       "color_index": 15,
       "connections": 65,
-      "about": "Interested in marketing and business case competitions.",
+      "about": "Marketing student who has run social campaigns for two campus orgs. I care about insights first, then the creative.",
       "links": [
         {
           "label": "LinkedIn",
@@ -718,6 +984,34 @@
           "label": "Instagram",
           "value": "https://www.instagram.com/",
           "example": true
+        }
+      ],
+      "exp": [
+        {
+          "title": "National Marketing Case Competition",
+          "result": "Finalist",
+          "year": "2025",
+          "org": "MarkComm Forum"
+        },
+        {
+          "title": "Brand Activation Challenge",
+          "result": "3rd place",
+          "year": "2025",
+          "org": "Marketing Club"
+        }
+      ],
+      "pastTeams": [
+        {
+          "name": "Lantern",
+          "comp": "National Marketing Case Competition 2026",
+          "role": "Marketing Lead",
+          "result": "Semifinalist"
+        },
+        {
+          "name": "Spark",
+          "comp": "Brand Activation Challenge 2025",
+          "role": "Researcher",
+          "result": "3rd place"
         }
       ]
     },
@@ -743,7 +1037,7 @@
       "complete": 0.8,
       "color_index": 16,
       "connections": 72,
-      "about": "Interested in entrepreneurship and hackathon competitions.",
+      "about": "IS student building a small SaaS on the side. I can code the MVP and talk business model in the same meeting.",
       "links": [
         {
           "label": "LinkedIn",
@@ -759,6 +1053,40 @@
           "label": "Instagram",
           "value": "https://www.instagram.com/",
           "example": true
+        }
+      ],
+      "exp": [
+        {
+          "title": "Startup Pitch Competition",
+          "result": "Top 10",
+          "year": "2025",
+          "org": "Venture Society"
+        },
+        {
+          "title": "TechnoScape Hackathon 8.0",
+          "result": "2nd place",
+          "year": "2025",
+          "org": "BNCC"
+        },
+        {
+          "title": "Campus Code Sprint",
+          "result": "Finalist",
+          "year": "2024",
+          "org": "BINUS Computer Club"
+        }
+      ],
+      "pastTeams": [
+        {
+          "name": "Byte Club",
+          "comp": "TechnoScape Hackathon 8.0",
+          "role": "Developer",
+          "result": "Finalist"
+        },
+        {
+          "name": "Sprout",
+          "comp": "Startup Pitch Competition 2025",
+          "role": "Developer",
+          "result": "Top 10"
         }
       ]
     },
@@ -785,7 +1113,7 @@
       "mutual": 1,
       "color_index": 17,
       "connections": 79,
-      "about": "Interested in data science and hackathon competitions.",
+      "about": "Data science student, Kaggle regular. I handle modelling and evaluation and keep the notebook reproducible.",
       "links": [
         {
           "label": "LinkedIn",
@@ -801,6 +1129,34 @@
           "label": "Instagram",
           "value": "https://www.instagram.com/",
           "example": true
+        }
+      ],
+      "exp": [
+        {
+          "title": "Data Science Competition",
+          "result": "1st place",
+          "year": "2025",
+          "org": "Statistics Explore"
+        },
+        {
+          "title": "Open ML Leaderboard Challenge",
+          "result": "Top 5%",
+          "year": "2025",
+          "org": "Data Kita Community"
+        },
+        {
+          "title": "AI Innovation Challenge",
+          "result": "Finalist",
+          "year": "2024",
+          "org": "Tech for Impact Indonesia"
+        }
+      ],
+      "pastTeams": [
+        {
+          "name": "Gradient",
+          "comp": "Data Science Competition 2025",
+          "role": "Data Scientist",
+          "result": "1st place"
         }
       ]
     },
@@ -825,7 +1181,7 @@
       "complete": 0.65,
       "color_index": 18,
       "connections": 26,
-      "about": "Interested in business case competitions.",
+      "about": "International Business student who enjoys presenting in English. Looking for my first case competition team.",
       "links": [
         {
           "label": "LinkedIn",
@@ -841,6 +1197,14 @@
           "label": "Instagram",
           "value": "https://www.instagram.com/",
           "example": true
+        }
+      ],
+      "exp": [
+        {
+          "title": "Business English Presentation Contest",
+          "result": "Participant",
+          "year": "2026",
+          "org": "Language Center"
         }
       ]
     }
@@ -924,7 +1288,8 @@
           "label": "Final & awarding",
           "date": "2026-11-15"
         }
-      ]
+      ],
+      "feeNote": "Per team"
     },
     {
       "id": "techno",
@@ -1030,8 +1395,53 @@
       "interested": 41,
       "poster": "/posters/dsc.jpg",
       "tagline": "Resilient economy: driving smart decisions for a sustainable future",
-      "overview": "Pairs work through a public economic dataset, submit a notebook and a short report, and the top teams present their findings.",
-      "url": "https://example.com/?competition=dsc"
+      "overview": "Pairs work through a public dataset on Indonesia's regional economy, then submit a notebook and a five-page report with policy recommendations. The ten best teams present their findings live to statisticians and data leads from industry.",
+      "url": "https://example.com/?competition=dsc",
+      "eligibility": [
+        "Active Diploma or S1 students in Indonesia",
+        "Teams of exactly 2 people from the same university",
+        "Each student may join only one team"
+      ],
+      "prizes": [
+        {
+          "label": "1st place",
+          "value": "Rp5.000.000"
+        },
+        {
+          "label": "2nd place",
+          "value": "Rp3.000.000"
+        },
+        {
+          "label": "3rd place",
+          "value": "Rp2.000.000"
+        },
+        {
+          "label": "Best visualization",
+          "value": "Rp1.000.000"
+        }
+      ],
+      "timeline": [
+        {
+          "label": "Registration closes",
+          "date": "2026-10-20"
+        },
+        {
+          "label": "Dataset released",
+          "date": "2026-10-22"
+        },
+        {
+          "label": "Notebook & report due",
+          "date": "2026-11-02"
+        },
+        {
+          "label": "Finalists announced",
+          "date": "2026-11-09"
+        },
+        {
+          "label": "Final presentation",
+          "date": "2026-11-18"
+        }
+      ]
     },
     {
       "id": "nuiux",
@@ -1058,12 +1468,55 @@
         "UI/UX",
         "User Research"
       ],
-      "teamsCount": 5,
+      "teamsCount": 7,
       "openRoles": 6,
       "interested": 38,
-      "overview": "Design a mobile experience for a public service and test it with real users.",
+      "overview": "Pick a public service, from renewing an ID card to booking a puskesmas visit, and redesign its mobile experience. Teams submit a case study and a clickable Figma prototype tested with at least five real users. Finalists walk the judges through their design decisions.",
       "url": "https://example.com/?competition=nuiux",
-      "poster": "/posters/nuiux.jpg"
+      "poster": "/posters/nuiux.jpg",
+      "tagline": "Designing public services people actually want to use",
+      "feeNote": "Per team",
+      "eligibility": [
+        "Active S1 students in Indonesia",
+        "Teams of 2–3 people",
+        "Prototype must be built in Figma and shared with view access"
+      ],
+      "prizes": [
+        {
+          "label": "1st place",
+          "value": "Rp4.000.000"
+        },
+        {
+          "label": "2nd place",
+          "value": "Rp2.500.000"
+        },
+        {
+          "label": "3rd place",
+          "value": "Rp1.500.000"
+        },
+        {
+          "label": "Favourite design (public vote)",
+          "value": "Rp750.000"
+        }
+      ],
+      "timeline": [
+        {
+          "label": "Registration closes",
+          "date": "2026-10-12"
+        },
+        {
+          "label": "Case study & prototype due",
+          "date": "2026-10-17"
+        },
+        {
+          "label": "Finalists announced",
+          "date": "2026-10-20"
+        },
+        {
+          "label": "Final presentation",
+          "date": "2026-10-24"
+        }
+      ]
     },
     {
       "id": "yivc",
@@ -1089,12 +1542,55 @@
         "Financial Analysis",
         "Excel"
       ],
-      "teamsCount": 4,
+      "teamsCount": 5,
       "openRoles": 5,
       "interested": 29,
-      "overview": "Value a listed company and defend your recommendation in front of investors.",
+      "overview": "Pick one IDX-listed company from the shortlist, build a full valuation model and write an equity research report with a buy, hold or sell call. Shortlisted entrants defend their pick live in Jakarta before a panel of fund managers and analysts.",
       "url": "https://example.com/?competition=yivc",
-      "poster": "/posters/yivc.jpg"
+      "poster": "/posters/yivc.jpg",
+      "tagline": "Think like an analyst, argue like a fund manager",
+      "feeNote": "Per entry, solo or team",
+      "eligibility": [
+        "Active S1 students in Indonesia",
+        "Enter solo or as a team of up to 3",
+        "Models must be built in Excel or Google Sheets"
+      ],
+      "prizes": [
+        {
+          "label": "1st place",
+          "value": "Rp7.500.000"
+        },
+        {
+          "label": "2nd place",
+          "value": "Rp5.000.000"
+        },
+        {
+          "label": "3rd place",
+          "value": "Rp2.500.000"
+        },
+        {
+          "label": "Top 10",
+          "value": "Fast-track interview with partner securities firms"
+        }
+      ],
+      "timeline": [
+        {
+          "label": "Registration closes",
+          "date": "2026-10-23"
+        },
+        {
+          "label": "Research report due",
+          "date": "2026-10-30"
+        },
+        {
+          "label": "Finalists announced",
+          "date": "2026-11-02"
+        },
+        {
+          "label": "Final in Jakarta",
+          "date": "2026-11-07"
+        }
+      ]
     },
     {
       "id": "nmcc",
@@ -1124,9 +1620,56 @@
       "teamsCount": 6,
       "openRoles": 8,
       "interested": 33,
-      "overview": "Build a go-to-market plan for a local FMCG brand.",
+      "overview": "Teams get a brief from a local FMCG brand that wants to win Gen Z buyers. Research the audience, build a go-to-market plan with budget and channel mix, and present the campaign. The three best plans get feedback from the brand's own marketing team.",
       "url": "https://example.com/?competition=nmcc",
-      "poster": "/posters/nmcc.jpg"
+      "poster": "/posters/nmcc.jpg",
+      "tagline": "Bring a local brand to the next generation",
+      "feeNote": "Early bird · Rp150k regular",
+      "eligibility": [
+        "Active Diploma or S1 students in Indonesia",
+        "Teams of 3–4 people",
+        "Members may come from different universities"
+      ],
+      "prizes": [
+        {
+          "label": "1st place",
+          "value": "Rp6.000.000"
+        },
+        {
+          "label": "2nd place",
+          "value": "Rp4.000.000"
+        },
+        {
+          "label": "3rd place",
+          "value": "Rp2.000.000"
+        },
+        {
+          "label": "Best campaign idea",
+          "value": "Rp1.000.000"
+        }
+      ],
+      "timeline": [
+        {
+          "label": "Registration closes",
+          "date": "2026-10-30"
+        },
+        {
+          "label": "Brief released",
+          "date": "2026-11-02"
+        },
+        {
+          "label": "Proposal due",
+          "date": "2026-11-12"
+        },
+        {
+          "label": "Finalists announced",
+          "date": "2026-11-18"
+        },
+        {
+          "label": "Final pitch",
+          "date": "2026-11-28"
+        }
+      ]
     },
     {
       "id": "spc",
@@ -1156,9 +1699,51 @@
       "teamsCount": 9,
       "openRoles": 10,
       "interested": 52,
-      "overview": "Pitch an early-stage startup idea to angel investors.",
+      "overview": "Bring an early-stage startup idea, with or without a working product. Shortlisted teams get two mentoring sessions on their business model and deck, then pitch on stage in Jakarta to angel investors and founders.",
       "url": "https://example.com/?competition=spc",
-      "poster": "/posters/spc.jpg"
+      "poster": "/posters/spc.jpg",
+      "tagline": "From idea to investor meeting in six weeks",
+      "eligibility": [
+        "Active students or fresh graduates up to 1 year after graduation",
+        "Teams of 2–4 people; at least one member must be a student",
+        "The startup must not have raised outside funding"
+      ],
+      "prizes": [
+        {
+          "label": "Grand winner",
+          "value": "Rp10.000.000 seed grant"
+        },
+        {
+          "label": "Runner-up",
+          "value": "Rp5.000.000"
+        },
+        {
+          "label": "Top 10",
+          "value": "Mentoring with partner founders and an incubator interview"
+        }
+      ],
+      "timeline": [
+        {
+          "label": "Registration closes",
+          "date": "2026-11-05"
+        },
+        {
+          "label": "Shortlist announced",
+          "date": "2026-11-09"
+        },
+        {
+          "label": "Mentoring sessions",
+          "date": "2026-11-12"
+        },
+        {
+          "label": "Pitch deck due",
+          "date": "2026-11-17"
+        },
+        {
+          "label": "Demo day",
+          "date": "2026-11-21"
+        }
+      ]
     },
     {
       "id": "ived",
@@ -1184,12 +1769,59 @@
         "English",
         "Debate"
       ],
-      "teamsCount": 3,
+      "teamsCount": 4,
       "openRoles": 4,
       "interested": 19,
-      "overview": "British Parliamentary format, three speakers per team.",
+      "overview": "Three-speaker teams compete in British Parliamentary format across five preliminary rounds, then break rounds and a grand final. Motions cover economics, technology and international affairs. Adjudicators come from national and Asian debating circuits.",
       "url": "https://example.com/?competition=ived",
-      "poster": "/posters/ived.jpg"
+      "poster": "/posters/ived.jpg",
+      "tagline": "The varsity stage for British Parliamentary debate",
+      "feeNote": "Per team · includes 3 nights' accommodation",
+      "eligibility": [
+        "Active S1 students in Indonesia",
+        "Teams of exactly 3 speakers from the same university",
+        "Each university may send up to 3 teams"
+      ],
+      "prizes": [
+        {
+          "label": "Champion",
+          "value": "Rp8.000.000"
+        },
+        {
+          "label": "Runner-up",
+          "value": "Rp4.000.000"
+        },
+        {
+          "label": "Best speaker",
+          "value": "Rp1.500.000"
+        },
+        {
+          "label": "Novice champion",
+          "value": "Trophy and certificate"
+        }
+      ],
+      "timeline": [
+        {
+          "label": "Registration closes",
+          "date": "2026-10-21"
+        },
+        {
+          "label": "Fee payment due",
+          "date": "2026-10-25"
+        },
+        {
+          "label": "Motion briefing",
+          "date": "2026-11-10"
+        },
+        {
+          "label": "Preliminary rounds",
+          "date": "2026-11-11"
+        },
+        {
+          "label": "Grand final",
+          "date": "2026-11-13"
+        }
+      ]
     },
     {
       "id": "nspc",
@@ -1216,12 +1848,55 @@
         "Academic Writing",
         "Statistics"
       ],
-      "teamsCount": 2,
+      "teamsCount": 3,
       "openRoles": 3,
       "interested": 14,
-      "overview": "Submit a paper on sustainable cities.",
+      "overview": "Write a scientific paper proposing a solution to a sustainable-city problem: transport, waste, housing or clean water. An abstract round narrows the field, selected teams submit a full paper, and finalists present it online to lecturers and urban planners.",
       "url": "https://example.com/?competition=nspc",
-      "poster": "/posters/nspc.jpg"
+      "poster": "/posters/nspc.jpg",
+      "tagline": "Research that helps Indonesian cities grow sustainably",
+      "feeNote": "Per team, charged after abstract selection",
+      "eligibility": [
+        "Active Diploma or S1 students in Indonesia",
+        "Teams of 2–3 people with one faculty supervisor",
+        "Papers must be original and not previously published"
+      ],
+      "prizes": [
+        {
+          "label": "1st place",
+          "value": "Rp5.000.000"
+        },
+        {
+          "label": "2nd place",
+          "value": "Rp3.500.000"
+        },
+        {
+          "label": "3rd place",
+          "value": "Rp2.000.000"
+        },
+        {
+          "label": "Finalists",
+          "value": "Publication in the conference proceedings"
+        }
+      ],
+      "timeline": [
+        {
+          "label": "Abstract due",
+          "date": "2026-10-28"
+        },
+        {
+          "label": "Selected abstracts announced",
+          "date": "2026-11-03"
+        },
+        {
+          "label": "Full paper due",
+          "date": "2026-11-12"
+        },
+        {
+          "label": "Final presentation",
+          "date": "2026-11-20"
+        }
+      ]
     },
     {
       "id": "eic",
@@ -1246,12 +1921,59 @@
         "Research",
         "Python"
       ],
-      "teamsCount": 0,
-      "openRoles": 0,
+      "teamsCount": 2,
+      "openRoles": 3,
       "interested": 11,
-      "overview": "Prototype a low-cost solution for rural energy access.",
+      "overview": "Design and prototype a low-cost device or system that improves energy access in rural villages, from micro-hydro to solar cold storage. Teams submit a technical proposal, build a working prototype and demo it in Surabaya to judges from industry and engineering faculties.",
       "url": "https://example.com/?competition=eic",
-      "poster": "/posters/eic.jpg"
+      "poster": "/posters/eic.jpg",
+      "tagline": "Engineering clean energy for rural Indonesia",
+      "feeNote": "Per team",
+      "eligibility": [
+        "Active S1 engineering or computer science students",
+        "Teams of 2–4 people",
+        "Prototype budget may not exceed Rp5.000.000"
+      ],
+      "prizes": [
+        {
+          "label": "1st place",
+          "value": "Rp10.000.000"
+        },
+        {
+          "label": "2nd place",
+          "value": "Rp6.000.000"
+        },
+        {
+          "label": "3rd place",
+          "value": "Rp4.000.000"
+        },
+        {
+          "label": "Best social impact",
+          "value": "Rp2.000.000"
+        }
+      ],
+      "timeline": [
+        {
+          "label": "Registration opens",
+          "date": "2026-10-12"
+        },
+        {
+          "label": "Registration closes",
+          "date": "2026-11-12"
+        },
+        {
+          "label": "Technical proposal due",
+          "date": "2026-11-19"
+        },
+        {
+          "label": "Finalists announced",
+          "date": "2026-11-24"
+        },
+        {
+          "label": "Prototype demo & final",
+          "date": "2026-12-05"
+        }
+      ]
     }
   ],
   "teams": [
@@ -1337,7 +2059,7 @@
       "level": "Beginner friendly",
       "comms": "LINE",
       "lang": "Bahasa Indonesia",
-      "about": "Strategy plus research, missing the finance brain.",
+      "about": "Strategy and research covered, missing the finance brain. We meet every Saturday at the Anggrek campus and split the case by section.",
       "roles": [
         {
           "id": "analyst",
@@ -1365,7 +2087,7 @@
       "level": "Beginner friendly",
       "comms": "WhatsApp",
       "lang": "English",
-      "about": "Debater looking for analytical teammates.",
+      "about": "Debater looking for analytical teammates. I can own the story and the Q&A; I need people who love numbers and frameworks.",
       "roles": [
         {
           "id": "analyst",
@@ -1403,7 +2125,7 @@
       "level": "Beginner friendly",
       "comms": "WhatsApp",
       "lang": "Bahasa Indonesia",
-      "about": "Two talkers, need someone who loves spreadsheets.",
+      "about": "Two talkers who need someone who loves spreadsheets. We are beginners and want to learn the case format together.",
       "roles": [
         {
           "id": "researcher",
@@ -1499,7 +2221,7 @@
       "level": "Experienced preferred",
       "comms": "Discord",
       "lang": "English",
-      "about": "ML-heavy team, missing design and business.",
+      "about": "ML-heavy team building a credit-scoring model for informal workers. Missing the design and business side for the final pitch.",
       "roles": [
         {
           "id": "designer",
@@ -1576,7 +2298,7 @@
       "level": "Beginner friendly",
       "comms": "Telegram",
       "lang": "English",
-      "about": "We have an MVP. We need someone to shape the business side.",
+      "about": "We already have a working MVP for campus food pre-orders. We need someone to shape the business model and the investor pitch.",
       "roles": [
         {
           "id": "strategist",
@@ -1614,7 +2336,7 @@
       "level": "Experienced preferred",
       "comms": "Discord",
       "lang": "English",
-      "about": "Looking for a partner who likes clean analysis.",
+      "about": "Looking for a partner who likes clean, reproducible analysis. I handle modelling; you take the EDA and the report.",
       "roles": [
         {
           "id": "analyst",
