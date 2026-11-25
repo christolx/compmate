@@ -1207,6 +1207,397 @@
           "org": "Language Center"
         }
       ]
+    },
+    "joshua": {
+      "name": "Joshua Tanuwijaya",
+      "program": "Information Systems",
+      "fac": "SOIS",
+      "roles": [
+        "Business Analyst",
+        "Researcher"
+      ],
+      "skills": [
+        "Product Strategy",
+        "User Research",
+        "SQL",
+        "Presentation"
+      ],
+      "interests": [
+        "Product Innovation",
+        "Business Case",
+        "Hackathon"
+      ],
+      "avail": "Weekday evenings",
+      "level": "Some experience",
+      "complete": 0.95,
+      "connections": 28,
+      "about": "Aspiring product manager. I like talking to users, writing the spec and keeping the team focused on one problem.",
+      "exp": [
+        {
+          "title": "Product Hunt Campus",
+          "result": "2nd place",
+          "year": "2026",
+          "org": "Product Circle Indonesia"
+        },
+        {
+          "title": "Campus Product Sprint",
+          "result": "Finalist",
+          "year": "2025",
+          "org": "BINUS Student Association"
+        }
+      ],
+      "pastTeams": [
+        {
+          "name": "Pivot",
+          "comp": "Campus Product Sprint 2025",
+          "role": "Product Lead",
+          "result": "Finalist"
+        }
+      ],
+      "links": [
+        {
+          "label": "LinkedIn",
+          "value": "https://www.linkedin.com/",
+          "example": true
+        },
+        {
+          "label": "Portfolio",
+          "value": "https://example.com/",
+          "example": true
+        },
+        {
+          "label": "Instagram",
+          "value": "https://www.instagram.com/",
+          "example": true
+        }
+      ],
+      "color_index": 19
+    },
+    "hana": {
+      "name": "Hana Kusuma",
+      "program": "Industrial Engineering",
+      "fac": "SOE",
+      "roles": [
+        "Researcher",
+        "Data Analyst"
+      ],
+      "skills": [
+        "Research",
+        "Statistics",
+        "Academic Writing",
+        "Excel"
+      ],
+      "interests": [
+        "Research",
+        "Engineering"
+      ],
+      "avail": "Flexible",
+      "level": "Experienced",
+      "complete": 0.9,
+      "connections": 39,
+      "about": "Industrial engineering student who writes papers on logistics and urban systems. I handle the method, the stats and the write-up.",
+      "exp": [
+        {
+          "title": "National Scientific Paper Competition",
+          "result": "2nd place",
+          "year": "2025",
+          "org": "Research Circle Indonesia"
+        },
+        {
+          "title": "Indonesian Student Research Olympiad",
+          "result": "Finalist",
+          "year": "2025",
+          "org": "Research Olympiad Committee"
+        }
+      ],
+      "pastTeams": [
+        {
+          "name": "Kota Hijau",
+          "comp": "National Scientific Paper Competition 2025",
+          "role": "Lead Author",
+          "result": "2nd place"
+        }
+      ],
+      "links": [
+        {
+          "label": "LinkedIn",
+          "value": "https://www.linkedin.com/",
+          "example": true
+        },
+        {
+          "label": "Portfolio",
+          "value": "https://example.com/",
+          "example": true
+        },
+        {
+          "label": "Instagram",
+          "value": "https://www.instagram.com/",
+          "example": true
+        }
+      ],
+      "color_index": 20
+    },
+    "reza": {
+      "name": "Reza Firmansyah",
+      "program": "Computer Engineering",
+      "fac": "SOE",
+      "roles": [
+        "Developer",
+        "Researcher"
+      ],
+      "skills": [
+        "Python",
+        "Research",
+        "Data Visualization"
+      ],
+      "interests": [
+        "Engineering",
+        "Hackathon",
+        "Research"
+      ],
+      "avail": "Weekends",
+      "level": "Some experience",
+      "complete": 0.85,
+      "connections": 21,
+      "about": "Computer engineering student who builds IoT prototypes. Sensors, microcontrollers and the Python dashboard on top.",
+      "exp": [
+        {
+          "title": "Smart Campus IoT Challenge",
+          "result": "3rd place",
+          "year": "2026",
+          "org": "Engineering Student Council"
+        },
+        {
+          "title": "Engineering Innovation Challenge",
+          "result": "Participant",
+          "year": "2025",
+          "org": "Indonesian Engineering Students Forum"
+        }
+      ],
+      "pastTeams": [
+        {
+          "name": "Ampere",
+          "comp": "Engineering Innovation Challenge 2025",
+          "role": "Hardware Developer",
+          "result": "Participant"
+        }
+      ],
+      "links": [
+        {
+          "label": "LinkedIn",
+          "value": "https://www.linkedin.com/",
+          "example": true
+        },
+        {
+          "label": "Portfolio",
+          "value": "https://example.com/",
+          "example": true
+        },
+        {
+          "label": "Instagram",
+          "value": "https://www.instagram.com/",
+          "example": true
+        }
+      ],
+      "color_index": 21
+    },
+    "tasya": {
+      "name": "Tasya Anindita",
+      "program": "Visual Communication Design",
+      "fac": "SOD",
+      "roles": [
+        "Designer"
+      ],
+      "skills": [
+        "Branding",
+        "Graphic Design",
+        "Figma",
+        "Copywriting"
+      ],
+      "interests": [
+        "Branding",
+        "Marketing",
+        "UI/UX"
+      ],
+      "avail": "Weekends",
+      "level": "Some experience",
+      "complete": 0.9,
+      "connections": 33,
+      "about": "Brand designer who has rebranded two local coffee shops. I like identity systems, packaging and the story behind them.",
+      "exp": [
+        {
+          "title": "Local Brand Makeover",
+          "result": "1st place",
+          "year": "2026",
+          "org": "Kreatif Muda Collective"
+        },
+        {
+          "title": "Campus Poster Design Contest",
+          "result": "2nd place",
+          "year": "2025",
+          "org": "BINUS Student Association"
+        }
+      ],
+      "pastTeams": [
+        {
+          "name": "Rupa",
+          "comp": "Local Brand Makeover 2026",
+          "role": "Brand Designer",
+          "result": "1st place"
+        }
+      ],
+      "links": [
+        {
+          "label": "LinkedIn",
+          "value": "https://www.linkedin.com/",
+          "example": true
+        },
+        {
+          "label": "Portfolio",
+          "value": "https://example.com/",
+          "example": true
+        },
+        {
+          "label": "Instagram",
+          "value": "https://www.instagram.com/",
+          "example": true
+        }
+      ],
+      "color_index": 22
+    },
+    "daniel": {
+      "name": "Daniel Sutanto",
+      "program": "Finance",
+      "fac": "BBS",
+      "roles": [
+        "Financial Analyst",
+        "Presenter"
+      ],
+      "skills": [
+        "Valuation",
+        "Financial Analysis",
+        "Excel",
+        "Presentation"
+      ],
+      "interests": [
+        "Investment",
+        "Business Case"
+      ],
+      "avail": "Weekday evenings",
+      "level": "Experienced",
+      "complete": 1,
+      "connections": 52,
+      "about": "Finance student and investment club lead. I build the DCF and I am happy to defend it in front of judges.",
+      "exp": [
+        {
+          "title": "Financial Modeling Cup",
+          "result": "1st place",
+          "year": "2025",
+          "org": "Corporate Finance Society"
+        },
+        {
+          "title": "Young Investor Valuation Challenge",
+          "result": "Semifinalist",
+          "year": "2025",
+          "org": "Investor Club Indonesia"
+        },
+        {
+          "title": "Stock Pitch Day",
+          "result": "Best pitch",
+          "year": "2024",
+          "org": "BINUS Investment Club"
+        }
+      ],
+      "pastTeams": [
+        {
+          "name": "Bluechip",
+          "comp": "Young Investor Valuation Challenge 2025",
+          "role": "Presenter",
+          "result": "Finalist"
+        }
+      ],
+      "links": [
+        {
+          "label": "LinkedIn",
+          "value": "https://www.linkedin.com/",
+          "example": true
+        },
+        {
+          "label": "Portfolio",
+          "value": "https://example.com/",
+          "example": true
+        },
+        {
+          "label": "Instagram",
+          "value": "https://www.instagram.com/",
+          "example": true
+        }
+      ],
+      "color_index": 23
+    },
+    "nabila": {
+      "name": "Nabila Azzahra",
+      "program": "English Literature",
+      "fac": "SOH",
+      "roles": [
+        "Presenter",
+        "Researcher"
+      ],
+      "skills": [
+        "Debate",
+        "Public Speaking",
+        "English",
+        "Academic Writing"
+      ],
+      "interests": [
+        "Debate",
+        "Research"
+      ],
+      "avail": "Flexible",
+      "level": "Some experience",
+      "complete": 0.85,
+      "connections": 26,
+      "about": "Debater and essay writer. I prepare motions with lots of research and enjoy closing-half extension speeches.",
+      "exp": [
+        {
+          "title": "Java Debate Open",
+          "result": "Semifinalist",
+          "year": "2025",
+          "org": "Java Debate Council"
+        },
+        {
+          "title": "National Essay Competition",
+          "result": "3rd place",
+          "year": "2025",
+          "org": "Language Center"
+        }
+      ],
+      "pastTeams": [
+        {
+          "name": "Ad Hoc",
+          "comp": "Indonesian Varsity English Debate 2025",
+          "role": "Third speaker",
+          "result": "Quarterfinalist"
+        }
+      ],
+      "links": [
+        {
+          "label": "LinkedIn",
+          "value": "https://www.linkedin.com/",
+          "example": true
+        },
+        {
+          "label": "Portfolio",
+          "value": "https://example.com/",
+          "example": true
+        },
+        {
+          "label": "Instagram",
+          "value": "https://www.instagram.com/",
+          "example": true
+        }
+      ],
+      "color_index": 24
     }
   },
   "competitions": [
@@ -1974,6 +2365,308 @@
           "date": "2026-12-05"
         }
       ]
+    },
+    {
+      "id": "pmcc",
+      "title": "Product Management Case Challenge",
+      "org": "Product Circle Indonesia",
+      "cat": "Product",
+      "group": "Business",
+      "interest": "Product Innovation",
+      "open": "2026-09-25",
+      "deadline": "2026-10-26",
+      "event": "2026-11-14",
+      "loc": "Online",
+      "place": "Online, all rounds",
+      "fee": 80000,
+      "feeNote": "Per team",
+      "min": 2,
+      "max": 3,
+      "facs": [
+        "SOIS",
+        "SOCS",
+        "BBS"
+      ],
+      "skills": [
+        "Product Strategy",
+        "User Research",
+        "Market Research",
+        "Presentation"
+      ],
+      "teamsCount": 5,
+      "openRoles": 6,
+      "interested": 37,
+      "url": "https://example.com/?competition=pmcc",
+      "tagline": "Ship the right feature, not just any feature",
+      "overview": "Teams get a product brief from a growing Indonesian app: falling retention in one user segment. Dig into the data, interview users, decide what to build next and defend the roadmap to product leads. Finalists present a one-page PRD and a clickable concept.",
+      "eligibility": [
+        "Active S1 students in Indonesia",
+        "Teams of 2–3 people",
+        "At least one member from a business or information systems major"
+      ],
+      "prizes": [
+        {
+          "label": "1st place",
+          "value": "Rp5.000.000"
+        },
+        {
+          "label": "2nd place",
+          "value": "Rp3.000.000"
+        },
+        {
+          "label": "3rd place",
+          "value": "Rp1.500.000"
+        },
+        {
+          "label": "Finalists",
+          "value": "Associate PM internship interviews"
+        }
+      ],
+      "timeline": [
+        {
+          "label": "Registration closes",
+          "date": "2026-10-26"
+        },
+        {
+          "label": "Brief released",
+          "date": "2026-10-28"
+        },
+        {
+          "label": "Product proposal due",
+          "date": "2026-11-05"
+        },
+        {
+          "label": "Finalists announced",
+          "date": "2026-11-09"
+        },
+        {
+          "label": "Final presentation",
+          "date": "2026-11-14"
+        }
+      ],
+      "poster": "/posters/pmcc.jpg"
+    },
+    {
+      "id": "aifg",
+      "title": "AI for Good Hackathon",
+      "org": "Tech for Impact Indonesia",
+      "cat": "Hackathon",
+      "group": "Technology",
+      "interest": "Hackathon",
+      "open": "2026-10-01",
+      "deadline": "2026-10-27",
+      "event": "2026-11-22",
+      "loc": "Hybrid",
+      "place": "Online build · Demo day in Bandung",
+      "fee": 0,
+      "min": 3,
+      "max": 5,
+      "facs": [
+        "SOCS",
+        "SOIS",
+        "SOD"
+      ],
+      "skills": [
+        "Python",
+        "Machine Learning",
+        "UI/UX",
+        "Pitching"
+      ],
+      "teamsCount": 8,
+      "openRoles": 11,
+      "interested": 73,
+      "url": "https://example.com/?competition=aifg",
+      "tagline": "Machine learning for problems that matter",
+      "overview": "Build an AI-powered tool for one of three tracks: education access, disaster response or small-farmer income. Teams get cloud credits and two weeks of online mentoring, then the top 15 demo live in Bandung to NGO partners and engineers.",
+      "eligibility": [
+        "Active university students in Indonesia",
+        "Teams of 3–5 people",
+        "At least one designer or business member per team is encouraged"
+      ],
+      "prizes": [
+        {
+          "label": "Prize pool",
+          "value": "Rp25.000.000"
+        },
+        {
+          "label": "Track winners",
+          "value": "Pilot with an NGO partner"
+        },
+        {
+          "label": "All finalists",
+          "value": "Cloud credits and certificate"
+        }
+      ],
+      "timeline": [
+        {
+          "label": "Registration closes",
+          "date": "2026-10-27"
+        },
+        {
+          "label": "Kickoff & mentoring",
+          "date": "2026-11-01"
+        },
+        {
+          "label": "Prototype due",
+          "date": "2026-11-14"
+        },
+        {
+          "label": "Finalists announced",
+          "date": "2026-11-17"
+        },
+        {
+          "label": "Demo day",
+          "date": "2026-11-22"
+        }
+      ],
+      "poster": "/posters/aifg.jpg"
+    },
+    {
+      "id": "fmcup",
+      "title": "Financial Modeling Cup",
+      "org": "Corporate Finance Society",
+      "cat": "Investment",
+      "group": "Finance",
+      "interest": "Investment",
+      "open": "2026-09-20",
+      "deadline": "2026-10-15",
+      "event": "2026-10-31",
+      "loc": "Online",
+      "place": "Online",
+      "fee": 60000,
+      "feeNote": "Per entry",
+      "part": "either",
+      "min": 1,
+      "max": 2,
+      "facs": [
+        "BBS"
+      ],
+      "skills": [
+        "Financial Analysis",
+        "Excel",
+        "Valuation",
+        "Accounting"
+      ],
+      "teamsCount": 3,
+      "openRoles": 3,
+      "interested": 22,
+      "url": "https://example.com/?competition=fmcup",
+      "tagline": "Four hours, one model, zero broken links",
+      "overview": "A timed online round: build a three-statement model and a DCF from a case pack in four hours. The best models move to a live round where finalists walk judges through their assumptions and sensitivity tables.",
+      "eligibility": [
+        "Active S1 students in Indonesia",
+        "Enter solo or as a pair",
+        "Excel only; no add-ins or templates"
+      ],
+      "prizes": [
+        {
+          "label": "1st place",
+          "value": "Rp4.000.000"
+        },
+        {
+          "label": "2nd place",
+          "value": "Rp2.500.000"
+        },
+        {
+          "label": "3rd place",
+          "value": "Rp1.500.000"
+        }
+      ],
+      "timeline": [
+        {
+          "label": "Registration closes",
+          "date": "2026-10-15"
+        },
+        {
+          "label": "Practice case released",
+          "date": "2026-10-18"
+        },
+        {
+          "label": "Timed modeling round",
+          "date": "2026-10-24"
+        },
+        {
+          "label": "Live final",
+          "date": "2026-10-31"
+        }
+      ],
+      "poster": "/posters/fmcup.jpg"
+    },
+    {
+      "id": "bdc",
+      "title": "Campus Brand Design Challenge",
+      "org": "Kreatif Muda Collective",
+      "cat": "Branding",
+      "group": "Design",
+      "interest": "Branding",
+      "open": "2026-10-14",
+      "deadline": "2026-11-20",
+      "event": "2026-12-06",
+      "loc": "Online",
+      "place": "Online",
+      "fee": 50000,
+      "feeNote": "Per team",
+      "min": 2,
+      "max": 3,
+      "facs": [
+        "SOD",
+        "BBS",
+        "SOH"
+      ],
+      "skills": [
+        "Branding",
+        "Graphic Design",
+        "Copywriting",
+        "Marketing"
+      ],
+      "teamsCount": 0,
+      "openRoles": 0,
+      "interested": 9,
+      "url": "https://example.com/?competition=bdc",
+      "tagline": "Rebrand a local business that deserves better",
+      "overview": "Pair up with a real local small business and give it a new identity: logo, colour system, packaging and a launch post series. Judges look at strategy as much as visuals, so every choice needs a reason.",
+      "eligibility": [
+        "Active Diploma or S1 students in Indonesia",
+        "Teams of 2–3 people",
+        "Work must be original; stock assets must be credited"
+      ],
+      "prizes": [
+        {
+          "label": "1st place",
+          "value": "Rp3.500.000"
+        },
+        {
+          "label": "2nd place",
+          "value": "Rp2.000.000"
+        },
+        {
+          "label": "3rd place",
+          "value": "Rp1.000.000"
+        },
+        {
+          "label": "Best packaging",
+          "value": "Rp500.000"
+        }
+      ],
+      "timeline": [
+        {
+          "label": "Registration opens",
+          "date": "2026-10-14"
+        },
+        {
+          "label": "Registration closes",
+          "date": "2026-11-20"
+        },
+        {
+          "label": "Brand book due",
+          "date": "2026-11-29"
+        },
+        {
+          "label": "Winners announced",
+          "date": "2026-12-06"
+        }
+      ],
+      "poster": "/posters/bdc.jpg"
     }
   ],
   "teams": [
@@ -2348,6 +3041,329 @@
             "SQL"
           ],
           "note": "Analysis and visualisation."
+        }
+      ]
+    },
+    {
+      "id": "prisma",
+      "name": "Prisma",
+      "comp": "nuiux",
+      "leader": "nadia",
+      "members": [
+        "nadia",
+        "alya"
+      ],
+      "target": 3,
+      "avail": "Weekends",
+      "level": "Experienced preferred",
+      "comms": "Discord",
+      "lang": "Bahasa Indonesia / English",
+      "about": "Designer and researcher redesigning the puskesmas booking flow. We have interview notes from twelve patients and need a strong visual designer.",
+      "roles": [
+        {
+          "id": "designer",
+          "name": "Designer",
+          "qty": 1,
+          "skills": [
+            "Figma",
+            "Graphic Design",
+            "UI/UX"
+          ],
+          "note": "High-fidelity screens and the final prototype polish."
+        }
+      ]
+    },
+    {
+      "id": "kapital",
+      "name": "Kapital",
+      "comp": "yivc",
+      "leader": "daniel",
+      "members": [
+        "daniel",
+        "aditya"
+      ],
+      "target": 3,
+      "avail": "Weekday evenings",
+      "level": "Experienced preferred",
+      "comms": "WhatsApp",
+      "lang": "English",
+      "about": "Two finance students valuing a consumer goods company. The model is half done; we want a third person for industry research.",
+      "roles": [
+        {
+          "id": "researcher",
+          "name": "Researcher",
+          "qty": 1,
+          "skills": [
+            "Market Research",
+            "Research",
+            "Excel"
+          ],
+          "note": "Industry research, comparables and the thesis section of the report."
+        }
+      ]
+    },
+    {
+      "id": "agora",
+      "name": "Agora",
+      "comp": "ived",
+      "leader": "clara",
+      "members": [
+        "clara",
+        "nabila"
+      ],
+      "target": 3,
+      "avail": "Flexible",
+      "level": "Experienced preferred",
+      "comms": "LINE",
+      "lang": "English",
+      "about": "Two BP debaters with quarterfinal experience. Looking for a first or second speaker who reads widely on economics and tech.",
+      "roles": [
+        {
+          "id": "speaker",
+          "name": "Presenter",
+          "qty": 1,
+          "skills": [
+            "Debate",
+            "English",
+            "Public Speaking"
+          ],
+          "note": "Opening speaker who sets up the case and handles definitions."
+        }
+      ]
+    },
+    {
+      "id": "terra",
+      "name": "Terra",
+      "comp": "nspc",
+      "leader": "hana",
+      "members": [
+        "hana",
+        "reza"
+      ],
+      "target": 3,
+      "avail": "Flexible",
+      "level": "Beginner friendly",
+      "comms": "WhatsApp",
+      "lang": "Bahasa Indonesia",
+      "about": "Writing about flood-resilient drainage for North Jakarta. Method and data are covered; we need a writer to tighten the paper.",
+      "roles": [
+        {
+          "id": "writer",
+          "name": "Researcher",
+          "qty": 1,
+          "skills": [
+            "Academic Writing",
+            "Research"
+          ],
+          "note": "Literature review and editing the full paper."
+        }
+      ]
+    },
+    {
+      "id": "voltra",
+      "name": "Voltra",
+      "comp": "eic",
+      "leader": "reza",
+      "members": [
+        "reza",
+        "kevin"
+      ],
+      "target": 4,
+      "avail": "Weekends",
+      "level": "Beginner friendly",
+      "comms": "Discord",
+      "lang": "Bahasa Indonesia / English",
+      "about": "Building a solar-powered cold box for fishermen in East Java. Hardware and software covered; we need research and a pitch.",
+      "roles": [
+        {
+          "id": "researcher",
+          "name": "Researcher",
+          "qty": 1,
+          "skills": [
+            "Research",
+            "Statistics"
+          ],
+          "note": "Field data, cost analysis and impact numbers."
+        },
+        {
+          "id": "presenter",
+          "name": "Presenter",
+          "qty": 1,
+          "skills": [
+            "Presentation",
+            "Pitching"
+          ],
+          "note": "Final demo and Q&A with the judges."
+        }
+      ]
+    },
+    {
+      "id": "polaris",
+      "name": "Polaris",
+      "comp": "pmcc",
+      "leader": "joshua",
+      "members": [
+        "joshua",
+        "livia"
+      ],
+      "target": 3,
+      "avail": "Weekday evenings",
+      "level": "Beginner friendly",
+      "comms": "Slack",
+      "lang": "English",
+      "about": "PM and designer pair who love user interviews. Need a business mind to size the opportunity and build the roadmap case.",
+      "roles": [
+        {
+          "id": "strategist",
+          "name": "Business Strategist",
+          "qty": 1,
+          "skills": [
+            "Business Strategy",
+            "Market Research",
+            "Presentation"
+          ],
+          "note": "Market sizing, prioritisation and the final pitch."
+        }
+      ]
+    },
+    {
+      "id": "sentra",
+      "name": "Sentra",
+      "comp": "aifg",
+      "leader": "bima",
+      "members": [
+        "bima",
+        "sarah"
+      ],
+      "target": 4,
+      "avail": "Weekends",
+      "level": "Beginner friendly",
+      "comms": "Discord",
+      "lang": "Bahasa Indonesia / English",
+      "about": "Disaster-response track: an app that routes aid requests from WhatsApp messages. Dev and data covered; we need design and a pitch.",
+      "roles": [
+        {
+          "id": "designer",
+          "name": "UI/UX Designer",
+          "qty": 1,
+          "skills": [
+            "Figma",
+            "UI/UX"
+          ],
+          "note": "Mobile flows for volunteers and the demo screens."
+        },
+        {
+          "id": "presenter",
+          "name": "Presenter",
+          "qty": 1,
+          "skills": [
+            "Pitching",
+            "Presentation"
+          ],
+          "note": "Owns the demo-day pitch."
+        }
+      ]
+    },
+    {
+      "id": "ledger",
+      "name": "Ledger",
+      "comp": "fmcup",
+      "leader": "dimas",
+      "members": [
+        "dimas"
+      ],
+      "target": 2,
+      "avail": "Weekday evenings",
+      "level": "Beginner friendly",
+      "comms": "WhatsApp",
+      "lang": "Bahasa Indonesia",
+      "about": "Looking for a modeling partner for the timed round. Practice cases every Tuesday and Thursday evening.",
+      "roles": [
+        {
+          "id": "analyst",
+          "name": "Financial Analyst",
+          "qty": 1,
+          "skills": [
+            "Valuation",
+            "Excel"
+          ],
+          "note": "Splits the model: you take the DCF, I take the three statements."
+        }
+      ]
+    },
+    {
+      "id": "ember",
+      "name": "Ember",
+      "comp": "spc",
+      "leader": "rizky",
+      "members": [
+        "rizky",
+        "fikri"
+      ],
+      "target": 4,
+      "avail": "Weekends",
+      "level": "Beginner friendly",
+      "comms": "WhatsApp",
+      "lang": "Bahasa Indonesia",
+      "about": "Idea stage: a marketplace for second-hand textbooks between campuses. Business and pitch covered; we need builders.",
+      "roles": [
+        {
+          "id": "developer",
+          "name": "Developer",
+          "qty": 1,
+          "skills": [
+            "JavaScript",
+            "React"
+          ],
+          "note": "Builds a clickable MVP before demo day."
+        },
+        {
+          "id": "designer",
+          "name": "Designer",
+          "qty": 1,
+          "skills": [
+            "Figma",
+            "UI/UX"
+          ],
+          "note": "Brand, app screens and the pitch deck."
+        }
+      ]
+    },
+    {
+      "id": "sora",
+      "name": "Sora",
+      "comp": "nmcc",
+      "leader": "gilang",
+      "members": [
+        "gilang",
+        "tasya"
+      ],
+      "target": 4,
+      "avail": "Weekends",
+      "level": "Beginner friendly",
+      "comms": "Instagram DM",
+      "lang": "Bahasa Indonesia",
+      "about": "Copywriter and brand designer with a campaign idea already sketched. Need research and strategy to back it up.",
+      "roles": [
+        {
+          "id": "researcher",
+          "name": "Researcher",
+          "qty": 1,
+          "skills": [
+            "Market Research",
+            "Research"
+          ],
+          "note": "Gen Z survey and consumer insight."
+        },
+        {
+          "id": "strategist",
+          "name": "Marketing Lead",
+          "qty": 1,
+          "skills": [
+            "Marketing",
+            "Business Strategy"
+          ],
+          "note": "Channel mix and budget."
         }
       ]
     }
