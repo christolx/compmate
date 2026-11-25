@@ -717,3 +717,55 @@ func TestProfileAndSavedValidation(t *testing.T) {
 	h.req(student, "PUT", "/saved/"+h.competition, map[string]any{}, 200)
 	h.req(student, "PUT", "/saved/"+h.competition, map[string]any{}, 200)
 }
+
+func TestCatalogV2UpgradesSeededDatabase(t *testing.T) {
+	h := setup(t)
+	ctx := context.Background()
+	if err := Seed(ctx, h.db); err != nil {
+		t.Fatal(err)
+	}
+	_, legacy, err := loadSeed()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Roll the database back to what original-ui-v1 left behind, plus a few
+	// edits made since: a custom bio and alya already on another nuiux team.
+	for _, q := range []struct {
+		sql  string
+		args []any
+	}{
+		{`DELETE FROM teams WHERE id=ANY($1)`, []any{legacy.Added.Teams}},
+		{`DELETE FROM competitions WHERE id=ANY($1)`, []any{legacy.Added.Competitions}},
+		{`DELETE FROM users WHERE id=ANY($1)`, []any{legacy.Added.People}},
+		{`DELETE FROM seed_versions WHERE version='catalog-v2'`, nil},
+		{`UPDATE competitions SET description=$1, presentation=presentation-'timeline'-'prizes'-'eligibility'-'tagline'||'{"deadline":"2027-01-20"}' WHERE id='dsc'`, []any{legacy.Competitions["dsc"]}},
+		{`UPDATE profiles SET about=$1 WHERE user_id='kevin'`, []any{legacy.People["kevin"]}},
+		{`UPDATE profiles SET about='My own bio' WHERE user_id='bima'`, nil},
+		{`UPDATE teams SET about=$1 WHERE id='kinara'`, []any{legacy.Teams["kinara"]}},
+		{`INSERT INTO teams(id,competition_id,leader_id,name,about,capacity) VALUES('alya-own','nuiux','alya','Own','Mine',3)`, nil},
+		{`INSERT INTO memberships(team_id,user_id,share_contact) VALUES('alya-own','alya',true)`, nil},
+	} {
+		if _, err = h.db.Exec(ctx, q.sql, q.args...); err != nil {
+			t.Fatal(q.sql, err)
+		}
+	}
+	for range 2 { // second run must be a no-op
+		if err = Seed(ctx, h.db); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if h.count(`SELECT count(*) FROM users WHERE seeded`) != 25 || h.count(`SELECT count(*) FROM competitions WHERE id=ANY($1)`, legacy.Added.Competitions) != 4 ||
+		h.count(`SELECT count(*) FROM teams WHERE id=ANY($1)`, legacy.Added.Teams) != 10 || h.count(`SELECT count(*) FROM seed_versions WHERE version='catalog-v2'`) != 1 {
+		t.Fatal("catalog-v2 listings not added")
+	}
+	if h.count(`SELECT count(*) FROM memberships WHERE team_id='prisma' AND user_id='alya'`) != 0 || h.count(`SELECT count(*) FROM memberships WHERE team_id='prisma'`) != 1 {
+		t.Fatal("upgrade must not put a student on two teams in one competition")
+	}
+	if h.count(`SELECT count(*) FROM competitions WHERE id='dsc' AND description<>$1 AND presentation->'timeline'->0->>'date'='2027-01-20' AND presentation->>'deadline'='2027-01-20' AND jsonb_array_length(presentation->'prizes')=4`, legacy.Competitions["dsc"]) != 1 {
+		t.Fatal("dsc details not filled or timeline not aligned to its deadline")
+	}
+	if h.count(`SELECT count(*) FROM profiles WHERE user_id='kevin' AND about<>$1`, legacy.People["kevin"]) != 1 || h.count(`SELECT count(*) FROM profiles WHERE user_id='bima' AND about='My own bio'`) != 1 ||
+		h.count(`SELECT count(*) FROM teams WHERE id='kinara' AND about<>$1`, legacy.Teams["kinara"]) != 1 {
+		t.Fatal("placeholder copy not replaced, or an edit was overwritten")
+	}
+}

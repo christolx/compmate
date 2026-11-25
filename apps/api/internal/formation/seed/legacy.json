@@ -1,0 +1,66 @@
+{
+  "competitions": {
+    "dsc": "Pairs work through a public economic dataset, submit a notebook and a short report, and the top teams present their findings.",
+    "nuiux": "Design a mobile experience for a public service and test it with real users.",
+    "yivc": "Value a listed company and defend your recommendation in front of investors.",
+    "nmcc": "Build a go-to-market plan for a local FMCG brand.",
+    "spc": "Pitch an early-stage startup idea to angel investors.",
+    "ived": "British Parliamentary format, three speakers per team.",
+    "nspc": "Submit a paper on sustainable cities.",
+    "eic": "Prototype a low-cost solution for rural energy access."
+  },
+  "people": {
+    "kevin": "Interested in hackathon and programming competitions.",
+    "bima": "Interested in hackathon competitions.",
+    "jessica": "Interested in UI/UX and marketing competitions.",
+    "livia": "Interested in hackathon and UI/UX competitions.",
+    "clara": "Interested in debate and business case competitions.",
+    "fikri": "Interested in marketing and hackathon competitions.",
+    "gilang": "Interested in marketing competitions.",
+    "dimas": "Interested in business case and investment competitions.",
+    "sarah": "Interested in business case and data science competitions.",
+    "aditya": "Interested in business case and investment competitions.",
+    "rizky": "Interested in business case and entrepreneurship competitions.",
+    "alya": "Interested in research and marketing competitions.",
+    "clarissa": "Interested in marketing and business case competitions.",
+    "steven": "Interested in entrepreneurship and hackathon competitions.",
+    "farhan": "Interested in data science and hackathon competitions.",
+    "yoga": "Interested in business case competitions."
+  },
+  "teams": {
+    "kinara": "Strategy plus research, missing the finance brain.",
+    "meridian": "Debater looking for analytical teammates.",
+    "vega": "Two talkers, need someone who loves spreadsheets.",
+    "lumen": "ML-heavy team, missing design and business.",
+    "nexus": "We have an MVP. We need someone to shape the business side.",
+    "quanta": "Looking for a partner who likes clean analysis."
+  },
+  "added": {
+    "people": [
+      "joshua",
+      "hana",
+      "reza",
+      "tasya",
+      "daniel",
+      "nabila"
+    ],
+    "competitions": [
+      "pmcc",
+      "aifg",
+      "fmcup",
+      "bdc"
+    ],
+    "teams": [
+      "prisma",
+      "kapital",
+      "agora",
+      "terra",
+      "voltra",
+      "polaris",
+      "sentra",
+      "ledger",
+      "ember",
+      "sora"
+    ]
+  }
+}
