@@ -1,6 +1,6 @@
 # Competition imagery
 
-These seven images illustrate sample competition topics; they are not official event posters. Downloaded from Unsplash under the [Unsplash License](https://unsplash.com/license), resized to at most 1400px wide, JPEG quality 82. Existing nbcc.jpg, techno.jpg and dsc.jpg are unchanged.
+These images illustrate sample competition topics; they are not official event posters. Downloaded from Unsplash under the [Unsplash License](https://unsplash.com/license), resized to at most 1400px wide, JPEG quality 82. Existing nbcc.jpg, techno.jpg and dsc.jpg are unchanged.
 
 | File | Topic | Photographer / source |
 | --- | --- | --- |
@@ -11,3 +11,7 @@ These seven images illustrate sample competition topics; they are not official e
 | ived.jpg | Public speaking | [Avesta](https://unsplash.com/photos/3DnYPSCvacw) |
 | nspc.jpg | Sustainable cities | [Victor](https://unsplash.com/photos/0NJ9urGXrIg) |
 | eic.jpg | Solar energy | [Angie Warren](https://unsplash.com/photos/ZO7UsokVH98) |
+| pmcc.jpg | Product planning | [Jakub Żerdzicki](https://unsplash.com/photos/LMsSNDJ9Hvc) |
+| aifg.jpg | Human and AI | [Cash Macanaya](https://unsplash.com/photos/X9Cemmq4YjM) |
+| fmcup.jpg | Financial modeling | [Jakub Żerdzicki](https://unsplash.com/photos/ip7GFn5JqX8) |
+| bdc.jpg | Brand colour swatches | [Noemí Jiménez](https://unsplash.com/photos/xppqQBDT4Ok) |
