@@ -356,7 +356,7 @@ export function Team({ tid, authed: authedProp }: TeamProps) {
                 </button>
               </div>
             ))}
-            {roles.length === 0 && <div className="rounded-[16px] bg-canvas p-5 text-[14px] text-slate-600">All roles are filled. This team is no longer recruiting.</div>}
+            {roles.length === 0 && <div className="rounded-[16px] border border-card bg-white p-5 text-[14px] text-slate-600">All roles are filled. This team is no longer recruiting.</div>}
           </div>
           <p className="mt-4 mb-0 text-[12px] leading-[1.55] text-slate-500">
             Contact details stay private. Consented contacts are shared with team members after acceptance.

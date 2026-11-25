@@ -186,7 +186,7 @@ export function Profile({ pid }: { pid: string }) {
         </header>
         {conn === 'incoming' && <div className="mt-5 rounded-[12px] bg-brand-tint px-4 py-3 text-[14px] text-brand-deep">{p.first} wants to connect with you.</div>}
         {me && (
-          <div className="mt-6 flex flex-wrap items-center gap-4 rounded-[14px] bg-canvas px-4 py-3.5">
+          <div className="mt-6 flex flex-wrap items-center gap-4 rounded-[14px] border border-card bg-white px-4 py-3.5">
             <div className="min-w-[200px] flex-1">
               <div className="text-[14px] font-bold">Profile {Math.round(p.complete * 100)}% complete</div>
               <div className="mt-0.5 text-[13px] text-slate-600">
@@ -265,7 +265,7 @@ export function Profile({ pid }: { pid: string }) {
                   <div className="mb-1.5 text-[12px] font-semibold text-slate-400">{cat}</div>
                   <div className="flex flex-wrap gap-1.5">
                     {skills.map((k) => (
-                      <span key={k} className="inline-flex h-[30px] items-center rounded-[8px] bg-[#F3F5F8] px-[11px] text-[13px] font-semibold text-ink-2">
+                      <span key={k} className="inline-flex h-[30px] items-center rounded-[8px] border border-card bg-white px-[11px] text-[13px] font-semibold text-ink-2">
                         {k}
                       </span>
                     ))}

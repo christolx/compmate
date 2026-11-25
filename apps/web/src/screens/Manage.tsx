@@ -212,7 +212,7 @@ export function Manage({ tid='vertex', tab: initialTab = 'apps' }: {tid?:string;
                 <h2 className={cx('mt-1.5 mb-0 font-extrabold tracking-[-0.03em]', m ? 'text-[22px]' : 'text-[28px]')}>People who could strengthen {t.name}</h2>
                 {t.roleList.length > 0 ? (
                   <>
-                    <div className="mt-[18px] rounded-[14px] bg-canvas px-[18px] py-4">
+                    <div className="mt-[18px] rounded-[14px] border border-card bg-white px-[18px] py-4">
                       <div className="text-[13px] font-bold text-slate-700">Your team today</div>
                       <div className="mt-2.5 flex flex-wrap gap-2">
                         {cov.map((cv) => (
