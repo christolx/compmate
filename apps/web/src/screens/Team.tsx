@@ -364,7 +364,7 @@ export function Team({ tid, authed: authedProp }: TeamProps) {
         </aside>
       </div>
       {m && <div aria-hidden="true" className="h-[79px]" />}
-      {(t.isMember || app?.status==='pending') && <div className={cx("mx-auto box-border max-w-[1140px] px-5",m?"pb-28":"pb-8")}>
+      {(t.isMember || app?.status==='pending') && <div className={cx("mx-auto box-border max-w-[1120px]",m?"px-5 pb-28":"px-8 pb-8")}>
         {app?.status === 'pending' && (
           <button
             className="h-10 cursor-pointer rounded-[10px] border border-slate-200 bg-white px-4 text-[14px] font-semibold text-danger"
