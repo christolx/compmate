@@ -128,7 +128,7 @@ export function Manage({ tid='vertex', tab: initialTab = 'apps' }: {tid?:string;
           </div>
         </header>
         {m && (
-          <div role="tablist" className="sticky top-14 z-[5] -mx-5 mt-5 flex gap-[22px] border-b border-line bg-white px-5">
+          <div role="tablist" className="sticky top-14 z-[5] -mx-5 mt-5 flex gap-[22px] border-b border-line bg-canvas px-5">
             {(
               [
                 ['apps', 'Applicants · ' + pending.length],

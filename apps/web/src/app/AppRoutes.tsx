@@ -99,7 +99,7 @@ function NotFound() {
   const { authed } = useAppState();
   useTitle('Page not found');
   return (
-    <div className="relative min-h-full bg-white font-sans text-ink">
+    <div className="relative min-h-full bg-canvas font-sans text-ink">
       <TopNav authed={authed} active="" />
       <div className="mx-auto max-w-[640px] px-5 py-24 text-center">
         <div className="font-mono text-[12px] font-semibold tracking-[.08em] text-slate-500">404</div>

@@ -189,7 +189,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
                   </button>
                 </div>
               </div>
-              <nav className="sticky top-[68px] z-[5] mt-10 flex gap-7 border-b border-line bg-white">
+              <nav className="sticky top-[68px] z-[5] mt-10 flex gap-7 border-b border-line bg-canvas">
                 {(
                   [
                     ['overview', 'Overview', ovRef],
@@ -377,7 +377,7 @@ export function Competition({ cid, hero = 'a', tab: initialTab = 'overview', noT
               ))}
             </div>
           </div>
-          <div role="tablist" className="sticky top-14 z-[5] mt-3 flex gap-6 border-b border-line bg-white px-5">
+          <div role="tablist" className="sticky top-14 z-[5] mt-3 flex gap-6 border-b border-line bg-canvas px-5">
             {(
               [
                 ['overview', 'Overview'],
